@@ -7,6 +7,8 @@ import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.jooq.DSLContext
+import org.jooq.impl.DSL.count
+import org.jooq.impl.DSL.select
 import com.example.api.model.Comment as ApiComment
 
 @ApplicationScoped
@@ -18,53 +20,75 @@ class CommentQueryService {
         slug: String,
         viewerId: Long? = null,
     ): List<ApiComment> {
-        val commentRecords =
-            dsl
-                .select(
-                    COMMENTS.ID,
-                    COMMENTS.BODY,
-                    COMMENTS.CREATED_AT,
-                    COMMENTS.UPDATED_AT,
-                    COMMENTS.AUTHOR_ID,
-                    USERS.USERNAME,
-                    USERS.BIO,
-                    USERS.IMAGE,
-                ).from(COMMENTS)
-                .join(USERS)
-                .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-                .join(com.example.jooq.public.tables.references.ARTICLES)
-                .on(
-                    com.example.jooq.public.tables.references.ARTICLES.ID
-                        .eq(COMMENTS.ARTICLE_ID),
-                ).where(
-                    com.example.jooq.public.tables.references.ARTICLES.SLUG
-                        .eq(slug),
-                ).orderBy(COMMENTS.CREATED_AT.desc())
-                .fetch()
+        val followingField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FOLLOWERS)
+                    .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .asField<Int>("following")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("following")
+            }
 
-        return commentRecords.map { record ->
-            val authorId = record.get(COMMENTS.AUTHOR_ID)!!
-            val following = viewerId?.let { isFollowing(authorId, it) } ?: false
-
-            ApiComment()
-                .id(record.get(COMMENTS.ID)?.toInt())
-                .body(record.get(COMMENTS.BODY))
-                .createdAt(record.get(COMMENTS.CREATED_AT))
-                .updatedAt(record.get(COMMENTS.UPDATED_AT))
-                .author(
-                    Profile()
-                        .username(record.get(USERS.USERNAME))
-                        .bio(record.get(USERS.BIO))
-                        .image(record.get(USERS.IMAGE))
-                        .following(following),
-                )
-        }
+        return dsl
+            .select(
+                COMMENTS.ID,
+                COMMENTS.BODY,
+                COMMENTS.CREATED_AT,
+                COMMENTS.UPDATED_AT,
+                COMMENTS.AUTHOR_ID,
+                USERS.USERNAME,
+                USERS.BIO,
+                USERS.IMAGE,
+                followingField,
+            ).from(COMMENTS)
+            .join(USERS)
+            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+            .join(com.example.jooq.public.tables.references.ARTICLES)
+            .on(
+                com.example.jooq.public.tables.references.ARTICLES.ID
+                    .eq(COMMENTS.ARTICLE_ID),
+            ).where(
+                com.example.jooq.public.tables.references.ARTICLES.SLUG
+                    .eq(slug),
+            ).orderBy(COMMENTS.CREATED_AT.desc())
+            .fetch()
+            .map { record ->
+                ApiComment()
+                    .id(record.get(COMMENTS.ID)?.toInt())
+                    .body(record.get(COMMENTS.BODY))
+                    .createdAt(record.get(COMMENTS.CREATED_AT))
+                    .updatedAt(record.get(COMMENTS.UPDATED_AT))
+                    .author(
+                        Profile()
+                            .username(record.get(USERS.USERNAME))
+                            .bio(record.get(USERS.BIO))
+                            .image(record.get(USERS.IMAGE))
+                            .following(record.get("following", Int::class.java) > 0),
+                    )
+            }
     }
 
     fun getCommentById(
         commentId: Long,
         viewerId: Long? = null,
     ): ApiComment {
+        val followingField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FOLLOWERS)
+                    .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .asField<Int>("following")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("following")
+            }
+
         val record =
             dsl
                 .select(
@@ -76,15 +100,13 @@ class CommentQueryService {
                     USERS.USERNAME,
                     USERS.BIO,
                     USERS.IMAGE,
+                    followingField,
                 ).from(COMMENTS)
                 .join(USERS)
                 .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
                 .where(COMMENTS.ID.eq(commentId))
                 .fetchOne() ?: throw com.example.shared.exceptions
                 .NotFoundException("Comment not found")
-
-        val authorId = record.get(COMMENTS.AUTHOR_ID)!!
-        val following = viewerId?.let { isFollowing(authorId, it) } ?: false
 
         return ApiComment()
             .id(record.get(COMMENTS.ID)?.toInt())
@@ -96,18 +118,7 @@ class CommentQueryService {
                     .username(record.get(USERS.USERNAME))
                     .bio(record.get(USERS.BIO))
                     .image(record.get(USERS.IMAGE))
-                    .following(following),
+                    .following(record.get("following", Int::class.java) > 0),
             )
     }
-
-    private fun isFollowing(
-        followeeId: Long,
-        followerId: Long,
-    ): Boolean =
-        dsl.fetchExists(
-            dsl
-                .selectFrom(FOLLOWERS)
-                .where(FOLLOWERS.FOLLOWEE_ID.eq(followeeId))
-                .and(FOLLOWERS.FOLLOWER_ID.eq(followerId)),
-        )
 }
