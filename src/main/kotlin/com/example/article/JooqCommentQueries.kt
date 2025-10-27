@@ -11,14 +11,6 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 import com.example.api.model.Comment as ApiComment
 
-/**
- * jOOQ-based implementation of CommentQueries interface
- *
- * Implementation Details:
- * - Uses jOOQ DSL for type-safe SQL queries
- * - Scalar subqueries for following status
- * - Single SQL query per method for performance
- */
 @ApplicationScoped
 class JooqCommentQueries : CommentQueries {
     @Inject

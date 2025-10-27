@@ -17,21 +17,6 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
-/**
- * jOOQ-based implementation of ArticleQueries interface
- *
- * Implementation Details:
- * - Uses jOOQ DSL for type-safe SQL queries
- * - Optimized with multiset() to avoid N+1 queries
- * - Scalar subqueries for counts and existence checks
- * - Single SQL query per method for performance
- *
- * Why jOOQ Dependency:
- * - CQRS read side benefits from query-specific optimizations
- * - jOOQ provides compile-time SQL validation
- * - Direct control over SQL for performance tuning
- * - Type safety prevents runtime errors
- */
 @ApplicationScoped
 class JooqArticleQueries : ArticleQueries {
     @Inject
