@@ -17,14 +17,29 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
+/**
+ * jOOQ-based implementation of ArticleQueries interface
+ *
+ * Implementation Details:
+ * - Uses jOOQ DSL for type-safe SQL queries
+ * - Optimized with multiset() to avoid N+1 queries
+ * - Scalar subqueries for counts and existence checks
+ * - Single SQL query per method for performance
+ *
+ * Why jOOQ Dependency:
+ * - CQRS read side benefits from query-specific optimizations
+ * - jOOQ provides compile-time SQL validation
+ * - Direct control over SQL for performance tuning
+ * - Type safety prevents runtime errors
+ */
 @ApplicationScoped
-class ArticleQueryService {
+class JooqArticleQueries : ArticleQueries {
     @Inject
     lateinit var dsl: DSLContext
 
-    fun getArticleBySlug(
+    override fun getArticleBySlug(
         slug: String,
-        viewerId: Long? = null,
+        viewerId: Long?,
     ): ApiArticle {
         val articleRecord =
             dsl
@@ -113,13 +128,13 @@ class ArticleQueryService {
         )
 
     @Suppress("LongMethod")
-    fun getArticles(
-        tag: String? = null,
-        author: String? = null,
-        favorited: String? = null,
-        limit: Int = 20,
-        offset: Int = 0,
-        viewerId: Long? = null,
+    override fun getArticles(
+        tag: String?,
+        author: String?,
+        favorited: String?,
+        limit: Int,
+        offset: Int,
+        viewerId: Long?,
     ): List<ApiArticle> {
         val conditions = buildConditions(tag, author, favorited)
 
@@ -249,9 +264,9 @@ class ArticleQueryService {
     }
 
     @Suppress("LongMethod")
-    fun getArticlesFeed(
-        limit: Int = 20,
-        offset: Int = 0,
+    override fun getArticlesFeed(
+        limit: Int,
+        offset: Int,
         viewerId: Long,
     ): List<ApiArticle> =
         dsl

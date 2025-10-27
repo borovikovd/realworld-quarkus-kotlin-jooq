@@ -11,14 +11,22 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 import com.example.api.model.Comment as ApiComment
 
+/**
+ * jOOQ-based implementation of CommentQueries interface
+ *
+ * Implementation Details:
+ * - Uses jOOQ DSL for type-safe SQL queries
+ * - Scalar subqueries for following status
+ * - Single SQL query per method for performance
+ */
 @ApplicationScoped
-class CommentQueryService {
+class JooqCommentQueries : CommentQueries {
     @Inject
     lateinit var dsl: DSLContext
 
-    fun getCommentsBySlug(
+    override fun getCommentsBySlug(
         slug: String,
-        viewerId: Long? = null,
+        viewerId: Long?,
     ): List<ApiComment> {
         val followingField =
             if (viewerId != null) {
@@ -72,9 +80,9 @@ class CommentQueryService {
             }
     }
 
-    fun getCommentById(
+    override fun getCommentById(
         commentId: Long,
-        viewerId: Long? = null,
+        viewerId: Long?,
     ): ApiComment {
         val followingField =
             if (viewerId != null) {

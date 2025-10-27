@@ -16,7 +16,7 @@ class CommentResource : CommentsApi {
     lateinit var commentService: CommentService
 
     @Inject
-    lateinit var commentQueryService: CommentQueryService
+    lateinit var commentQueries: CommentQueries
 
     @Inject
     lateinit var securityContext: SecurityContext
@@ -30,7 +30,7 @@ class CommentResource : CommentsApi {
         val newComment = comment.comment
         val createdComment = commentService.addComment(userId, slug, newComment.body)
 
-        val commentDto = commentQueryService.getCommentById(createdComment.id!!, userId)
+        val commentDto = commentQueries.getCommentById(createdComment.id!!, userId)
 
         return Response
             .ok(CreateArticleComment200Response().comment(commentDto))
@@ -50,7 +50,7 @@ class CommentResource : CommentsApi {
 
     override fun getArticleComments(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val comments = commentQueryService.getCommentsBySlug(slug, viewerId)
+        val comments = commentQueries.getCommentsBySlug(slug, viewerId)
 
         return Response
             .ok(GetArticleComments200Response().comments(comments))

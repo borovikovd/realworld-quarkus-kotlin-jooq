@@ -2,6 +2,7 @@ package com.example.article
 
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.utils.SlugGenerator
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -11,6 +12,9 @@ class ArticleService {
     @Inject
     lateinit var articleRepository: ArticleRepository
 
+    @Inject
+    lateinit var slugGenerator: SlugGenerator
+
     @Transactional
     fun createArticle(
         userId: Long,
@@ -19,7 +23,13 @@ class ArticleService {
         body: String,
         tags: List<String>,
     ): Article {
-        val slug = generateUniqueSlug(title)
+        val slug =
+            slugGenerator.generateUniqueSlug(
+                title = title,
+                existingSlugChecker = { candidateSlug: String ->
+                    articleRepository.findBySlug(candidateSlug) != null
+                },
+            )
         val article =
             Article(
                 slug = slug,
@@ -55,7 +65,13 @@ class ArticleService {
 
         val updatedSlug =
             if (title != null && title.isNotBlank() && title != article.title) {
-                generateUniqueSlug(title, excludeId = article.id)
+                slugGenerator.generateUniqueSlug(
+                    title = title,
+                    existingSlugChecker = { candidateSlug: String ->
+                        val existing = articleRepository.findBySlug(candidateSlug)
+                        existing != null && existing.id != article.id
+                    },
+                )
             } else {
                 article.slug
             }
@@ -109,33 +125,4 @@ class ArticleService {
             ?: throw NotFoundException("Article not found")
 
     fun getAllTags(): List<String> = articleRepository.getAllTags()
-
-    private fun generateUniqueSlug(
-        title: String,
-        excludeId: Long? = null,
-    ): String {
-        val baseSlug = generateBaseSlug(title)
-        var candidateSlug = baseSlug
-        var counter = 2
-
-        while (true) {
-            val existing = articleRepository.findBySlug(candidateSlug)
-            if (existing == null || existing.id == excludeId) {
-                return candidateSlug
-            }
-            candidateSlug = "$baseSlug-$counter"
-            counter++
-        }
-    }
-
-    private fun generateBaseSlug(title: String): String {
-        val normalized = java.text.Normalizer.normalize(title, java.text.Normalizer.Form.NFD)
-        return normalized
-            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-            .lowercase()
-            .replace("[^a-z0-9\\s-]".toRegex(), "")
-            .trim()
-            .replace("\\s+".toRegex(), "-")
-            .replace("-+".toRegex(), "-")
-    }
 }

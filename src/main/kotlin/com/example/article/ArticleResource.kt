@@ -20,7 +20,7 @@ class ArticleResource :
     lateinit var articleService: ArticleService
 
     @Inject
-    lateinit var articleQueryService: ArticleQueryService
+    lateinit var articleQueries: ArticleQueries
 
     @Inject
     lateinit var securityContext: SecurityContext
@@ -39,7 +39,7 @@ class ArticleResource :
                 tags = newArticle.tagList ?: emptyList(),
             )
 
-        val articleDto = articleQueryService.getArticleBySlug(created.slug, userId)
+        val articleDto = articleQueries.getArticleBySlug(created.slug, userId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -57,7 +57,7 @@ class ArticleResource :
 
     override fun getArticle(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueryService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -73,7 +73,7 @@ class ArticleResource :
     ): Response {
         val viewerId = securityContext.currentUserId
         val articles =
-            articleQueryService.getArticles(
+            articleQueries.getArticles(
                 tag = tag,
                 author = author,
                 favorited = favorited,
@@ -97,7 +97,7 @@ class ArticleResource :
     ): Response {
         val viewerId = securityContext.currentUserId!!
         val articles =
-            articleQueryService.getArticlesFeed(
+            articleQueries.getArticlesFeed(
                 limit = limit ?: 20,
                 offset = offset ?: 0,
                 viewerId = viewerId,
@@ -128,7 +128,7 @@ class ArticleResource :
                 body = updateData.body,
             )
 
-        val articleDto = articleQueryService.getArticleBySlug(updated.slug, userId)
+        val articleDto = articleQueries.getArticleBySlug(updated.slug, userId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -140,7 +140,7 @@ class ArticleResource :
         val userId = securityContext.currentUserId!!
         articleService.favoriteArticle(userId, slug)
 
-        val articleDto = articleQueryService.getArticleBySlug(slug, userId)
+        val articleDto = articleQueries.getArticleBySlug(slug, userId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -152,7 +152,7 @@ class ArticleResource :
         val userId = securityContext.currentUserId!!
         articleService.unfavoriteArticle(userId, slug)
 
-        val articleDto = articleQueryService.getArticleBySlug(slug, userId)
+        val articleDto = articleQueries.getArticleBySlug(slug, userId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
