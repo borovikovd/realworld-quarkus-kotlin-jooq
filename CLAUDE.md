@@ -61,7 +61,7 @@
 
 **Repositories**
 - Interface: `ArticleRepository`, Implementation: `JooqArticleRepository`
-- Methods work with full aggregates (see DESIGN.md for aggregate boundaries)
+- Methods work with full aggregates
 - Example: `save(article: Article): Article`, `findBySlug(slug: String): Article?`
 - Repository handles all child entities within aggregate
 
@@ -79,7 +79,7 @@
 **DTO Usage**
 - Map domain entities to DTOs at Resource (API) layer
 - Never expose domain entities directly via API
-- Keep DTOs in query/ package (see DESIGN.md)
+- Keep DTOs in query/ package
 
 ## Database & jOOQ
 
@@ -277,8 +277,6 @@ gradle build -Dquarkus.package.type=native
 ## Documentation
 
 - Update openapi.yaml first, then generate code
-- README.md - Quick start, tech stack
-- SETUP.md - Step-by-step setup
-- DESIGN.md - Architecture decisions (READ THIS!)
-- db/README.md - Migration guide
+- README.md - Quick start, tech stack, architecture overview
+- CLAUDE.md - Development guidelines (THIS FILE)
 - Swagger UI auto-generated from OpenAPI spec
