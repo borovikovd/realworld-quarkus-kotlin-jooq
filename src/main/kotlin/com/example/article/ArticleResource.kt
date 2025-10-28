@@ -61,6 +61,7 @@ class ArticleResource : ArticlesApi {
             .build()
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun getArticles(
         tag: String?,
         author: String?,
@@ -87,6 +88,7 @@ class ArticleResource : ArticlesApi {
             ).build()
     }
 
+    @Suppress("UNCHECKED_CAST")
     @RolesAllowed("**")
     override fun getArticlesFeed(
         offset: Int?,
