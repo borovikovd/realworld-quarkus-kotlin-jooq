@@ -131,5 +131,4 @@ class ArticleResource : ArticlesApi {
             .ok(CreateArticle201Response().article(articleDto))
             .build()
     }
-
 }

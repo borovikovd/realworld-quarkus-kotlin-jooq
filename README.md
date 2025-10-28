@@ -4,6 +4,12 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
+## Documentation
+
+- [DOCKER.md](DOCKER.md) - Docker deployment guide (building and running as native image)
+- [DESIGN.md](DESIGN.md) - Architecture and design decisions
+- [CLAUDE.md](CLAUDE.md) - Development guidelines for Claude Code assistant
+
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:

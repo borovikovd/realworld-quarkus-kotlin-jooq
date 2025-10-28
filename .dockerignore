@@ -1,0 +1,35 @@
+# Build output
+build/
+.gradle/
+.quarkus/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Database
+*.db
+db/data/
+
+# Docker
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# Test files
+src/test/
+
+# Misc
+.DS_Store
+*.log
