@@ -1,5 +1,6 @@
 package com.example.profile
 
+import com.example.shared.exceptions.BadRequestException
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
@@ -23,7 +24,9 @@ class ProfileService {
             userRepository.findByUsername(username)
                 ?: throw NotFoundException("User not found")
 
-        require(followee.id != followerId) { "Cannot follow yourself" }
+        if (followee.id == followerId) {
+            throw BadRequestException("Cannot follow yourself")
+        }
 
         followRepository.follow(followerId, followee.id!!)
     }

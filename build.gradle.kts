@@ -63,6 +63,8 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.testcontainers:postgresql:1.21.3")
     testImplementation("org.testcontainers:testcontainers:1.21.3")
+    testImplementation("io.mockk:mockk:1.14.6")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
 
 // ============================================

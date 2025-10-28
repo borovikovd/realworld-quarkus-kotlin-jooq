@@ -33,7 +33,8 @@ class CommentResource : CommentsApi {
         val commentDto = commentQueries.getCommentById(createdComment.id!!, userId)
 
         return Response
-            .ok(CreateArticleComment200Response().comment(commentDto))
+            .status(Response.Status.CREATED)
+            .entity(CreateArticleComment200Response().comment(commentDto))
             .build()
     }
 
@@ -45,7 +46,7 @@ class CommentResource : CommentsApi {
         val userId = securityContext.currentUserId!!
         commentService.deleteComment(userId, slug, id.toLong())
 
-        return Response.ok().build()
+        return Response.noContent().build()
     }
 
     override fun getArticleComments(slug: String): Response {

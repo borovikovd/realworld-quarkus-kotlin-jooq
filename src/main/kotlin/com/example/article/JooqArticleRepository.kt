@@ -40,6 +40,7 @@ class JooqArticleRepository : ArticleRepository {
 
         dsl
             .update(ARTICLES)
+            .set(ARTICLES.SLUG, entity.slug)
             .set(ARTICLES.TITLE, entity.title)
             .set(ARTICLES.DESCRIPTION, entity.description)
             .set(ARTICLES.BODY, entity.body)
@@ -66,7 +67,8 @@ class JooqArticleRepository : ArticleRepository {
                 dsl
                     .insertInto(TAGS)
                     .set(TAGS.NAME, tagName)
-                    .onDuplicateKeyUpdate()
+                    .onConflict(TAGS.NAME)
+                    .doUpdate()
                     .set(TAGS.NAME, tagName)
                     .returning(TAGS.ID)
                     .fetchOne()!!
@@ -76,7 +78,8 @@ class JooqArticleRepository : ArticleRepository {
                 .insertInto(ARTICLE_TAGS)
                 .set(ARTICLE_TAGS.ARTICLE_ID, articleId)
                 .set(ARTICLE_TAGS.TAG_ID, tagId)
-                .onDuplicateKeyIgnore()
+                .onConflict(ARTICLE_TAGS.ARTICLE_ID, ARTICLE_TAGS.TAG_ID)
+                .doNothing()
                 .execute()
         }
     }
