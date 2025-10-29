@@ -3,7 +3,7 @@
 // ============================================
 plugins {
     kotlin("jvm") version "2.2.21"
-    kotlin("plugin.allopen") version "2.2.20"
+    kotlin("plugin.allopen") version "2.2.21"
     id("io.quarkus")
     id("org.openapi.generator") version "7.17.0"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
