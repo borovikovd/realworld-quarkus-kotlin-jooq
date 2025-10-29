@@ -4,11 +4,10 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 10
     reviewers:
-      - "denisborovikov"
+      - "borovikovd"
     labels:
       - "dependencies"
       - "gradle"
@@ -20,11 +19,10 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     reviewers:
-      - "denisborovikov"
+      - "borovikovd"
     labels:
       - "dependencies"
       - "github-actions"
@@ -36,11 +34,10 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 5
     reviewers:
-      - "denisborovikov"
+      - "borovikovd"
     labels:
       - "dependencies"
       - "docker"
