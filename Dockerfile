@@ -16,7 +16,7 @@
 ###
 
 # Stage 1: Build native executable
-FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21 AS builder
+FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-25 AS builder
 
 USER root
 WORKDIR /build
