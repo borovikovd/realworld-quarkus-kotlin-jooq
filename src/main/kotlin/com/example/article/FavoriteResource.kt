@@ -6,8 +6,10 @@ import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
+@Path("/api")
 @ApplicationScoped
 class FavoriteResource : FavoritesApi {
     @Inject
