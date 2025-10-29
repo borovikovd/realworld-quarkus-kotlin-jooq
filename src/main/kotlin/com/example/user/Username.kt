@@ -1,4 +1,4 @@
-package com.example.shared.domain
+package com.example.user
 
 @JvmInline
 value class Username(

@@ -21,10 +21,10 @@ class FavoriteResource : FavoritesApi {
 
     @RolesAllowed("**")
     override fun createArticleFavorite(slug: String): Response {
-        val userId = securityContext.currentUserId!!
-        articleService.favoriteArticle(userId, slug)
+        articleService.favoriteArticle(slug)
 
-        val articleDto = articleQueries.getArticleBySlug(slug, userId)
+        val viewerId = securityContext.currentUserId
+        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -33,10 +33,10 @@ class FavoriteResource : FavoritesApi {
 
     @RolesAllowed("**")
     override fun deleteArticleFavorite(slug: String): Response {
-        val userId = securityContext.currentUserId!!
-        articleService.unfavoriteArticle(userId, slug)
+        articleService.unfavoriteArticle(slug)
 
-        val articleDto = articleQueries.getArticleBySlug(slug, userId)
+        val viewerId = securityContext.currentUserId
+        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))

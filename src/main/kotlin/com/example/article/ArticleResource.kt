@@ -24,19 +24,18 @@ class ArticleResource : ArticlesApi {
 
     @RolesAllowed("**")
     override fun createArticle(article: CreateArticleRequest): Response {
-        val userId = securityContext.currentUserId!!
         val newArticle = article.article
 
         val created =
             articleService.createArticle(
-                userId = userId,
                 title = newArticle.title,
                 description = newArticle.description,
                 body = newArticle.body,
                 tags = newArticle.tagList ?: emptyList(),
             )
 
-        val articleDto = articleQueries.getArticleBySlug(created.slug, userId)
+        val viewerId = securityContext.currentUserId
+        val articleDto = articleQueries.getArticleBySlug(created.slug, viewerId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -46,8 +45,7 @@ class ArticleResource : ArticlesApi {
 
     @RolesAllowed("**")
     override fun deleteArticle(slug: String): Response {
-        val userId = securityContext.currentUserId!!
-        articleService.deleteArticle(userId, slug)
+        articleService.deleteArticle(slug)
 
         return Response.noContent().build()
     }
@@ -115,19 +113,18 @@ class ArticleResource : ArticlesApi {
         slug: String,
         article: UpdateArticleRequest,
     ): Response {
-        val userId = securityContext.currentUserId!!
         val updateData = article.article
 
         val updated =
             articleService.updateArticle(
-                userId = userId,
                 slug = slug,
                 title = updateData.title,
                 description = updateData.description,
                 body = updateData.body,
             )
 
-        val articleDto = articleQueries.getArticleBySlug(updated.slug, userId)
+        val viewerId = securityContext.currentUserId
+        val articleDto = articleQueries.getArticleBySlug(updated.slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
