@@ -51,3 +51,9 @@ updates:
       include: "scope"
     pull-request-branch-name:
       separator: "-"
+    ignore:
+      # Stay on JDK 21 - ignore JDK 22+ updates
+      - dependency-name: "quarkus/ubi-quarkus-mandrel-builder-image"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "quarkus/ubi-quarkus-native-image"
+        update-types: ["version-update:semver-major"]
