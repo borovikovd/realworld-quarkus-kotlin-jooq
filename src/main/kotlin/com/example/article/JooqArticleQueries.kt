@@ -189,7 +189,10 @@ class JooqArticleQueries : ArticleQueries {
                     .title(record.get(ARTICLES.TITLE))
                     .description(record.get(ARTICLES.DESCRIPTION))
                     .body(record.get(ARTICLES.BODY))
-                    .tagList(record.get("tags", List::class.java) as? List<String> ?: emptyList())
+                    .tagList(
+                        @Suppress("UNCHECKED_CAST")
+                        (record.get("tags") as? List<String> ?: emptyList())
+                    )
                     .createdAt(record.get(ARTICLES.CREATED_AT))
                     .updatedAt(record.get(ARTICLES.UPDATED_AT))
                     .favorited(record.get("favorited", Int::class.java) > 0)
@@ -305,7 +308,10 @@ class JooqArticleQueries : ArticleQueries {
                     .title(record.get(ARTICLES.TITLE))
                     .description(record.get(ARTICLES.DESCRIPTION))
                     .body(record.get(ARTICLES.BODY))
-                    .tagList(record.get("tags", List::class.java) as? List<String> ?: emptyList())
+                    .tagList(
+                        @Suppress("UNCHECKED_CAST")
+                        (record.get("tags") as? List<String> ?: emptyList())
+                    )
                     .createdAt(record.get(ARTICLES.CREATED_AT))
                     .updatedAt(record.get(ARTICLES.UPDATED_AT))
                     .favorited(record.get("favorited", Int::class.java) > 0)
