@@ -159,6 +159,7 @@ jooq {
                         isRecords = true
                         isImmutablePojos = true
                         isFluentSetters = true
+                        isImplicitJoinPathsToMany = false
                     }
                     target.apply {
                         packageName = "com.example.jooq"
