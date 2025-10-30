@@ -62,8 +62,8 @@ dependencies {
     // Test dependencies (versions managed by BOM)
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
-    testImplementation("org.testcontainers:postgresql:1.21.3")
-    testImplementation("org.testcontainers:testcontainers:1.21.3")
+    testImplementation("org.testcontainers:postgresql:2.0.1")
+    testImplementation("org.testcontainers:testcontainers:2.0.1")
     testImplementation("io.mockk:mockk:1.14.6")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
