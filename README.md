@@ -16,14 +16,14 @@ This application is built with a **DDD-lite** architecture using **CQRS** patter
 
 ## Technology Stack
 
-- **[Quarkus 3.28.x](https://quarkus.io/)** - Supersonic Subatomic Java Framework
+- **[Quarkus](https://quarkus.io/)** - Supersonic Subatomic Java Framework
   - GraalVM native image support for blazing fast startup (<100ms) and low memory usage (<50MB)
   - Built-in dependency injection, REST, and security
-- **[Kotlin 2.2.x](https://kotlinlang.org/)** - Modern, concise, null-safe JVM language
-- **[jOOQ 3.19.x](https://www.jooq.org/)** - Type-safe SQL query builder (not JPA/Hibernate)
+- **[Kotlin](https://kotlinlang.org/)** - Modern, concise, null-safe JVM language
+- **[jOOQ](https://www.jooq.org/)** - Type-safe SQL query builder (not JPA/Hibernate)
   - Compile-time query validation
   - Full SQL feature access with Kotlin code generation
-- **[PostgreSQL 18](https://www.postgresql.org/)** - Production-grade relational database
+- **[PostgreSQL](https://www.postgresql.org/)** - Production-grade relational database
 - **[Atlas](https://atlasgo.io/)** - Modern database schema migration tool
 - **[SmallRye JWT](https://smallrye.io/smallrye-jwt/)** - JWT authentication (RS256)
 - **[Argon2](https://github.com/phc/phc-winner-argon2)** - Secure password hashing
