@@ -51,7 +51,7 @@ dependencies {
 
     // External dependencies
     implementation("de.mkammerer:argon2-jvm:2.12")
-    implementation("io.swagger:swagger-annotations:1.6.15")
+    implementation("io.swagger:swagger-annotations:1.6.16")
 
     // Required for OpenAPI generated code (not provided by Quarkus BOM for standalone generated classes)
     implementation("jakarta.validation:jakarta.validation-api:3.1.0")
