@@ -30,7 +30,7 @@ class CommentResource : CommentsApi {
     ): Response {
         val userId = securityContext.currentUserId!!
         val newComment = comment.comment
-        val createdComment = commentService.addComment(userId, slug, newComment.body)
+        val createdComment = commentService.addComment(slug, newComment.body)
 
         val commentDto = commentQueries.getCommentById(createdComment.id!!, userId)
 
@@ -45,8 +45,7 @@ class CommentResource : CommentsApi {
         slug: String,
         id: Int,
     ): Response {
-        val userId = securityContext.currentUserId!!
-        commentService.deleteComment(userId, slug, id.toLong())
+        commentService.deleteComment(slug, id.toLong())
 
         return Response.noContent().build()
     }

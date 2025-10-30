@@ -2,6 +2,8 @@ package com.example.article
 
 import com.example.article.ArticleRepository
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.UnauthorizedException
+import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -14,12 +16,19 @@ class CommentService {
     @Inject
     lateinit var articleRepository: ArticleRepository
 
+    @Inject
+    lateinit var securityContext: SecurityContext
+
+    private fun getCurrentUserId(): Long =
+        securityContext.currentUserId
+            ?: throw UnauthorizedException("Authentication required")
+
     @Transactional
     fun addComment(
-        userId: Long,
         articleSlug: String,
         body: String,
     ): Comment {
+        val userId = getCurrentUserId()
         val article =
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
@@ -43,10 +52,10 @@ class CommentService {
 
     @Transactional
     fun deleteComment(
-        userId: Long,
         articleSlug: String,
         commentId: Long,
     ) {
+        val userId = getCurrentUserId()
         val article =
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")

@@ -32,9 +32,9 @@ class ProfileResource : ProfileApi {
 
     @RolesAllowed("**")
     override fun followUserByUsername(username: String): Response {
-        val currentUserId = securityContext.currentUserId!!
-        profileService.followUser(currentUserId, username)
+        profileService.followUser(username)
 
+        val currentUserId = securityContext.currentUserId!!
         val profile = profileQueryService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
@@ -43,9 +43,9 @@ class ProfileResource : ProfileApi {
 
     @RolesAllowed("**")
     override fun unfollowUserByUsername(username: String): Response {
-        val currentUserId = securityContext.currentUserId!!
-        profileService.unfollowUser(currentUserId, username)
+        profileService.unfollowUser(username)
 
+        val currentUserId = securityContext.currentUserId!!
         val profile = profileQueryService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))

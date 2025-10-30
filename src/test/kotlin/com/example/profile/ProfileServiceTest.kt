@@ -2,6 +2,8 @@ package com.example.profile
 
 import com.example.shared.exceptions.BadRequestException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.UnauthorizedException
+import com.example.shared.security.SecurityContext
 import com.example.user.User
 import com.example.user.UserRepository
 import io.mockk.every
@@ -16,14 +18,17 @@ class ProfileServiceTest {
     private lateinit var profileService: ProfileService
     private lateinit var userRepository: UserRepository
     private lateinit var followRepository: FollowRepository
+    private lateinit var securityContext: SecurityContext
 
     @BeforeEach
     fun setup() {
         userRepository = mockk()
         followRepository = mockk()
+        securityContext = mockk()
         profileService = ProfileService()
         profileService.userRepository = userRepository
         profileService.followRepository = followRepository
+        profileService.securityContext = securityContext
     }
 
     @Test
@@ -39,11 +44,13 @@ class ProfileServiceTest {
                 passwordHash = "hash",
             )
 
+        every { securityContext.currentUserId } returns followerId
         every { userRepository.findByUsername(username) } returns followee
         every { followRepository.follow(followerId, 2L) } returns Unit
 
-        profileService.followUser(followerId, username)
+        profileService.followUser(username)
 
+        verify { securityContext.currentUserId }
         verify { userRepository.findByUsername(username) }
         verify { followRepository.follow(followerId, 2L) }
     }
@@ -53,14 +60,16 @@ class ProfileServiceTest {
         val followerId = 1L
         val username = "nonexistent"
 
+        every { securityContext.currentUserId } returns followerId
         every { userRepository.findByUsername(username) } returns null
 
         val exception =
             assertThrows<NotFoundException> {
-                profileService.followUser(followerId, username)
+                profileService.followUser(username)
             }
 
         assertEquals("User not found", exception.message)
+        verify { securityContext.currentUserId }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
@@ -78,14 +87,16 @@ class ProfileServiceTest {
                 passwordHash = "hash",
             )
 
+        every { securityContext.currentUserId } returns followerId
         every { userRepository.findByUsername(username) } returns followee
 
         val exception =
             assertThrows<BadRequestException> {
-                profileService.followUser(followerId, username)
+                profileService.followUser(username)
             }
 
         assertEquals("Cannot follow yourself", exception.message)
+        verify { securityContext.currentUserId }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
@@ -103,11 +114,13 @@ class ProfileServiceTest {
                 passwordHash = "hash",
             )
 
+        every { securityContext.currentUserId } returns followerId
         every { userRepository.findByUsername(username) } returns followee
         every { followRepository.unfollow(followerId, 2L) } returns Unit
 
-        profileService.unfollowUser(followerId, username)
+        profileService.unfollowUser(username)
 
+        verify { securityContext.currentUserId }
         verify { userRepository.findByUsername(username) }
         verify { followRepository.unfollow(followerId, 2L) }
     }
@@ -117,14 +130,16 @@ class ProfileServiceTest {
         val followerId = 1L
         val username = "nonexistent"
 
+        every { securityContext.currentUserId } returns followerId
         every { userRepository.findByUsername(username) } returns null
 
         val exception =
             assertThrows<NotFoundException> {
-                profileService.unfollowUser(followerId, username)
+                profileService.unfollowUser(username)
             }
 
         assertEquals("User not found", exception.message)
+        verify { securityContext.currentUserId }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.unfollow(any(), any()) }
     }
