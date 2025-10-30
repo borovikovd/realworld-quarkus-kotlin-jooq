@@ -1,4 +1,4 @@
-package com.example.article
+package com.example.comment
 
 import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.COMMENTS

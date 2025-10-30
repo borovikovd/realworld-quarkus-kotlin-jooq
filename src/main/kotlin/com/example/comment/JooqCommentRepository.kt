@@ -1,4 +1,4 @@
-package com.example.article
+package com.example.comment
 
 import com.example.jooq.public.tables.references.COMMENTS
 import jakarta.enterprise.context.ApplicationScoped

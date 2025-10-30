@@ -1,4 +1,4 @@
-package com.example.article
+package com.example.comment
 
 import com.example.api.CommentsApi
 import com.example.api.model.CreateArticleComment200Response

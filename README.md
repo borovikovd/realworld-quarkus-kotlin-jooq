@@ -39,13 +39,12 @@ com.example/
 ├── profile/        # Follow aggregate (user relationships)
 ├── article/        # Article aggregate (includes tags, favorites)
 ├── comment/        # Comment aggregate
-├── query/          # Read model (optimized queries)
 └── shared/         # Cross-cutting concerns (security, exceptions)
 ```
 
 **CQRS Separation:**
 - **Commands (Write)**: Defined in `*Service.kt`, enforce business rules, transactional
-- **Queries (Read)**: Centralized in `QueryService.kt`, optimized with jOOQ multiset (no N+1 queries)
+- **Queries (Read)**: Defined in `*Queries.kt`, optimized with jOOQ multiset (no N+1 queries)
 
 **Key Patterns:**
 - Rich domain entities with behavior methods

@@ -1,4 +1,4 @@
-package com.example.article
+package com.example.comment
 
 import com.example.shared.exceptions.ForbiddenException
 import org.junit.jupiter.api.Test
