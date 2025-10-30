@@ -16,14 +16,14 @@ class ProfileResource : ProfileApi {
     lateinit var profileService: ProfileService
 
     @Inject
-    lateinit var profileQueryService: ProfileQueryService
+    lateinit var profileQueries: ProfileQueries
 
     @Inject
     lateinit var securityContext: SecurityContext
 
     override fun getProfileByUsername(username: String): Response {
         val viewerId = securityContext.currentUserId
-        val profile = profileQueryService.getProfileByUsername(username, viewerId)
+        val profile = profileQueries.getProfileByUsername(username, viewerId)
 
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
@@ -35,7 +35,7 @@ class ProfileResource : ProfileApi {
         profileService.followUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileQueryService.getProfileByUsername(username, currentUserId)
+        val profile = profileQueries.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
@@ -46,7 +46,7 @@ class ProfileResource : ProfileApi {
         profileService.unfollowUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileQueryService.getProfileByUsername(username, currentUserId)
+        val profile = profileQueries.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
