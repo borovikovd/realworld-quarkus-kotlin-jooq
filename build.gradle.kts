@@ -54,7 +54,7 @@ dependencies {
     implementation("io.swagger:swagger-annotations:1.6.15")
 
     // Required for OpenAPI generated code (not provided by Quarkus BOM for standalone generated classes)
-    implementation("jakarta.validation:jakarta.validation-api:3.1.0")
+    implementation("jakarta.validation:jakarta.validation-api:3.1.1")
 
     // jOOQ code generation
     jooqGenerator("org.jooq:jooq-meta-extensions:3.20.8")
