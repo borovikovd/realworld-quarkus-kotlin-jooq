@@ -1,5 +1,15 @@
 # ![RealWorld Example App](https://raw.githubusercontent.com/gothinkster/realworld/master/media/realworld.png)
 
+[![Build Status](https://github.com/borovikovd/realworld-quarkus-kotlin-jooq/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/borovikovd/realworld-quarkus-kotlin-jooq/actions)
+[![RealWorld](https://img.shields.io/badge/RealWorld-Example%20App-brightgreen)](https://github.com/gothinkster/realworld)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Quarkus](https://img.shields.io/badge/quarkus-4695EB.svg?logo=quarkus&logoColor=white)](https://quarkus.io/)
+[![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![jOOQ](https://img.shields.io/badge/jooq-black.svg?logo=java&logoColor=white)](https://www.jooq.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+
 > ### Quarkus + Kotlin + jOOQ + OpenAPI + Atlas + PostgreSQL codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
 ### [Demo](https://demo.realworld.build/)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
