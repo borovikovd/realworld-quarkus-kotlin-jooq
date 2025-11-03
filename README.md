@@ -1,10 +1,10 @@
 # ![RealWorld Example App](https://raw.githubusercontent.com/gothinkster/realworld/master/media/realworld.png)
 
-> ### Quarkus + Kotlin codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
+> ### Quarkus + Kotlin + jOOQ + OpenAPI + Atlas + PostgreSQL codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
 ### [Demo](https://demo.realworld.build/)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
 
-This codebase was created to demonstrate a fully fledged backend application built with **Quarkus** and **Kotlin** including CRUD operations, authentication, routing, pagination, and more.
+This codebase was created to demonstrate a fully fledged backend application built with **Quarkus + Kotlin + jOOQ + OpenAPI + Atlas + PostgreSQL** including CRUD operations, authentication, routing, pagination, and more.
 
 We've gone to great lengths to adhere to the **Quarkus** and **Kotlin** community styleguides & best practices.
 
