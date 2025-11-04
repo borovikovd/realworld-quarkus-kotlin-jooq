@@ -30,7 +30,7 @@ class ProfileResource : ProfileApi {
             .build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun followUserByUsername(username: String): Response {
         profileService.followUser(username)
 
@@ -41,7 +41,7 @@ class ProfileResource : ProfileApi {
             .build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun unfollowUserByUsername(username: String): Response {
         profileService.unfollowUser(username)
 

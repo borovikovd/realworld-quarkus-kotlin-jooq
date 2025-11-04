@@ -23,7 +23,7 @@ class CommentResource : CommentsApi {
     @Inject
     lateinit var securityContext: SecurityContext
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun createArticleComment(
         slug: String,
         comment: CreateArticleCommentRequest,
@@ -40,7 +40,7 @@ class CommentResource : CommentsApi {
             .build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun deleteArticleComment(
         slug: String,
         id: Int,

@@ -15,5 +15,6 @@ class JwtService {
             .subject(userId.toString())
             .claim("email", email)
             .claim("username", username)
+            .groups(setOf("user"))
             .sign()
 }

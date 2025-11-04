@@ -74,7 +74,7 @@ class UserAndAuthenticationResource : UserAndAuthenticationApi {
             ).build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun getCurrentUser(): Response {
         val userId = securityContext.currentUserId!!
         val user = userService.getCurrentUser(userId)
@@ -93,7 +93,7 @@ class UserAndAuthenticationResource : UserAndAuthenticationApi {
             ).build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Response {
         val userId = securityContext.currentUserId!!
         val updateUser = body.user

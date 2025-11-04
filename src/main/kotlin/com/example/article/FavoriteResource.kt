@@ -21,7 +21,7 @@ class FavoriteResource : FavoritesApi {
     @Inject
     lateinit var securityContext: SecurityContext
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): Response {
         articleService.favoriteArticle(slug)
 
@@ -33,7 +33,7 @@ class FavoriteResource : FavoritesApi {
             .build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): Response {
         articleService.unfavoriteArticle(slug)
 

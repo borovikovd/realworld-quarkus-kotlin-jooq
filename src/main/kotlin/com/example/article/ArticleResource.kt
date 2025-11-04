@@ -24,7 +24,7 @@ class ArticleResource : ArticlesApi {
     @Inject
     lateinit var securityContext: SecurityContext
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun createArticle(article: CreateArticleRequest): Response {
         val newArticle = article.article
 
@@ -45,7 +45,7 @@ class ArticleResource : ArticlesApi {
             .build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun deleteArticle(slug: String): Response {
         articleService.deleteArticle(slug)
 
@@ -89,7 +89,7 @@ class ArticleResource : ArticlesApi {
     }
 
     @Suppress("UNCHECKED_CAST")
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun getArticlesFeed(
         offset: Int?,
         limit: Int?,
@@ -110,7 +110,7 @@ class ArticleResource : ArticlesApi {
             ).build()
     }
 
-    @RolesAllowed("**")
+    @RolesAllowed("user")
     override fun updateArticle(
         slug: String,
         article: UpdateArticleRequest,
