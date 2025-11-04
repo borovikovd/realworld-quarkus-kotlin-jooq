@@ -1,63 +1,31 @@
 package com.example.user
 
-import com.example.shared.PostgresTestResource
-import io.quarkus.test.common.QuarkusTestResource
+import com.example.shared.ApiTestFixtures
+import com.example.shared.BaseApiTest
+import com.example.shared.TestDataBuilder
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import javax.sql.DataSource
-import jakarta.inject.Inject
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
+import org.junit.jupiter.api.Test
 
 @QuarkusTest
-@QuarkusTestResource(PostgresTestResource::class)
-class UserAuthApiTest {
-    @Inject
-    lateinit var dataSource: DataSource
-
-    @BeforeEach
-    fun setup() {
-        cleanDatabase()
-    }
-
-    private fun cleanDatabase() {
-        dataSource.connection.use { conn ->
-            conn.createStatement().use { stmt ->
-                stmt.execute("TRUNCATE TABLE favorites CASCADE")
-                stmt.execute("TRUNCATE TABLE article_tags CASCADE")
-                stmt.execute("TRUNCATE TABLE comments CASCADE")
-                stmt.execute("TRUNCATE TABLE articles CASCADE")
-                stmt.execute("TRUNCATE TABLE tags CASCADE")
-                stmt.execute("TRUNCATE TABLE followers CASCADE")
-                stmt.execute("TRUNCATE TABLE users CASCADE")
-                stmt.execute("ALTER SEQUENCE users_id_seq RESTART WITH 1")
-            }
-        }
-    }
-
+class UserAuthApiTest : BaseApiTest() {
     @Test
     fun `should register new user`() {
+        val email = TestDataBuilder.uniqueEmail()
+        val username = TestDataBuilder.uniqueUsername()
+
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userRegistration(email = email, username = username))
+            .`when`()
             .post("/api/users")
             .then()
             .statusCode(201)
-            .body("user.email", equalTo("test@example.com"))
-            .body("user.username", equalTo("testuser"))
+            .body("user.email", equalTo(email))
+            .body("user.username", equalTo(username))
             .body("user.token", notNullValue())
             .body("user.bio", equalTo(null))
             .body("user.image", equalTo(null))
@@ -65,33 +33,13 @@ class UserAuthApiTest {
 
     @Test
     fun `should not register user with duplicate email`() {
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        val email = TestDataBuilder.uniqueEmail()
+        ApiTestFixtures.registerUser(email = email)
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "differentuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userRegistration(email = email))
+            .`when`()
             .post("/api/users")
             .then()
             .statusCode(422)
@@ -100,33 +48,13 @@ class UserAuthApiTest {
 
     @Test
     fun `should not register user with duplicate username`() {
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        val username = TestDataBuilder.uniqueUsername()
+        ApiTestFixtures.registerUser(username = username)
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "different@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userRegistration(username = username))
+            .`when`()
             .post("/api/users")
             .then()
             .statusCode(422)
@@ -137,17 +65,8 @@ class UserAuthApiTest {
     fun `should not register user with short password`() {
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "short"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userRegistration(password = "short"))
+            .`when`()
             .post("/api/users")
             .then()
             .statusCode(422)
@@ -156,68 +75,28 @@ class UserAuthApiTest {
 
     @Test
     fun `should login with valid credentials`() {
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        val user = ApiTestFixtures.registerUser()
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userLogin(user.email, user.password))
+            .`when`()
             .post("/api/users/login")
             .then()
             .statusCode(200)
-            .body("user.email", equalTo("test@example.com"))
-            .body("user.username", equalTo("testuser"))
+            .body("user.email", equalTo(user.email))
+            .body("user.username", equalTo(user.username))
             .body("user.token", notNullValue())
     }
 
     @Test
     fun `should not login with invalid email`() {
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        ApiTestFixtures.registerUser()
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "wrong@example.com",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userLogin("wrong@example.com", "password123"))
+            .`when`()
             .post("/api/users/login")
             .then()
             .statusCode(401)
@@ -225,32 +104,12 @@ class UserAuthApiTest {
 
     @Test
     fun `should not login with invalid password`() {
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "username": "testuser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        val user = ApiTestFixtures.registerUser()
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "password": "wrongpassword"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userLogin(user.email, "wrongpassword"))
+            .`when`()
             .post("/api/users/login")
             .then()
             .statusCode(401)
@@ -258,16 +117,15 @@ class UserAuthApiTest {
 
     @Test
     fun `should get current user`() {
-        val token = registerUser()
+        val user = ApiTestFixtures.registerUser()
 
-        given()
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(user.token)
             .`when`()
             .get("/api/user")
             .then()
             .statusCode(200)
-            .body("user.email", equalTo("test@example.com"))
-            .body("user.username", equalTo("testuser"))
+            .body("user.email", equalTo(user.email))
+            .body("user.username", equalTo(user.username))
     }
 
     @Test
@@ -281,64 +139,44 @@ class UserAuthApiTest {
 
     @Test
     fun `should update user profile`() {
-        val token = registerUser()
+        val user = ApiTestFixtures.registerUser()
+        val newEmail = TestDataBuilder.uniqueEmail()
+        val newUsername = TestDataBuilder.uniqueUsername()
 
-        given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(user.token)
             .body(
-                """
-                {
-                  "user": {
-                    "email": "updated@example.com",
-                    "username": "updateduser",
-                    "bio": "Updated bio",
-                    "image": "https://example.com/image.jpg"
-                  }
-                }
-                """.trimIndent(),
+                TestDataBuilder.userUpdate(
+                    email = newEmail,
+                    username = newUsername,
+                    bio = "Updated bio",
+                    image = "https://example.com/image.jpg",
+                ),
             ).`when`()
             .put("/api/user")
             .then()
             .statusCode(200)
-            .body("user.email", equalTo("updated@example.com"))
-            .body("user.username", equalTo("updateduser"))
+            .body("user.email", equalTo(newEmail))
+            .body("user.username", equalTo(newUsername))
             .body("user.bio", equalTo("Updated bio"))
             .body("user.image", equalTo("https://example.com/image.jpg"))
     }
 
     @Test
     fun `should update user password`() {
-        val token = registerUser()
+        val user = ApiTestFixtures.registerUser()
+        val newPassword = "newpassword123"
 
-        given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer $token")
-            .body(
-                """
-                {
-                  "user": {
-                    "password": "newpassword123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(password = newPassword))
+            .`when`()
             .put("/api/user")
             .then()
             .statusCode(200)
 
         given()
             .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "test@example.com",
-                    "password": "newpassword123"
-                  }
-                }
-                """.trimIndent(),
-            ).`when`()
+            .body(TestDataBuilder.userLogin(user.email, newPassword))
+            .`when`()
             .post("/api/users/login")
             .then()
             .statusCode(200)
@@ -346,14 +184,14 @@ class UserAuthApiTest {
 
     @Test
     fun `should get profile by username`() {
-        registerUser()
+        val user = ApiTestFixtures.registerUser()
 
         given()
             .`when`()
-            .get("/api/profiles/testuser")
+            .get("/api/profiles/${user.username}")
             .then()
             .statusCode(200)
-            .body("profile.username", equalTo("testuser"))
+            .body("profile.username", equalTo(user.username))
             .body("profile.following", equalTo(false))
     }
 
@@ -368,70 +206,40 @@ class UserAuthApiTest {
 
     @Test
     fun `should follow user`() {
-        val token = registerUser()
+        val follower = ApiTestFixtures.registerUser()
+        val followee = ApiTestFixtures.registerUser()
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "other@example.com",
-                    "username": "otheruser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
-
-        given()
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(follower.token)
             .`when`()
-            .post("/api/profiles/otheruser/follow")
+            .post("/api/profiles/${followee.username}/follow")
             .then()
             .statusCode(200)
-            .body("profile.username", equalTo("otheruser"))
+            .body("profile.username", equalTo(followee.username))
             .body("profile.following", equalTo(true))
     }
 
     @Test
     fun `should unfollow user`() {
-        val token = registerUser()
+        val follower = ApiTestFixtures.registerUser()
+        val followee = ApiTestFixtures.registerUser()
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(
-                """
-                {
-                  "user": {
-                    "email": "other@example.com",
-                    "username": "otheruser",
-                    "password": "password123"
-                  }
-                }
-                """.trimIndent(),
-            ).post("/api/users")
+        ApiTestFixtures.authenticatedRequest(follower.token)
+            .post("/api/profiles/${followee.username}/follow")
 
-        given()
-            .header("Authorization", "Bearer $token")
-            .post("/api/profiles/otheruser/follow")
-
-        given()
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(follower.token)
             .`when`()
-            .delete("/api/profiles/otheruser/follow")
+            .delete("/api/profiles/${followee.username}/follow")
             .then()
             .statusCode(200)
-            .body("profile.username", equalTo("otheruser"))
+            .body("profile.username", equalTo(followee.username))
             .body("profile.following", equalTo(false))
     }
 
     @Test
     fun `should not follow non-existent user`() {
-        val token = registerUser()
+        val user = ApiTestFixtures.registerUser()
 
-        given()
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(user.token)
             .`when`()
             .post("/api/profiles/nonexistent/follow")
             .then()
@@ -440,37 +248,12 @@ class UserAuthApiTest {
 
     @Test
     fun `should not follow yourself`() {
-        val token = registerUser()
+        val user = ApiTestFixtures.registerUser()
 
-        given()
-            .header("Authorization", "Bearer $token")
+        ApiTestFixtures.authenticatedRequest(user.token)
             .`when`()
-            .post("/api/profiles/testuser/follow")
+            .post("/api/profiles/${user.username}/follow")
             .then()
             .statusCode(400)
-    }
-
-    private fun registerUser(): String {
-        val response =
-            given()
-                .contentType(ContentType.JSON)
-                .body(
-                    """
-                    {
-                      "user": {
-                        "email": "test@example.com",
-                        "username": "testuser",
-                        "password": "password123"
-                      }
-                    }
-                    """.trimIndent(),
-                ).`when`()
-                .post("/api/users")
-                .then()
-                .statusCode(201)
-                .extract()
-                .response()
-
-        return response.jsonPath().getString("user.token")
     }
 }

@@ -320,7 +320,7 @@ curl -X POST http://localhost:8080/api/users/login \
 # Create article (with auth token)
 curl -X POST http://localhost:8080/api/articles \
   -H "Content-Type: application/json" \
-  -H "Authorization: Token <your-jwt-token>" \
+  -H "Authorization: Bearer <your-jwt-token>" \
   -d '{
     "article": {
       "title": "How to train your dragon",
