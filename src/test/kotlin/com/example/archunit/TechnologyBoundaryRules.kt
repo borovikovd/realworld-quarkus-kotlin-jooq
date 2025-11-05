@@ -1,5 +1,6 @@
 package com.example.archunit
 
+import com.example.shared.domain.Queries
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -20,11 +21,21 @@ class TechnologyBoundaryRules {
     val `only Resources and Queries can import OpenAPI generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not in api package and not Queries/Resource") {
-                    override fun test(input: JavaClass): Boolean =
-                        !input.packageName.contains(".api") &&
-                            !input.fullName.contains("Queries") &&
-                            !input.fullName.contains("Resource")
+                object : DescribedPredicate<JavaClass>("not in api package, not Resource, and not Queries") {
+                    override fun test(input: JavaClass): Boolean {
+                        // Exclude API package itself
+                        if (input.packageName.contains(".api")) return false
+
+                        // Exclude Resources (annotated with @Path)
+                        if (input.isAnnotatedWith(Path::class.java)) return false
+
+                        // Exclude Queries (implements Queries interface or contains "Queries" in name)
+                        if (input.isAssignableTo(Queries::class.java)) return false
+                        if (input.fullName.contains("Queries")) return false
+
+                        // This class should be checked
+                        return true
+                    }
                 },
             )
             .and().resideOutsideOfPackage("..test..")

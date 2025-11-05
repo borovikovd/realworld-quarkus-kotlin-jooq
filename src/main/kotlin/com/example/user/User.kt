@@ -1,8 +1,10 @@
 package com.example.user
 
+import com.example.shared.architecture.AggregateRoot
 import com.example.shared.domain.Entity
 import java.time.OffsetDateTime
 
+@AggregateRoot
 data class User(
     override val id: Long? = null,
     val email: String,

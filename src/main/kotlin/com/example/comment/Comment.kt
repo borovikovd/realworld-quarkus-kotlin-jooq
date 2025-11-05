@@ -1,9 +1,11 @@
 package com.example.comment
 
+import com.example.shared.architecture.AggregateRoot
 import com.example.shared.domain.Entity
 import com.example.shared.exceptions.ForbiddenException
 import java.time.OffsetDateTime
 
+@AggregateRoot
 data class Comment(
     override val id: Long? = null,
     val articleId: Long,

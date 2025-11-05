@@ -1,5 +1,7 @@
 package com.example.archunit
 
+import com.example.shared.domain.Queries
+import com.example.shared.domain.Repository
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -14,19 +16,19 @@ class NamingConventionRules {
     @ArchTest
     val `repository implementations should be named Jooq-Repository` =
         classes()
-            .that().haveSimpleNameEndingWith("Repository")
+            .that().implement(Repository::class.java)
             .and().areNotInterfaces()
-            .and().resideInAnyPackage("..article", "..user", "..comment", "..profile")
             .should().haveSimpleNameStartingWith("Jooq")
+            .andShould().haveSimpleNameEndingWith("Repository")
             .because("Repository implementations should follow Jooq*Repository naming pattern")
 
     @ArchTest
     val `query implementations should be named Jooq-Queries` =
         classes()
-            .that().haveSimpleNameEndingWith("Queries")
+            .that().implement(Queries::class.java)
             .and().areNotInterfaces()
-            .and().resideInAnyPackage("..article", "..user", "..comment", "..profile")
             .should().haveSimpleNameStartingWith("Jooq")
+            .andShould().haveSimpleNameEndingWith("Queries")
             .because("Query implementations should follow Jooq*Queries naming pattern")
 
     @ArchTest

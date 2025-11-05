@@ -1,8 +1,10 @@
 package com.example.article
 
+import com.example.shared.architecture.AggregateRoot
 import com.example.shared.domain.Entity
 import java.time.OffsetDateTime
 
+@AggregateRoot
 data class Article(
     override val id: Long? = null,
     val slug: String,
