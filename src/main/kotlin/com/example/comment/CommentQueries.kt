@@ -1,7 +1,7 @@
 package com.example.comment
 
-import com.example.api.model.Comment as ApiComment
 import com.example.shared.domain.Queries
+import com.example.api.model.Comment as ApiComment
 
 interface CommentQueries : Queries {
     fun getCommentsBySlug(

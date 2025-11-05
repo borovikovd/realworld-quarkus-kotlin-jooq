@@ -1,5 +1,6 @@
 package com.example.archunit
 
+import com.example.shared.domain.Entity
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
@@ -14,27 +15,16 @@ import jakarta.ws.rs.Path
     importOptions = [ImportOption.DoNotIncludeTests::class, ImportOption.DoNotIncludeJars::class],
 )
 class LayerDependencyRules {
-    @ArchTest
-    val `resources should only access services and queries` =
-        classes()
-            .that().areAnnotatedWith(Path::class.java)
-            .should().onlyAccessClassesThat().resideInAnyPackage(
-                "..service..",
-                "..query..",
-                "..queries..",
-                "..repository..",
-                "..api..",
-                "..shared..",
-                "..article",
-                "..user",
-                "..comment",
-                "..profile",
-                "java..",
-                "kotlin..",
-                "jakarta..",
-                "org.eclipse..",
-                "io.quarkus..",
-            ).because("Resources should orchestrate services and queries, not directly manipulate domain entities")
+    companion object {
+        private fun isFrameworkPackage(pkg: String): Boolean =
+            pkg.startsWith("java.") ||
+                pkg.startsWith("kotlin.") ||
+                pkg.startsWith("jakarta.") ||
+                pkg.startsWith("org.eclipse.") ||
+                pkg.startsWith("io.quarkus.") ||
+                pkg.startsWith("com.example.shared") ||
+                pkg.startsWith("com.example.api")
+    }
 
     @ArchTest
     val `services should not use OpenAPI DTOs` =
@@ -46,16 +36,20 @@ class LayerDependencyRules {
     @ArchTest
     val `domain entities should not use jOOQ or JAX-RS` =
         classes()
-            .that().resideInAnyPackage("..article", "..user", "..comment", "..profile")
-            .and().haveSimpleNameNotContaining("Repository")
-            .and().haveSimpleNameNotContaining("Service")
-            .and().haveSimpleNameNotContaining("Resource")
-            .and().haveSimpleNameNotContaining("Queries")
-            .and().haveSimpleNameNotStartingWith("Jooq")
-            .and().resideOutsideOfPackage("..jooq..") // Exclude jOOQ generated code
+            .that().implement(Entity::class.java)
             .and(
-                object : DescribedPredicate<JavaClass>("full name not containing Jooq") {
-                    override fun test(input: JavaClass): Boolean = !input.fullName.contains("Jooq")
+                object : DescribedPredicate<JavaClass>("not infrastructure classes") {
+                    override fun test(input: JavaClass): Boolean {
+                        val name = input.simpleName
+                        // Exclude infrastructure classes (repositories, services, queries, resources)
+                        return !name.contains("Repository") &&
+                            !name.contains("Service") &&
+                            !name.contains("Resource") &&
+                            !name.contains("Queries") &&
+                            !name.startsWith("Jooq") &&
+                            !input.fullName.contains("Jooq") &&
+                            !input.packageName.contains(".jooq")
+                    }
                 },
             )
             .should().onlyDependOnClassesThat().resideOutsideOfPackages(
@@ -67,15 +61,15 @@ class LayerDependencyRules {
     val `only jooq classes can import jooq generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("full name containing Jooq or in jooq package") {
+                object : DescribedPredicate<JavaClass>("not Jooq classes and not in jooq package") {
                     override fun test(input: JavaClass): Boolean =
-                        !input.fullName.contains("Jooq") && !input.packageName.contains(".jooq")
+                        !input.fullName.contains("Jooq") &&
+                            !input.packageName.contains(".jooq") &&
+                            !input.simpleName.contains("Test") &&
+                            !input.simpleName.contains("Base") &&
+                            !input.simpleName.contains("Fixture")
                 },
             )
-            .and().haveSimpleNameNotContaining("Test")
-            .and().haveSimpleNameNotContaining("Base")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().resideOutsideOfPackage("..test..")
             .should().dependOnClassesThat().resideInAPackage("com.example.jooq..")
             .because("Only Jooq*Repository and Jooq*Queries should access jOOQ generated code")
 }

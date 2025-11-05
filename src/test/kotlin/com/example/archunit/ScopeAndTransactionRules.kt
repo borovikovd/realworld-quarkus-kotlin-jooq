@@ -25,7 +25,10 @@ class ScopeAndTransactionRules {
     val `services should be ApplicationScoped` =
         classes()
             .that().haveSimpleNameEndingWith("Service")
-            .and().resideInAnyPackage("..article", "..user", "..comment", "..profile")
+            .and().resideOutsideOfPackage("..shared..")
+            .and().resideOutsideOfPackage("..api..")
+            .and().resideOutsideOfPackage("..jooq..")
+            .and().resideOutsideOfPackage("..exceptions..")
             .should().beAnnotatedWith(ApplicationScoped::class.java)
             .because("Service classes should be @ApplicationScoped singletons")
 

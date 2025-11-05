@@ -1,7 +1,7 @@
 package com.example.article
 
-import com.example.api.model.Article as ApiArticle
 import com.example.shared.domain.Queries
+import com.example.api.model.Article as ApiArticle
 
 interface ArticleQueries : Queries {
     fun getArticleBySlug(

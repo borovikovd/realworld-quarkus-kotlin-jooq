@@ -41,8 +41,11 @@ class NamingConventionRules {
     @ArchTest
     val `services should end with Service` =
         classes()
-            .that().resideInAnyPackage("..article", "..user", "..comment", "..profile")
-            .and().haveSimpleNameContaining("Service")
+            .that().haveSimpleNameContaining("Service")
+            .and().resideOutsideOfPackage("..shared..")
+            .and().resideOutsideOfPackage("..api..")
+            .and().resideOutsideOfPackage("..jooq..")
+            .and().resideOutsideOfPackage("..exceptions..")
             .should().haveSimpleNameEndingWith("Service")
             .because("Service classes should be named *Service")
 
