@@ -26,6 +26,32 @@ class JooqArticleQueries : ArticleQueries {
         slug: String,
         viewerId: Long?,
     ): ApiArticle {
+        val favoritedField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FAVORITES)
+                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                    .and(FAVORITES.USER_ID.eq(viewerId))
+                    .asField<Int>("favorited")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("favorited")
+            }
+
+        val followingField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FOLLOWERS)
+                    .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .asField<Int>("following")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("following")
+            }
+
         val articleRecord =
             dsl
                 .select(
@@ -40,77 +66,45 @@ class JooqArticleQueries : ArticleQueries {
                     USERS.USERNAME,
                     USERS.BIO,
                     USERS.IMAGE,
+                    multiset(
+                        select(TAGS.NAME)
+                            .from(TAGS)
+                            .join(ARTICLE_TAGS)
+                            .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                            .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                    ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                    select(count())
+                        .from(FAVORITES)
+                        .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                        .asField<Int>("favoritesCount"),
+                    favoritedField,
+                    followingField,
                 ).from(ARTICLES)
                 .join(USERS)
                 .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        val articleId = articleRecord.get(ARTICLES.ID)!!
-        val authorId = articleRecord.get(ARTICLES.AUTHOR_ID)!!
-
-        val tags = loadTags(articleId)
-        val favoritesCount = countFavorites(articleId)
-        val favorited = viewerId?.let { isFavorited(articleId, it) } ?: false
-        val following = viewerId?.let { isFollowing(authorId, it) } ?: false
-
         return ApiArticle()
             .slug(articleRecord.get(ARTICLES.SLUG))
             .title(articleRecord.get(ARTICLES.TITLE))
             .description(articleRecord.get(ARTICLES.DESCRIPTION))
             .body(articleRecord.get(ARTICLES.BODY))
-            .tagList(tags)
-            .createdAt(articleRecord.get(ARTICLES.CREATED_AT))
+            .tagList(
+                @Suppress("UNCHECKED_CAST")
+                (articleRecord.get("tags") as? List<String> ?: emptyList()),
+            ).createdAt(articleRecord.get(ARTICLES.CREATED_AT))
             .updatedAt(articleRecord.get(ARTICLES.UPDATED_AT))
-            .favorited(favorited)
-            .favoritesCount(favoritesCount)
+            .favorited(articleRecord.get("favorited", Int::class.java) > 0)
+            .favoritesCount(articleRecord.get("favoritesCount", Int::class.java))
             .author(
                 Profile()
                     .username(articleRecord.get(USERS.USERNAME))
                     .bio(articleRecord.get(USERS.BIO))
                     .image(articleRecord.get(USERS.IMAGE))
-                    .following(following),
+                    .following(articleRecord.get("following", Int::class.java) > 0),
             )
     }
-
-    private fun loadTags(articleId: Long): List<String> =
-        dsl
-            .select(TAGS.NAME)
-            .from(TAGS)
-            .join(ARTICLE_TAGS)
-            .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-            .where(ARTICLE_TAGS.ARTICLE_ID.eq(articleId))
-            .fetch()
-            .mapNotNull { it.get(TAGS.NAME) }
-
-    private fun countFavorites(articleId: Long): Int =
-        dsl
-            .selectCount()
-            .from(FAVORITES)
-            .where(FAVORITES.ARTICLE_ID.eq(articleId))
-            .fetchOne(0, Int::class.java) ?: 0
-
-    private fun isFavorited(
-        articleId: Long,
-        userId: Long,
-    ): Boolean =
-        dsl.fetchExists(
-            dsl
-                .selectFrom(FAVORITES)
-                .where(FAVORITES.ARTICLE_ID.eq(articleId))
-                .and(FAVORITES.USER_ID.eq(userId)),
-        )
-
-    private fun isFollowing(
-        followeeId: Long,
-        followerId: Long,
-    ): Boolean =
-        dsl.fetchExists(
-            dsl
-                .selectFrom(FOLLOWERS)
-                .where(FOLLOWERS.FOLLOWEE_ID.eq(followeeId))
-                .and(FOLLOWERS.FOLLOWER_ID.eq(followerId)),
-        )
 
     @Suppress("LongMethod")
     override fun getArticles(

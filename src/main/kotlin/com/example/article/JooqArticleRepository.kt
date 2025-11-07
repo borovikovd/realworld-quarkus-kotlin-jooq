@@ -62,36 +62,67 @@ class JooqArticleRepository : ArticleRepository {
         articleId: Long,
         tags: Set<String>,
     ) {
-        for (tagName in tags) {
-            val tagId =
+        if (tags.isEmpty()) return
+
+        // First, ensure all tags exist (batch upsert)
+        val tagInserts =
+            tags.map { tagName ->
                 dsl
                     .insertInto(TAGS)
                     .set(TAGS.NAME, tagName)
                     .onConflict(TAGS.NAME)
                     .doUpdate()
                     .set(TAGS.NAME, tagName)
-                    .returning(TAGS.ID)
-                    .fetchOne()!!
-                    .id!!
+            }
+        dsl.batch(tagInserts).execute()
 
+        // Get all tag IDs in a single query
+        val tagIds =
             dsl
-                .insertInto(ARTICLE_TAGS)
-                .set(ARTICLE_TAGS.ARTICLE_ID, articleId)
-                .set(ARTICLE_TAGS.TAG_ID, tagId)
-                .onConflict(ARTICLE_TAGS.ARTICLE_ID, ARTICLE_TAGS.TAG_ID)
-                .doNothing()
-                .execute()
+                .select(TAGS.ID, TAGS.NAME)
+                .from(TAGS)
+                .where(TAGS.NAME.`in`(tags))
+                .fetch()
+                .associate { it.value2()!! to it.value1()!! }
+
+        // Batch insert article_tags relationships
+        val articleTagInserts =
+            tags.mapNotNull { tagName ->
+                tagIds[tagName]?.let { tagId ->
+                    dsl
+                        .insertInto(ARTICLE_TAGS)
+                        .set(ARTICLE_TAGS.ARTICLE_ID, articleId)
+                        .set(ARTICLE_TAGS.TAG_ID, tagId)
+                        .onConflict(ARTICLE_TAGS.ARTICLE_ID, ARTICLE_TAGS.TAG_ID)
+                        .doNothing()
+                }
+            }
+        if (articleTagInserts.isNotEmpty()) {
+            dsl.batch(articleTagInserts).execute()
         }
     }
 
     override fun findById(id: Long): Article? {
-        val record =
+        val result =
             dsl
-                .selectFrom(ARTICLES)
+                .select(
+                    ARTICLES.asterisk(),
+                    org.jooq.impl.DSL
+                        .multiset(
+                            dsl
+                                .select(TAGS.NAME)
+                                .from(TAGS)
+                                .join(ARTICLE_TAGS)
+                                .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                                .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                        ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                ).from(ARTICLES)
                 .where(ARTICLES.ID.eq(id))
                 .fetchOne() ?: return null
 
-        val tags = loadTags(id)
+        val record = result.into(ARTICLES)
+        @Suppress("UNCHECKED_CAST")
+        val tags = result.get("tags") as? List<String> ?: emptyList()
 
         return Article(
             id = record.id,
@@ -100,20 +131,33 @@ class JooqArticleRepository : ArticleRepository {
             description = record.description!!,
             body = record.body!!,
             authorId = record.authorId!!,
-            tags = tags,
+            tags = tags.toSet(),
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )
     }
 
     override fun findBySlug(slug: String): Article? {
-        val record =
+        val result =
             dsl
-                .selectFrom(ARTICLES)
+                .select(
+                    ARTICLES.asterisk(),
+                    org.jooq.impl.DSL
+                        .multiset(
+                            dsl
+                                .select(TAGS.NAME)
+                                .from(TAGS)
+                                .join(ARTICLE_TAGS)
+                                .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                                .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                        ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                ).from(ARTICLES)
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: return null
 
-        val tags = loadTags(record.id!!)
+        val record = result.into(ARTICLES)
+        @Suppress("UNCHECKED_CAST")
+        val tags = result.get("tags") as? List<String> ?: emptyList()
 
         return Article(
             id = record.id,
@@ -122,22 +166,11 @@ class JooqArticleRepository : ArticleRepository {
             description = record.description!!,
             body = record.body!!,
             authorId = record.authorId!!,
-            tags = tags,
+            tags = tags.toSet(),
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )
     }
-
-    private fun loadTags(articleId: Long): Set<String> =
-        dsl
-            .select(TAGS.NAME)
-            .from(TAGS)
-            .join(ARTICLE_TAGS)
-            .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-            .where(ARTICLE_TAGS.ARTICLE_ID.eq(articleId))
-            .fetch()
-            .mapNotNull { it.value1() }
-            .toSet()
 
     override fun deleteById(id: Long) {
         dsl
