@@ -57,7 +57,7 @@ dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.1.1")
 
     // jOOQ code generation
-    jooqGenerator("org.jooq:jooq-meta-extensions:3.20.8")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.20.10")
 
     // Test dependencies (versions managed by BOM)
     testImplementation("io.quarkus:quarkus-junit5")
