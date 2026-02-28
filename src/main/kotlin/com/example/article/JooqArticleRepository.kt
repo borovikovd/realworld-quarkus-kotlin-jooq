@@ -115,12 +115,14 @@ class JooqArticleRepository : ArticleRepository {
                                 .join(ARTICLE_TAGS)
                                 .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
                                 .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                        ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                        ).`as`("tags")
+                        .convertFrom { it.map { r -> r.value1() } },
                 ).from(ARTICLES)
                 .where(ARTICLES.ID.eq(id))
                 .fetchOne() ?: return null
 
         val record = result.into(ARTICLES)
+
         @Suppress("UNCHECKED_CAST")
         val tags = result.get("tags") as? List<String> ?: emptyList()
 
@@ -150,12 +152,14 @@ class JooqArticleRepository : ArticleRepository {
                                 .join(ARTICLE_TAGS)
                                 .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
                                 .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                        ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                        ).`as`("tags")
+                        .convertFrom { it.map { r -> r.value1() } },
                 ).from(ARTICLES)
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: return null
 
         val record = result.into(ARTICLES)
+
         @Suppress("UNCHECKED_CAST")
         val tags = result.get("tags") as? List<String> ?: emptyList()
 

@@ -12,6 +12,8 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.Record
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
@@ -26,87 +28,18 @@ class JooqArticleQueries : ArticleQueries {
         slug: String,
         viewerId: Long?,
     ): ApiArticle {
-        val favoritedField =
-            if (viewerId != null) {
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .and(FAVORITES.USER_ID.eq(viewerId))
-                    .asField<Int>("favorited")
-            } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("favorited")
-            }
-
-        val followingField =
-            if (viewerId != null) {
-                select(count())
-                    .from(FOLLOWERS)
-                    .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
-                    .asField<Int>("following")
-            } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("following")
-            }
-
-        val articleRecord =
+        val record =
             dsl
-                .select(
-                    ARTICLES.ID,
-                    ARTICLES.SLUG,
-                    ARTICLES.TITLE,
-                    ARTICLES.DESCRIPTION,
-                    ARTICLES.BODY,
-                    ARTICLES.AUTHOR_ID,
-                    ARTICLES.CREATED_AT,
-                    ARTICLES.UPDATED_AT,
-                    USERS.USERNAME,
-                    USERS.BIO,
-                    USERS.IMAGE,
-                    multiset(
-                        select(TAGS.NAME)
-                            .from(TAGS)
-                            .join(ARTICLE_TAGS)
-                            .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                            .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                    ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-                    select(count())
-                        .from(FAVORITES)
-                        .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                        .asField<Int>("favoritesCount"),
-                    favoritedField,
-                    followingField,
-                ).from(ARTICLES)
+                .select(articleFields(viewerId))
+                .from(ARTICLES)
                 .join(USERS)
                 .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        return ApiArticle()
-            .slug(articleRecord.get(ARTICLES.SLUG))
-            .title(articleRecord.get(ARTICLES.TITLE))
-            .description(articleRecord.get(ARTICLES.DESCRIPTION))
-            .body(articleRecord.get(ARTICLES.BODY))
-            .tagList(
-                @Suppress("UNCHECKED_CAST")
-                (articleRecord.get("tags") as? List<String> ?: emptyList()),
-            ).createdAt(articleRecord.get(ARTICLES.CREATED_AT))
-            .updatedAt(articleRecord.get(ARTICLES.UPDATED_AT))
-            .favorited(articleRecord.get("favorited", Int::class.java) > 0)
-            .favoritesCount(articleRecord.get("favoritesCount", Int::class.java))
-            .author(
-                Profile()
-                    .username(articleRecord.get(USERS.USERNAME))
-                    .bio(articleRecord.get(USERS.BIO))
-                    .image(articleRecord.get(USERS.IMAGE))
-                    .following(articleRecord.get("following", Int::class.java) > 0),
-            )
+        return record.toApiArticle()
     }
 
-    @Suppress("LongMethod")
     override fun getArticles(
         tag: String?,
         author: String?,
@@ -114,91 +47,18 @@ class JooqArticleQueries : ArticleQueries {
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ApiArticle> {
-        val conditions = buildConditions(tag, author, favorited)
-
-        val favoritedField =
-            if (viewerId != null) {
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .and(FAVORITES.USER_ID.eq(viewerId))
-                    .asField<Int>("favorited")
-            } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("favorited")
-            }
-
-        val followingField =
-            if (viewerId != null) {
-                select(count())
-                    .from(FOLLOWERS)
-                    .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
-                    .asField<Int>("following")
-            } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("following")
-            }
-
-        return dsl
-            .select(
-                ARTICLES.ID,
-                ARTICLES.SLUG,
-                ARTICLES.TITLE,
-                ARTICLES.DESCRIPTION,
-                ARTICLES.BODY,
-                ARTICLES.AUTHOR_ID,
-                ARTICLES.CREATED_AT,
-                ARTICLES.UPDATED_AT,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                multiset(
-                    select(TAGS.NAME)
-                        .from(TAGS)
-                        .join(ARTICLE_TAGS)
-                        .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                        .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .asField<Int>("favoritesCount"),
-                favoritedField,
-                followingField,
-            ).from(ARTICLES)
+    ): List<ApiArticle> =
+        dsl
+            .select(articleFields(viewerId))
+            .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-            .where(conditions)
+            .where(buildConditions(tag, author, favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { record ->
-                ApiArticle()
-                    .slug(record.get(ARTICLES.SLUG))
-                    .title(record.get(ARTICLES.TITLE))
-                    .description(record.get(ARTICLES.DESCRIPTION))
-                    .body(record.get(ARTICLES.BODY))
-                    .tagList(
-                        @Suppress("UNCHECKED_CAST")
-                        (record.get("tags") as? List<String> ?: emptyList()),
-                    ).createdAt(record.get(ARTICLES.CREATED_AT))
-                    .updatedAt(record.get(ARTICLES.UPDATED_AT))
-                    .favorited(record.get("favorited", Int::class.java) > 0)
-                    .favoritesCount(record.get("favoritesCount", Int::class.java))
-                    .author(
-                        Profile()
-                            .username(record.get(USERS.USERNAME))
-                            .bio(record.get(USERS.BIO))
-                            .image(record.get(USERS.IMAGE))
-                            .following(record.get("following", Int::class.java) > 0),
-                    )
-            }
-    }
+            .map { it.toApiArticle() }
 
     private fun buildConditions(
         tag: String?,
@@ -244,45 +104,14 @@ class JooqArticleQueries : ArticleQueries {
         return conditions
     }
 
-    @Suppress("LongMethod")
     override fun getArticlesFeed(
         limit: Int,
         offset: Int,
         viewerId: Long,
     ): List<ApiArticle> =
         dsl
-            .select(
-                ARTICLES.ID,
-                ARTICLES.SLUG,
-                ARTICLES.TITLE,
-                ARTICLES.DESCRIPTION,
-                ARTICLES.BODY,
-                ARTICLES.AUTHOR_ID,
-                ARTICLES.CREATED_AT,
-                ARTICLES.UPDATED_AT,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                multiset(
-                    select(TAGS.NAME)
-                        .from(TAGS)
-                        .join(ARTICLE_TAGS)
-                        .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                        .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .asField<Int>("favoritesCount"),
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .and(FAVORITES.USER_ID.eq(viewerId))
-                    .asField<Int>("favorited"),
-                org.jooq.impl.DSL
-                    .`val`(1)
-                    .`as`("following"),
-            ).from(ARTICLES)
+            .select(articleFields(viewerId))
+            .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
             .where(
@@ -295,25 +124,81 @@ class JooqArticleQueries : ArticleQueries {
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { record ->
-                ApiArticle()
-                    .slug(record.get(ARTICLES.SLUG))
-                    .title(record.get(ARTICLES.TITLE))
-                    .description(record.get(ARTICLES.DESCRIPTION))
-                    .body(record.get(ARTICLES.BODY))
-                    .tagList(
-                        @Suppress("UNCHECKED_CAST")
-                        (record.get("tags") as? List<String> ?: emptyList()),
-                    ).createdAt(record.get(ARTICLES.CREATED_AT))
-                    .updatedAt(record.get(ARTICLES.UPDATED_AT))
-                    .favorited(record.get("favorited", Int::class.java) > 0)
-                    .favoritesCount(record.get("favoritesCount", Int::class.java))
-                    .author(
-                        Profile()
-                            .username(record.get(USERS.USERNAME))
-                            .bio(record.get(USERS.BIO))
-                            .image(record.get(USERS.IMAGE))
-                            .following(true),
-                    )
+            .map { it.toApiArticle() }
+
+    private fun articleFields(viewerId: Long?): List<Field<*>> {
+        val favoritedField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FAVORITES)
+                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                    .and(FAVORITES.USER_ID.eq(viewerId))
+                    .asField<Int>("favorited")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("favorited")
             }
+
+        val followingField =
+            if (viewerId != null) {
+                select(count())
+                    .from(FOLLOWERS)
+                    .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .asField<Int>("following")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("following")
+            }
+
+        return listOf(
+            ARTICLES.ID,
+            ARTICLES.SLUG,
+            ARTICLES.TITLE,
+            ARTICLES.DESCRIPTION,
+            ARTICLES.BODY,
+            ARTICLES.AUTHOR_ID,
+            ARTICLES.CREATED_AT,
+            ARTICLES.UPDATED_AT,
+            USERS.USERNAME,
+            USERS.BIO,
+            USERS.IMAGE,
+            multiset(
+                select(TAGS.NAME)
+                    .from(TAGS)
+                    .join(ARTICLE_TAGS)
+                    .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                    .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+            ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+            select(count())
+                .from(FAVORITES)
+                .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                .asField<Int>("favoritesCount"),
+            favoritedField,
+            followingField,
+        )
+    }
+
+    private fun Record.toApiArticle(): ApiArticle =
+        ApiArticle()
+            .slug(get(ARTICLES.SLUG))
+            .title(get(ARTICLES.TITLE))
+            .description(get(ARTICLES.DESCRIPTION))
+            .body(get(ARTICLES.BODY))
+            .tagList(
+                @Suppress("UNCHECKED_CAST")
+                (get("tags") as? List<String> ?: emptyList()),
+            ).createdAt(get(ARTICLES.CREATED_AT))
+            .updatedAt(get(ARTICLES.UPDATED_AT))
+            .favorited(get("favorited", Int::class.java) > 0)
+            .favoritesCount(get("favoritesCount", Int::class.java))
+            .author(
+                Profile()
+                    .username(get(USERS.USERNAME))
+                    .bio(get(USERS.BIO))
+                    .image(get(USERS.IMAGE))
+                    .following(get("following", Int::class.java) > 0),
+            )
 }
