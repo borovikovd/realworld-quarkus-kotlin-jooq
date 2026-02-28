@@ -2,13 +2,13 @@
 // Plugins
 // ============================================
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.3.10"
     kotlin("plugin.allopen") version "2.2.21"
     id("io.quarkus")
     id("org.openapi.generator") version "7.20.0"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("nu.studer.jooq") version "10.1.1"
+    id("nu.studer.jooq") version "10.2"
 }
 
 // ============================================
@@ -57,14 +57,14 @@ dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.1.1")
 
     // jOOQ code generation
-    jooqGenerator("org.jooq:jooq-meta-extensions:3.20.8")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.20.11")
 
     // Test dependencies (versions managed by BOM)
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:testcontainers")
-    testImplementation("io.mockk:mockk:1.14.6")
+    testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
 }
