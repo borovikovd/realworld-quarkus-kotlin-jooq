@@ -43,7 +43,7 @@ class CommentServiceTest {
     }
 
     @Test
-    fun `addComment should create comment for existing article`() {
+    fun `addComment should create comment and return CommentId`() {
         val body = "Great article!"
         val createdComment = Comment(id = 1L, articleId = articleId, authorId = userId, body = body)
 
@@ -53,7 +53,7 @@ class CommentServiceTest {
 
         val result = commentService.addComment(slug, body)
 
-        assertEquals(createdComment, result)
+        assertEquals(CommentId(1L), result)
         verify { commentRepository.create(match { it.articleId == articleId && it.authorId == userId && it.body == body }) }
     }
 
@@ -64,30 +64,6 @@ class CommentServiceTest {
 
         assertThrows<NotFoundException> {
             commentService.addComment(slug, "comment body")
-        }
-    }
-
-    @Test
-    fun `getComments should return comments for existing article`() {
-        val comments = listOf(
-            Comment(id = 1L, articleId = articleId, authorId = userId, body = "Comment 1"),
-            Comment(id = 2L, articleId = articleId, authorId = 3L, body = "Comment 2"),
-        )
-
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.findByArticleId(articleId) } returns comments
-
-        val result = commentService.getComments(slug)
-
-        assertEquals(comments, result)
-    }
-
-    @Test
-    fun `getComments should throw NotFoundException when article not found`() {
-        every { articleRepository.findBySlug(slug) } returns null
-
-        assertThrows<NotFoundException> {
-            commentService.getComments(slug)
         }
     }
 

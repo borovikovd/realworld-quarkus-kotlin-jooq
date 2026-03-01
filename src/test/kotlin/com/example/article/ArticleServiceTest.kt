@@ -30,7 +30,7 @@ class ArticleServiceTest {
     }
 
     @Test
-    fun `createArticle should generate slug and save article`() {
+    fun `createArticle should generate slug and return ArticleId`() {
         val userId = 1L
         val title = "Test Article"
         val description = "Test description"
@@ -47,7 +47,7 @@ class ArticleServiceTest {
             )
         } returns generatedSlug
 
-        val expectedArticle =
+        val savedArticle =
             Article(
                 id = 1L,
                 slug = generatedSlug,
@@ -58,17 +58,17 @@ class ArticleServiceTest {
                 tags = tags.toSet(),
             )
 
-        every { articleRepository.create(any()) } returns expectedArticle
+        every { articleRepository.create(any()) } returns savedArticle
 
         val result = articleService.createArticle(title, description, body, tags)
 
-        assertEquals(expectedArticle, result)
+        assertEquals(ArticleId(1L), result)
         verify { slugGenerator.generateUniqueSlug(title = title, existingSlugChecker = any()) }
         verify { articleRepository.create(any()) }
     }
 
     @Test
-    fun `updateArticle should update all fields when provided`() {
+    fun `updateArticle should update all fields and return ArticleId`() {
         val userId = 1L
         val originalSlug = "original-slug"
         val newTitle = "New Title"
@@ -108,7 +108,7 @@ class ArticleServiceTest {
 
         val result = articleService.updateArticle(originalSlug, newTitle, newDescription, newBody)
 
-        assertEquals(updatedArticle, result)
+        assertEquals(ArticleId(1L), result)
         verify { articleRepository.findBySlug(originalSlug) }
         verify { slugGenerator.generateUniqueSlug(title = newTitle, existingSlugChecker = any()) }
         verify { articleRepository.update(any()) }
@@ -145,7 +145,7 @@ class ArticleServiceTest {
 
         val result = articleService.updateArticle(slug, null, null, null)
 
-        assertEquals(updatedArticle, result)
+        assertEquals(ArticleId(1L), result)
         verify { articleRepository.findBySlug(slug) }
         verify(exactly = 0) { slugGenerator.generateUniqueSlug(any(), any()) }
         verify { articleRepository.update(any()) }
@@ -316,39 +316,6 @@ class ArticleServiceTest {
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.unfavorite(1L, userId) }
-    }
-
-    @Test
-    fun `getArticle should return article when found`() {
-        val slug = "test-slug"
-
-        val article =
-            Article(
-                id = 1L,
-                slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
-                authorId = 1L,
-            )
-
-        every { articleRepository.findBySlug(slug) } returns article
-
-        val result = articleService.getArticle(slug)
-
-        assertEquals(article, result)
-        verify { articleRepository.findBySlug(slug) }
-    }
-
-    @Test
-    fun `getArticle should throw NotFoundException when article not found`() {
-        val slug = "non-existent"
-
-        every { articleRepository.findBySlug(slug) } returns null
-
-        assertThrows<NotFoundException> {
-            articleService.getArticle(slug)
-        }
     }
 
     @Test

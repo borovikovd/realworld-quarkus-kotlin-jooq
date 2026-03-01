@@ -25,7 +25,7 @@ class ArticleService {
         description: String,
         body: String,
         tags: List<String>,
-    ): Article {
+    ): ArticleId {
         val userId = securityContext.requireCurrentUserId()
         val slug =
             slugGenerator.generateUniqueSlug(
@@ -43,7 +43,8 @@ class ArticleService {
                 authorId = userId,
                 tags = tags.toSet(),
             )
-        return articleRepository.create(article)
+        val saved = articleRepository.create(article)
+        return ArticleId(saved.id!!)
     }
 
     @Transactional
@@ -52,7 +53,7 @@ class ArticleService {
         title: String?,
         description: String?,
         body: String?,
-    ): Article {
+    ): ArticleId {
         val userId = securityContext.requireCurrentUserId()
         val article =
             articleRepository.findBySlug(slug)
@@ -81,7 +82,8 @@ class ArticleService {
             }
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody)
-        return articleRepository.update(updatedArticle)
+        val saved = articleRepository.update(updatedArticle)
+        return ArticleId(saved.id!!)
     }
 
     @Transactional
@@ -117,10 +119,6 @@ class ArticleService {
 
         articleRepository.unfavorite(article.id!!, userId)
     }
-
-    fun getArticle(slug: String): Article =
-        articleRepository.findBySlug(slug)
-            ?: throw NotFoundException("Article not found")
 
     fun getAllTags(): List<String> = articleRepository.getAllTags()
 }

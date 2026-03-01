@@ -24,7 +24,7 @@ class UserService {
         email: String,
         username: String,
         password: String,
-    ): User {
+    ): UserId {
         val errors = mutableMapOf<String, List<String>>()
 
         if (userRepository.existsByEmail(email)) {
@@ -45,13 +45,14 @@ class UserService {
 
         val passwordHash = passwordHasher.hash(password)
         val user = User(email = email, username = username, passwordHash = passwordHash)
-        return userRepository.create(user)
+        val saved = userRepository.create(user)
+        return UserId(saved.id!!)
     }
 
     fun login(
         email: String,
         password: String,
-    ): User {
+    ): UserId {
         val user =
             userRepository.findByEmail(email)
                 ?: throw UnauthorizedException("Invalid email or password")
@@ -60,7 +61,7 @@ class UserService {
             throw UnauthorizedException("Invalid email or password")
         }
 
-        return user
+        return UserId(user.id!!)
     }
 
     @Transactional
@@ -71,7 +72,7 @@ class UserService {
         password: String?,
         bio: String?,
         image: String?,
-    ): User {
+    ): UserId {
         val user =
             userRepository.findById(userId)
                 ?: throw UnauthorizedException("User not found")
@@ -107,10 +108,7 @@ class UserService {
             updatedUser = updatedUser.updatePassword(newPasswordHash)
         }
 
-        return userRepository.update(updatedUser)
+        val saved = userRepository.update(updatedUser)
+        return UserId(saved.id!!)
     }
-
-    fun getCurrentUser(userId: Long): User =
-        userRepository.findById(userId)
-            ?: throw UnauthorizedException("User not found")
 }

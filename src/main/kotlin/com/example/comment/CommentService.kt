@@ -22,7 +22,7 @@ class CommentService {
     fun addComment(
         articleSlug: String,
         body: String,
-    ): Comment {
+    ): CommentId {
         val userId = securityContext.requireCurrentUserId()
         val article =
             articleRepository.findBySlug(articleSlug)
@@ -34,15 +34,8 @@ class CommentService {
                 authorId = userId,
                 body = body,
             )
-        return commentRepository.create(comment)
-    }
-
-    fun getComments(articleSlug: String): List<Comment> {
-        val article =
-            articleRepository.findBySlug(articleSlug)
-                ?: throw NotFoundException("Article not found")
-
-        return commentRepository.findByArticleId(article.id!!)
+        val saved = commentRepository.create(comment)
+        return CommentId(saved.id!!)
     }
 
     @Transactional

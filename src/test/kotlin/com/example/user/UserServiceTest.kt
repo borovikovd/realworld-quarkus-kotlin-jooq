@@ -27,7 +27,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `register should create user when valid`() {
+    fun `register should create user and return UserId`() {
         val email = "test@example.com"
         val username = "testuser"
         val password = "password123"
@@ -37,7 +37,7 @@ class UserServiceTest {
         every { userRepository.existsByUsername(username) } returns false
         every { passwordHasher.hash(password) } returns passwordHash
 
-        val expectedUser =
+        val savedUser =
             User(
                 id = 1L,
                 email = email,
@@ -45,11 +45,11 @@ class UserServiceTest {
                 passwordHash = passwordHash,
             )
 
-        every { userRepository.create(any()) } returns expectedUser
+        every { userRepository.create(any()) } returns savedUser
 
         val result = userService.register(email, username, password)
 
-        assertEquals(expectedUser, result)
+        assertEquals(UserId(1L), result)
         verify { userRepository.existsByEmail(email) }
         verify { userRepository.existsByUsername(username) }
         verify { passwordHasher.hash(password) }
@@ -131,7 +131,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `login should return user when credentials valid`() {
+    fun `login should return UserId when credentials valid`() {
         val email = "test@example.com"
         val password = "password123"
 
@@ -148,7 +148,7 @@ class UserServiceTest {
 
         val result = userService.login(email, password)
 
-        assertEquals(user, result)
+        assertEquals(UserId(1L), result)
         verify { userRepository.findByEmail(email) }
         verify { passwordHasher.verify(user.passwordHash, password) }
     }
@@ -193,7 +193,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `updateUser should update all fields when valid`() {
+    fun `updateUser should update all fields and return UserId`() {
         val userId = 1L
         val newEmail = "new@example.com"
         val newUsername = "newuser"
@@ -224,7 +224,7 @@ class UserServiceTest {
 
         val result = userService.updateUser(userId, newEmail, newUsername, newPassword, newBio, newImage)
 
-        assertEquals(updatedUser, result)
+        assertEquals(UserId(1L), result)
         verify { userRepository.findById(userId) }
         verify { userRepository.existsByEmail(newEmail) }
         verify { userRepository.existsByUsername(newUsername) }
@@ -252,7 +252,7 @@ class UserServiceTest {
 
         val result = userService.updateUser(userId, null, null, null, null, null)
 
-        assertEquals(updatedUser, result)
+        assertEquals(UserId(1L), result)
         verify { userRepository.findById(userId) }
         verify(exactly = 0) { userRepository.existsByEmail(any()) }
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
@@ -353,42 +353,9 @@ class UserServiceTest {
 
         val result = userService.updateUser(userId, email, username, null, null, null)
 
-        assertEquals(updatedUser, result)
+        assertEquals(UserId(1L), result)
         verify(exactly = 0) { userRepository.existsByEmail(any()) }
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
 
-    @Test
-    fun `getCurrentUser should return user when found`() {
-        val userId = 1L
-
-        val user =
-            User(
-                id = userId,
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hash",
-            )
-
-        every { userRepository.findById(userId) } returns user
-
-        val result = userService.getCurrentUser(userId)
-
-        assertEquals(user, result)
-        verify { userRepository.findById(userId) }
-    }
-
-    @Test
-    fun `getCurrentUser should throw UnauthorizedException when user not found`() {
-        val userId = 1L
-
-        every { userRepository.findById(userId) } returns null
-
-        val exception =
-            assertThrows<UnauthorizedException> {
-                userService.getCurrentUser(userId)
-            }
-
-        assertEquals("User not found", exception.message)
-    }
 }
