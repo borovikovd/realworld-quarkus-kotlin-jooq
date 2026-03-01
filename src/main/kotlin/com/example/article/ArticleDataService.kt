@@ -20,9 +20,25 @@ import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
-class ArticleQueries {
+class ArticleDataService {
     @Inject
     lateinit var dsl: DSLContext
+
+    fun hydrate(
+        id: ArticleId,
+        viewerId: Long?,
+    ): ApiArticle {
+        val record =
+            dsl
+                .select(articleFields(viewerId))
+                .from(ARTICLES)
+                .join(USERS)
+                .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+                .where(ARTICLES.ID.eq(id.value))
+                .fetchOne() ?: throw NotFoundException("Article not found")
+
+        return record.toApiArticle()
+    }
 
     fun getArticleBySlug(
         slug: String,

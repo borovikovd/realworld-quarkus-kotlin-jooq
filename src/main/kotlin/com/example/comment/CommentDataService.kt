@@ -4,6 +4,7 @@ import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
+import com.example.shared.exceptions.NotFoundException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.jooq.DSLContext
@@ -12,9 +13,14 @@ import org.jooq.impl.DSL.select
 import com.example.api.model.Comment as ApiComment
 
 @ApplicationScoped
-class CommentQueries {
+class CommentDataService {
     @Inject
     lateinit var dsl: DSLContext
+
+    fun hydrate(
+        id: CommentId,
+        viewerId: Long?,
+    ): ApiComment = getCommentById(id.value, viewerId)
 
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
@@ -71,7 +77,7 @@ class CommentQueries {
                     )
             }
 
-    fun getCommentById(
+    private fun getCommentById(
         commentId: Long,
         viewerId: Long?,
     ): ApiComment {
@@ -91,8 +97,7 @@ class CommentQueries {
                 .join(USERS)
                 .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
                 .where(COMMENTS.ID.eq(commentId))
-                .fetchOne() ?: throw com.example.shared.exceptions
-                .NotFoundException("Comment not found")
+                .fetchOne() ?: throw NotFoundException("Comment not found")
 
         return ApiComment()
             .id(record.get(COMMENTS.ID)?.toInt())

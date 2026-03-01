@@ -11,7 +11,7 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class ProfileQueries {
+class ProfileDataService {
     @Inject
     lateinit var dsl: DSLContext
 
