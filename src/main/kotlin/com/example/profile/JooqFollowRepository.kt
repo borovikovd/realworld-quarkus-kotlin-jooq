@@ -2,13 +2,12 @@ package com.example.profile
 
 import com.example.jooq.public.tables.references.FOLLOWERS
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqFollowRepository : FollowRepository {
-    @Inject
-    lateinit var dsl: DSLContext
+class JooqFollowRepository(
+    private val dsl: DSLContext,
+) : FollowRepository {
 
     override fun follow(
         followerId: Long,

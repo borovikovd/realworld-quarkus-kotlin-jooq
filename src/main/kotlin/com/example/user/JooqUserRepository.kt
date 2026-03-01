@@ -2,13 +2,12 @@ package com.example.user
 
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqUserRepository : UserRepository {
-    @Inject
-    lateinit var dsl: DSLContext
+class JooqUserRepository(
+    private val dsl: DSLContext,
+) : UserRepository {
 
     override fun create(entity: User): User {
         require(entity.id == null) { "Cannot create entity with existing ID" }

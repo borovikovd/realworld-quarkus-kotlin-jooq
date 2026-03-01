@@ -2,13 +2,12 @@ package com.example.comment
 
 import com.example.jooq.public.tables.references.COMMENTS
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqCommentRepository : CommentRepository {
-    @Inject
-    lateinit var dsl: DSLContext
+class JooqCommentRepository(
+    private val dsl: DSLContext,
+) : CommentRepository {
 
     override fun create(entity: Comment): Comment {
         require(entity.id == null) { "Cannot create entity with existing ID" }

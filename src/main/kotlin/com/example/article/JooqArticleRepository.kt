@@ -5,13 +5,12 @@ import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.TAGS
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqArticleRepository : ArticleRepository {
-    @Inject
-    lateinit var dsl: DSLContext
+class JooqArticleRepository(
+    private val dsl: DSLContext,
+) : ArticleRepository {
 
     override fun create(entity: Article): Article {
         require(entity.id == null) { "Cannot create entity with existing ID" }
