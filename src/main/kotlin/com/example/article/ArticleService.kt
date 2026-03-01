@@ -59,13 +59,12 @@ class ArticleService(
             throw ForbiddenException("You can only update your own articles")
         }
 
-        val updatedTitle = if (title != null && title.isNotBlank()) title else article.title
-        val updatedDescription =
-            if (description != null && description.isNotBlank()) description else article.description
-        val updatedBody = if (body != null && body.isNotBlank()) body else article.body
+        val updatedTitle = title ?: article.title
+        val updatedDescription = description ?: article.description
+        val updatedBody = body ?: article.body
 
         val updatedSlug =
-            if (title != null && title.isNotBlank() && title != article.title) {
+            if (title != null && title != article.title) {
                 slugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidateSlug: String ->

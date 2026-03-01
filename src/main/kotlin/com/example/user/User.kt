@@ -35,21 +35,17 @@ class User(
         username: String? = null,
         bio: String? = null,
         image: String? = null,
-    ): User {
-        val updatedEmail = if (email != null && email.isNotBlank()) email else this.email
-        val updatedUsername = if (username != null && username.isNotBlank()) username else this.username
-
-        return User(
+    ): User =
+        User(
             id = id,
-            email = updatedEmail,
-            username = updatedUsername,
+            email = email ?: this.email,
+            username = username ?: this.username,
             passwordHash = passwordHash,
             bio = bio ?: this.bio,
             image = image ?: this.image,
             createdAt = createdAt,
             updatedAt = OffsetDateTime.now(),
         )
-    }
 
     fun updatePassword(newPasswordHash: String): User =
         User(
