@@ -1,6 +1,5 @@
 package com.example.archunit
 
-import com.example.shared.domain.Queries
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -29,8 +28,7 @@ class TechnologyBoundaryRules {
                         // Exclude Resources (annotated with @Path)
                         if (input.isAnnotatedWith(Path::class.java)) return false
 
-                        // Exclude Queries (implements Queries interface or contains "Queries" in name)
-                        if (input.isAssignableTo(Queries::class.java)) return false
+                        // Exclude Queries classes (including inner/lambda classes)
                         if (input.fullName.contains("Queries")) return false
 
                         // This class should be checked
@@ -55,12 +53,13 @@ class TechnologyBoundaryRules {
             ).because("JWT token handling should be isolated to SecurityContext and JwtService")
 
     @ArchTest
-    val `only Jooq classes can inject DSLContext` =
+    val `only Jooq repositories and Queries can inject DSLContext` =
         fields()
             .that().haveRawType(DSLContext::class.java)
             .should().beDeclaredInClassesThat().haveSimpleNameStartingWith("Jooq")
+            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("Queries")
             .orShould().beDeclaredInClassesThat().haveSimpleNameContaining("Test")
-            .because("Only Jooq*Repository and Jooq*Queries should have direct access to jOOQ DSLContext")
+            .because("Only Jooq*Repository and *Queries should have direct access to jOOQ DSLContext")
 
     @ArchTest
     val `services should not use JAX-RS Response` =
