@@ -7,21 +7,16 @@ import com.example.api.model.GetArticleComments200Response
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class CommentResource : CommentsApi {
-    @Inject
-    lateinit var commentService: CommentService
-
-    @Inject
-    lateinit var commentDataService: CommentDataService
-
-    @Inject
-    lateinit var securityContext: SecurityContext
+class CommentResource(
+    private val commentService: CommentService,
+    private val commentDataService: CommentDataService,
+    private val securityContext: SecurityContext,
+) : CommentsApi {
 
     @RolesAllowed("user")
     override fun createArticleComment(

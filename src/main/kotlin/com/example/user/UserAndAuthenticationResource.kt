@@ -8,21 +8,16 @@ import com.example.api.model.UpdateCurrentUserRequest
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class UserAndAuthenticationResource : UserAndAuthenticationApi {
-    @Inject
-    lateinit var userService: UserService
-
-    @Inject
-    lateinit var userDataService: UserDataService
-
-    @Inject
-    lateinit var securityContext: SecurityContext
+class UserAndAuthenticationResource(
+    private val userService: UserService,
+    private val userDataService: UserDataService,
+    private val securityContext: SecurityContext,
+) : UserAndAuthenticationApi {
 
     override fun createUser(body: CreateUserRequest): Response {
         val newUser = body.user
