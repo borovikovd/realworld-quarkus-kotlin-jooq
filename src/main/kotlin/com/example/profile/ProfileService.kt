@@ -5,19 +5,14 @@ import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.user.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class ProfileService {
-    @Inject
-    lateinit var userRepository: UserRepository
-
-    @Inject
-    lateinit var followRepository: FollowRepository
-
-    @Inject
-    lateinit var securityContext: SecurityContext
+class ProfileService(
+    private val userRepository: UserRepository,
+    private val followRepository: FollowRepository,
+    private val securityContext: SecurityContext,
+) {
 
     @Transactional
     fun followUser(username: String) {

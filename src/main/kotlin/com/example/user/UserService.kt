@@ -4,16 +4,13 @@ import com.example.shared.exceptions.UnauthorizedException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.PasswordHasher
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class UserService {
-    @Inject
-    lateinit var userRepository: UserRepository
-
-    @Inject
-    lateinit var passwordHasher: PasswordHasher
+class UserService(
+    private val userRepository: UserRepository,
+    private val passwordHasher: PasswordHasher,
+) {
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8

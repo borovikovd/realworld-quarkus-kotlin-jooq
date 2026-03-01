@@ -23,10 +23,11 @@ class ArticleServiceTest {
         articleRepository = mockk()
         slugGenerator = mockk()
         securityContext = mockk()
-        articleService = ArticleService()
-        articleService.articleRepository = articleRepository
-        articleService.slugGenerator = slugGenerator
-        articleService.securityContext = securityContext
+        articleService = ArticleService(
+            articleRepository = articleRepository,
+            slugGenerator = slugGenerator,
+            securityContext = securityContext,
+        )
     }
 
     @Test

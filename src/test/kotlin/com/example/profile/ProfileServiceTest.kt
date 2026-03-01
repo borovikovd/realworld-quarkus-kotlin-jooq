@@ -24,10 +24,11 @@ class ProfileServiceTest {
         userRepository = mockk()
         followRepository = mockk()
         securityContext = mockk()
-        profileService = ProfileService()
-        profileService.userRepository = userRepository
-        profileService.followRepository = followRepository
-        profileService.securityContext = securityContext
+        profileService = ProfileService(
+            userRepository = userRepository,
+            followRepository = followRepository,
+            securityContext = securityContext,
+        )
     }
 
     @Test

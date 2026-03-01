@@ -5,19 +5,14 @@ import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class ArticleService {
-    @Inject
-    lateinit var articleRepository: ArticleRepository
-
-    @Inject
-    lateinit var slugGenerator: SlugGenerator
-
-    @Inject
-    lateinit var securityContext: SecurityContext
+class ArticleService(
+    private val articleRepository: ArticleRepository,
+    private val slugGenerator: SlugGenerator,
+    private val securityContext: SecurityContext,
+) {
 
     @Transactional
     fun createArticle(

@@ -21,9 +21,10 @@ class UserServiceTest {
     fun setup() {
         userRepository = mockk()
         passwordHasher = mockk()
-        userService = UserService()
-        userService.userRepository = userRepository
-        userService.passwordHasher = passwordHasher
+        userService = UserService(
+            userRepository = userRepository,
+            passwordHasher = passwordHasher,
+        )
     }
 
     @Test

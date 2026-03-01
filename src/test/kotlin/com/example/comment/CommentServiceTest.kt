@@ -36,10 +36,11 @@ class CommentServiceTest {
         commentRepository = mockk()
         articleRepository = mockk()
         securityContext = mockk()
-        commentService = CommentService()
-        commentService.commentRepository = commentRepository
-        commentService.articleRepository = articleRepository
-        commentService.securityContext = securityContext
+        commentService = CommentService(
+            commentRepository = commentRepository,
+            articleRepository = articleRepository,
+            securityContext = securityContext,
+        )
     }
 
     @Test

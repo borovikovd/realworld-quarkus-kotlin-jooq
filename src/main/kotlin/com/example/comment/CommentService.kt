@@ -4,19 +4,14 @@ import com.example.article.ArticleRepository
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class CommentService {
-    @Inject
-    lateinit var commentRepository: CommentRepository
-
-    @Inject
-    lateinit var articleRepository: ArticleRepository
-
-    @Inject
-    lateinit var securityContext: SecurityContext
+class CommentService(
+    private val commentRepository: CommentRepository,
+    private val articleRepository: ArticleRepository,
+    private val securityContext: SecurityContext,
+) {
 
     @Transactional
     fun addComment(
