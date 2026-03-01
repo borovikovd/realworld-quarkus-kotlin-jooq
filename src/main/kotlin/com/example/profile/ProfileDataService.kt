@@ -5,15 +5,14 @@ import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.exceptions.NotFoundException
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class ProfileDataService {
-    @Inject
-    lateinit var dsl: DSLContext
+class ProfileDataService(
+    private val dsl: DSLContext,
+) {
 
     fun getProfileByUsername(
         username: String,

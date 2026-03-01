@@ -4,17 +4,14 @@ import com.example.jooq.public.tables.references.USERS
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.JwtService
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 import com.example.api.model.User as ApiUser
 
 @ApplicationScoped
-class UserDataService {
-    @Inject
-    lateinit var dsl: DSLContext
-
-    @Inject
-    lateinit var jwtService: JwtService
+class UserDataService(
+    private val dsl: DSLContext,
+    private val jwtService: JwtService,
+) {
 
     fun hydrate(id: UserId): ApiUser {
         val record =
