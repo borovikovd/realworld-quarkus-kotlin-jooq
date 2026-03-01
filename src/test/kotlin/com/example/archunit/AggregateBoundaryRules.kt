@@ -97,6 +97,9 @@ class AggregateBoundaryRules {
                             // Allow accessing other aggregate roots (for ID references)
                             if (target.isAnnotatedWith(AggregateRoot::class.java)) return@forEach
 
+                            // Allow accessing typed ID value classes from other aggregates
+                            if (target.simpleName.endsWith("Id") && target.isAnnotatedWith(JvmInline::class.java)) return@forEach
+
                             // Allow accessing classes in the same aggregate
                             if (inSameAggregate(item, target)) return@forEach
 
@@ -131,6 +134,9 @@ class AggregateBoundaryRules {
                     ) {
                         item.directDependenciesFromSelf.forEach { dependency ->
                             val target = dependency.targetClass
+
+                            if (target.simpleName.endsWith("Id") && target.isAnnotatedWith(JvmInline::class.java)) return@forEach
+
                             if (isInAggregate(target)) {
                                 val message =
                                     "Shared class ${item.simpleName} depends on " +

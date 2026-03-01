@@ -5,8 +5,8 @@ import com.example.shared.domain.Entity
 import java.time.OffsetDateTime
 
 @AggregateRoot
-data class User(
-    override val id: Long? = null,
+class User(
+    override val id: UserId,
     val email: String,
     val username: String,
     val passwordHash: String,
@@ -14,7 +14,7 @@ data class User(
     val image: String? = null,
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
-) : Entity<Long> {
+) : Entity<UserId> {
     init {
         require(email.isNotBlank()) { "Email must not be blank" }
         require(EMAIL_REGEX.matches(email)) { "Email must be a valid email address" }
@@ -30,8 +30,6 @@ data class User(
         private const val MAX_USERNAME_LENGTH = 50
     }
 
-    override fun withId(newId: Long): User = copy(id = newId)
-
     fun updateProfile(
         email: String? = null,
         username: String? = null,
@@ -41,18 +39,37 @@ data class User(
         val updatedEmail = if (email != null && email.isNotBlank()) email else this.email
         val updatedUsername = if (username != null && username.isNotBlank()) username else this.username
 
-        return copy(
+        return User(
+            id = id,
             email = updatedEmail,
             username = updatedUsername,
+            passwordHash = passwordHash,
             bio = bio ?: this.bio,
             image = image ?: this.image,
+            createdAt = createdAt,
             updatedAt = OffsetDateTime.now(),
         )
     }
 
     fun updatePassword(newPasswordHash: String): User =
-        copy(
+        User(
+            id = id,
+            email = email,
+            username = username,
             passwordHash = newPasswordHash,
+            bio = bio,
+            image = image,
+            createdAt = createdAt,
             updatedAt = OffsetDateTime.now(),
         )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return id == other.id
+    }
+
+    override fun hashCode(): Int = id.hashCode()
+
+    override fun toString(): String = "User(id=$id, email=$email, username=$username)"
 }

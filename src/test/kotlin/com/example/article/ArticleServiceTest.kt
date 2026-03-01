@@ -4,6 +4,7 @@ import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
+import com.example.user.UserId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,7 +33,8 @@ class ArticleServiceTest {
 
     @Test
     fun `createArticle should generate slug and return ArticleId`() {
-        val userId = 1L
+        val userId = UserId(1L)
+        val articleId = ArticleId(10L)
         val title = "Test Article"
         val description = "Test description"
         val body = "Test body"
@@ -40,6 +42,7 @@ class ArticleServiceTest {
         val generatedSlug = "test-article"
 
         every { securityContext.requireCurrentUserId() } returns userId
+        every { articleRepository.nextId() } returns articleId
 
         every {
             slugGenerator.generateUniqueSlug(
@@ -48,29 +51,19 @@ class ArticleServiceTest {
             )
         } returns generatedSlug
 
-        val savedArticle =
-            Article(
-                id = 1L,
-                slug = generatedSlug,
-                title = title,
-                description = description,
-                body = body,
-                authorId = userId,
-                tags = tags.toSet(),
-            )
-
-        every { articleRepository.create(any()) } returns savedArticle
+        every { articleRepository.create(any()) } answers { firstArg() }
 
         val result = articleService.createArticle(title, description, body, tags)
 
-        assertEquals(ArticleId(1L), result)
+        assertEquals(articleId, result)
+        verify { articleRepository.nextId() }
         verify { slugGenerator.generateUniqueSlug(title = title, existingSlugChecker = any()) }
         verify { articleRepository.create(any()) }
     }
 
     @Test
     fun `updateArticle should update all fields and return ArticleId`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val originalSlug = "original-slug"
         val newTitle = "New Title"
         val newDescription = "New description"
@@ -81,7 +74,7 @@ class ArticleServiceTest {
 
         val existingArticle =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = originalSlug,
                 title = "Original Title",
                 description = "Original description",
@@ -97,15 +90,7 @@ class ArticleServiceTest {
             )
         } returns newSlug
 
-        val updatedArticle =
-            existingArticle.update(
-                slug = newSlug,
-                title = newTitle,
-                description = newDescription,
-                body = newBody,
-            )
-
-        every { articleRepository.update(any()) } returns updatedArticle
+        every { articleRepository.update(any()) } answers { firstArg() }
 
         val result = articleService.updateArticle(originalSlug, newTitle, newDescription, newBody)
 
@@ -117,14 +102,14 @@ class ArticleServiceTest {
 
     @Test
     fun `updateArticle should keep existing values when null provided`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val existingArticle =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Original Title",
                 description = "Original description",
@@ -133,16 +118,7 @@ class ArticleServiceTest {
             )
 
         every { articleRepository.findBySlug(slug) } returns existingArticle
-
-        val updatedArticle =
-            existingArticle.update(
-                slug = slug,
-                title = existingArticle.title,
-                description = existingArticle.description,
-                body = existingArticle.body,
-            )
-
-        every { articleRepository.update(any()) } returns updatedArticle
+        every { articleRepository.update(any()) } answers { firstArg() }
 
         val result = articleService.updateArticle(slug, null, null, null)
 
@@ -154,7 +130,7 @@ class ArticleServiceTest {
 
     @Test
     fun `updateArticle should throw NotFoundException when article not found`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "non-existent"
 
         every { securityContext.requireCurrentUserId() } returns userId
@@ -167,15 +143,15 @@ class ArticleServiceTest {
 
     @Test
     fun `updateArticle should throw ForbiddenException when user is not author`() {
-        val userId = 1L
-        val differentUserId = 2L
+        val userId = UserId(1L)
+        val differentUserId = UserId(2L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val existingArticle =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Test Article",
                 description = "Test description",
@@ -192,14 +168,14 @@ class ArticleServiceTest {
 
     @Test
     fun `deleteArticle should delete when user is author`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val article =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Test Article",
                 description = "Test description",
@@ -208,17 +184,17 @@ class ArticleServiceTest {
             )
 
         every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.deleteById(1L) } returns Unit
+        every { articleRepository.deleteById(ArticleId(1L)) } returns Unit
 
         articleService.deleteArticle(slug)
 
         verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.deleteById(1L) }
+        verify { articleRepository.deleteById(ArticleId(1L)) }
     }
 
     @Test
     fun `deleteArticle should throw NotFoundException when article not found`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "non-existent"
 
         every { securityContext.requireCurrentUserId() } returns userId
@@ -231,15 +207,15 @@ class ArticleServiceTest {
 
     @Test
     fun `deleteArticle should throw ForbiddenException when user is not author`() {
-        val userId = 1L
-        val differentUserId = 2L
+        val userId = UserId(1L)
+        val differentUserId = UserId(2L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val article =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Test Article",
                 description = "Test description",
@@ -256,33 +232,33 @@ class ArticleServiceTest {
 
     @Test
     fun `favoriteArticle should call repository favorite`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val article =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
-                authorId = 2L,
+                authorId = UserId(2L),
             )
 
         every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.favorite(1L, userId) } returns Unit
+        every { articleRepository.favorite(ArticleId(1L), userId) } returns Unit
 
         articleService.favoriteArticle(slug)
 
         verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.favorite(1L, userId) }
+        verify { articleRepository.favorite(ArticleId(1L), userId) }
     }
 
     @Test
     fun `favoriteArticle should throw NotFoundException when article not found`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "non-existent"
 
         every { securityContext.requireCurrentUserId() } returns userId
@@ -295,28 +271,28 @@ class ArticleServiceTest {
 
     @Test
     fun `unfavoriteArticle should call repository unfavorite`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val slug = "test-slug"
 
         every { securityContext.requireCurrentUserId() } returns userId
 
         val article =
             Article(
-                id = 1L,
+                id = ArticleId(1L),
                 slug = slug,
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
-                authorId = 2L,
+                authorId = UserId(2L),
             )
 
         every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.unfavorite(1L, userId) } returns Unit
+        every { articleRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
         articleService.unfavoriteArticle(slug)
 
         verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.unfavorite(1L, userId) }
+        verify { articleRepository.unfavorite(ArticleId(1L), userId) }
     }
 
     @Test

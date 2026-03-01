@@ -22,14 +22,16 @@ class CommentService(
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
 
+        val commentId = commentRepository.nextId()
         val comment =
             Comment(
-                articleId = article.id!!,
+                id = commentId,
+                articleId = article.id,
                 authorId = userId,
                 body = body,
             )
-        val saved = commentRepository.create(comment)
-        return CommentId(saved.id!!)
+        commentRepository.create(comment)
+        return commentId
     }
 
     @Transactional
@@ -42,8 +44,9 @@ class CommentService(
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
 
+        val typedCommentId = CommentId(commentId)
         val comment =
-            commentRepository.findById(commentId)
+            commentRepository.findById(typedCommentId)
                 ?: throw NotFoundException("Comment not found")
 
         if (comment.articleId != article.id) {
@@ -51,6 +54,6 @@ class CommentService(
         }
 
         comment.ensureCanBeDeletedBy(userId)
-        commentRepository.deleteById(commentId)
+        commentRepository.deleteById(typedCommentId)
     }
 }

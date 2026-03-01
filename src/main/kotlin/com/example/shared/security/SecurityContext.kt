@@ -1,6 +1,7 @@
 package com.example.shared.security
 
 import com.example.shared.exceptions.UnauthorizedException
+import com.example.user.UserId
 import jakarta.enterprise.context.RequestScoped
 import org.eclipse.microprofile.jwt.JsonWebToken
 
@@ -8,11 +9,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken
 class SecurityContext(
     private val jwt: JsonWebToken,
 ) {
-    val currentUserId: Long?
-        get() = if (jwt.subject != null) jwt.subject.toLongOrNull() else null
+    val currentUserId: UserId?
+        get() = jwt.subject?.toLongOrNull()?.let { UserId(it) }
 
     val isAuthenticated: Boolean
         get() = currentUserId != null
 
-    fun requireCurrentUserId(): Long = currentUserId ?: throw UnauthorizedException("Authentication required")
+    fun requireCurrentUserId(): UserId = currentUserId ?: throw UnauthorizedException("Authentication required")
 }

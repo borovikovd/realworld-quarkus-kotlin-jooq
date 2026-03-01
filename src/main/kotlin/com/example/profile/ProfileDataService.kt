@@ -4,6 +4,7 @@ import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.exceptions.NotFoundException
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
@@ -15,15 +16,16 @@ class ProfileDataService(
 ) {
     fun getProfileByUsername(
         username: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): Profile {
+        val viewerIdValue = viewerId?.value
         val record =
             dsl
                 .select(
                     USERS.USERNAME,
                     USERS.BIO,
                     USERS.IMAGE,
-                    viewerId?.let {
+                    viewerIdValue?.let {
                         select(count())
                             .from(FOLLOWERS)
                             .where(FOLLOWERS.FOLLOWEE_ID.eq(USERS.ID))

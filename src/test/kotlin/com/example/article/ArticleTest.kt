@@ -1,5 +1,6 @@
 package com.example.article
 
+import com.example.user.UserId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.OffsetDateTime
@@ -12,11 +13,12 @@ class ArticleTest {
     fun `should create valid article`() {
         val article =
             Article(
+                id = ArticleId(1L),
                 slug = "test-article",
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
-                authorId = 1L,
+                authorId = UserId(1L),
                 tags = setOf("tag1", "tag2"),
             )
 
@@ -24,7 +26,7 @@ class ArticleTest {
         assertEquals("Test Article", article.title)
         assertEquals("Test description", article.description)
         assertEquals("Test body", article.body)
-        assertEquals(1L, article.authorId)
+        assertEquals(UserId(1L), article.authorId)
         assertEquals(setOf("tag1", "tag2"), article.tags)
     }
 
@@ -33,11 +35,12 @@ class ArticleTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 Article(
+                    id = ArticleId(1L),
                     slug = "test-article",
                     title = "",
                     description = "Test description",
                     body = "Test body",
-                    authorId = 1L,
+                    authorId = UserId(1L),
                 )
             }
 
@@ -49,11 +52,12 @@ class ArticleTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 Article(
+                    id = ArticleId(1L),
                     slug = "test-article",
                     title = "Test Article",
                     description = "",
                     body = "Test body",
-                    authorId = 1L,
+                    authorId = UserId(1L),
                 )
             }
 
@@ -65,11 +69,12 @@ class ArticleTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 Article(
+                    id = ArticleId(1L),
                     slug = "test-article",
                     title = "Test Article",
                     description = "Test description",
                     body = "",
-                    authorId = 1L,
+                    authorId = UserId(1L),
                 )
             }
 
@@ -80,11 +85,12 @@ class ArticleTest {
     fun `should update article fields and timestamp`() {
         val originalArticle =
             Article(
+                id = ArticleId(1L),
                 slug = "original-slug",
                 title = "Original Title",
                 description = "Original description",
                 body = "Original body",
-                authorId = 1L,
+                authorId = UserId(1L),
                 createdAt = OffsetDateTime.now().minusDays(1),
                 updatedAt = OffsetDateTime.now().minusDays(1),
             )
@@ -108,45 +114,55 @@ class ArticleTest {
     fun `should allow author to delete article`() {
         val article =
             Article(
+                id = ArticleId(1L),
                 slug = "test-article",
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
-                authorId = 1L,
+                authorId = UserId(1L),
             )
 
-        assertTrue(article.canBeDeletedBy(1L))
+        assertTrue(article.canBeDeletedBy(UserId(1L)))
     }
 
     @Test
     fun `should not allow non-author to delete article`() {
         val article =
             Article(
+                id = ArticleId(1L),
                 slug = "test-article",
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
-                authorId = 1L,
+                authorId = UserId(1L),
             )
 
-        assertFalse(article.canBeDeletedBy(2L))
+        assertFalse(article.canBeDeletedBy(UserId(2L)))
     }
 
     @Test
-    fun `should assign new id with withId`() {
-        val article =
+    fun `should have identity-based equality`() {
+        val article1 =
             Article(
-                id = 1L,
-                slug = "test-article",
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
-                authorId = 1L,
+                id = ArticleId(1L),
+                slug = "slug-1",
+                title = "Title 1",
+                description = "Desc 1",
+                body = "Body 1",
+                authorId = UserId(1L),
             )
 
-        val articleWithNewId = article.withId(2L)
+        val article2 =
+            Article(
+                id = ArticleId(1L),
+                slug = "slug-2",
+                title = "Title 2",
+                description = "Desc 2",
+                body = "Body 2",
+                authorId = UserId(2L),
+            )
 
-        assertEquals(2L, articleWithNewId.id)
-        assertEquals("test-article", articleWithNewId.slug)
+        assertEquals(article1, article2)
+        assertEquals(article1.hashCode(), article2.hashCode())
     }
 }

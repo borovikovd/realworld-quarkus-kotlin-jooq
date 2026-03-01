@@ -39,10 +39,11 @@ class UserService(
             throw ValidationException(errors)
         }
 
+        val userId = userRepository.nextId()
         val passwordHash = passwordHasher.hash(password)
-        val user = User(email = email, username = username, passwordHash = passwordHash)
-        val saved = userRepository.create(user)
-        return UserId(saved.id!!)
+        val user = User(id = userId, email = email, username = username, passwordHash = passwordHash)
+        userRepository.create(user)
+        return userId
     }
 
     fun login(
@@ -57,12 +58,12 @@ class UserService(
             throw UnauthorizedException("Invalid email or password")
         }
 
-        return UserId(user.id!!)
+        return user.id
     }
 
     @Transactional
     fun updateUser(
-        userId: Long,
+        userId: UserId,
         email: String?,
         username: String?,
         password: String?,
@@ -105,6 +106,6 @@ class UserService(
         }
 
         val saved = userRepository.update(updatedUser)
-        return UserId(saved.id!!)
+        return saved.id
     }
 }

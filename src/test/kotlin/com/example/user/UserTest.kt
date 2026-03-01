@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class UserTest {
@@ -12,6 +11,7 @@ class UserTest {
     fun `should create valid user`() {
         val user =
             User(
+                id = UserId(1L),
                 email = "test@example.com",
                 username = "testuser",
                 passwordHash = "hashed-password",
@@ -31,6 +31,7 @@ class UserTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 User(
+                    id = UserId(1L),
                     email = "",
                     username = "testuser",
                     passwordHash = "hashed-password",
@@ -45,6 +46,7 @@ class UserTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 User(
+                    id = UserId(1L),
                     email = "invalid-email",
                     username = "testuser",
                     passwordHash = "hashed-password",
@@ -59,6 +61,7 @@ class UserTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 User(
+                    id = UserId(1L),
                     email = "test@example.com",
                     username = "",
                     passwordHash = "hashed-password",
@@ -73,6 +76,7 @@ class UserTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 User(
+                    id = UserId(1L),
                     email = "test@example.com",
                     username = "ab",
                     passwordHash = "hashed-password",
@@ -87,6 +91,7 @@ class UserTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 User(
+                    id = UserId(1L),
                     email = "test@example.com",
                     username = "a".repeat(51),
                     passwordHash = "hashed-password",
@@ -100,6 +105,7 @@ class UserTest {
     fun `should update profile with all fields`() {
         val originalUser =
             User(
+                id = UserId(1L),
                 email = "original@example.com",
                 username = "original",
                 passwordHash = "hashed-password",
@@ -127,6 +133,7 @@ class UserTest {
     fun `should keep existing email and username when not provided`() {
         val originalUser =
             User(
+                id = UserId(1L),
                 email = "original@example.com",
                 username = "original",
                 passwordHash = "hashed-password",
@@ -148,6 +155,7 @@ class UserTest {
     fun `should keep existing bio and image when null provided`() {
         val originalUser =
             User(
+                id = UserId(1L),
                 email = "test@example.com",
                 username = "testuser",
                 passwordHash = "hashed-password",
@@ -169,6 +177,7 @@ class UserTest {
     fun `should update password and timestamp`() {
         val originalUser =
             User(
+                id = UserId(1L),
                 email = "test@example.com",
                 username = "testuser",
                 passwordHash = "old-hash",
@@ -182,18 +191,24 @@ class UserTest {
     }
 
     @Test
-    fun `should assign new id with withId`() {
-        val user =
+    fun `should have identity-based equality`() {
+        val user1 =
             User(
-                id = 1L,
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hashed-password",
+                id = UserId(1L),
+                email = "user1@example.com",
+                username = "user1",
+                passwordHash = "hash1",
             )
 
-        val userWithNewId = user.withId(2L)
+        val user2 =
+            User(
+                id = UserId(1L),
+                email = "user2@example.com",
+                username = "user2",
+                passwordHash = "hash2",
+            )
 
-        assertEquals(2L, userWithNewId.id)
-        assertEquals("test@example.com", userWithNewId.email)
+        assertEquals(user1, user2)
+        assertEquals(user1.hashCode(), user2.hashCode())
     }
 }

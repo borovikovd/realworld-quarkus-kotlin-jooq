@@ -24,7 +24,7 @@ class ProfileService(
             throw BadRequestException("Cannot follow yourself")
         }
 
-        followRepository.follow(followerId, followee.id!!)
+        followRepository.follow(followerId.value, followee.id.value)
     }
 
     @Transactional
@@ -34,6 +34,6 @@ class ProfileService(
             userRepository.findByUsername(username)
                 ?: throw NotFoundException("User not found")
 
-        followRepository.unfollow(followerId, followee.id!!)
+        followRepository.unfollow(followerId.value, followee.id.value)
     }
 }

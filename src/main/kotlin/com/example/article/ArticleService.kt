@@ -21,6 +21,7 @@ class ArticleService(
         tags: List<String>,
     ): ArticleId {
         val userId = securityContext.requireCurrentUserId()
+        val articleId = articleRepository.nextId()
         val slug =
             slugGenerator.generateUniqueSlug(
                 title = title,
@@ -30,6 +31,7 @@ class ArticleService(
             )
         val article =
             Article(
+                id = articleId,
                 slug = slug,
                 title = title,
                 description = description,
@@ -37,8 +39,8 @@ class ArticleService(
                 authorId = userId,
                 tags = tags.toSet(),
             )
-        val saved = articleRepository.create(article)
-        return ArticleId(saved.id!!)
+        articleRepository.create(article)
+        return articleId
     }
 
     @Transactional
@@ -76,8 +78,8 @@ class ArticleService(
             }
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody)
-        val saved = articleRepository.update(updatedArticle)
-        return ArticleId(saved.id!!)
+        articleRepository.update(updatedArticle)
+        return article.id
     }
 
     @Transactional
@@ -91,7 +93,7 @@ class ArticleService(
             throw ForbiddenException("You can only delete your own articles")
         }
 
-        articleRepository.deleteById(article.id!!)
+        articleRepository.deleteById(article.id)
     }
 
     @Transactional
@@ -101,7 +103,7 @@ class ArticleService(
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.favorite(article.id!!, userId)
+        articleRepository.favorite(article.id, userId)
     }
 
     @Transactional
@@ -111,7 +113,7 @@ class ArticleService(
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.unfavorite(article.id!!, userId)
+        articleRepository.unfavorite(article.id, userId)
     }
 
     fun getAllTags(): List<String> = articleRepository.getAllTags()

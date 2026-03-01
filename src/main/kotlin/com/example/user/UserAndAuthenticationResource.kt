@@ -52,7 +52,7 @@ class UserAndAuthenticationResource(
 
     @RolesAllowed("user")
     override fun getCurrentUser(): Response {
-        val userId = UserId(securityContext.currentUserId!!)
+        val userId = securityContext.requireCurrentUserId()
         val userDto = userDataService.hydrate(userId)
 
         return Response
@@ -62,7 +62,7 @@ class UserAndAuthenticationResource(
 
     @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Response {
-        val currentUserId = securityContext.currentUserId!!
+        val currentUserId = securityContext.requireCurrentUserId()
         val updateUser = body.user
 
         val userId =

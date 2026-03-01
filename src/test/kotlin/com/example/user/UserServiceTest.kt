@@ -33,27 +33,21 @@ class UserServiceTest {
         val username = "testuser"
         val password = "password123"
         val passwordHash = "hashed-password"
+        val userId = UserId(1L)
 
         every { userRepository.existsByEmail(email) } returns false
         every { userRepository.existsByUsername(username) } returns false
         every { passwordHasher.hash(password) } returns passwordHash
-
-        val savedUser =
-            User(
-                id = 1L,
-                email = email,
-                username = username,
-                passwordHash = passwordHash,
-            )
-
-        every { userRepository.create(any()) } returns savedUser
+        every { userRepository.nextId() } returns userId
+        every { userRepository.create(any()) } answers { firstArg() }
 
         val result = userService.register(email, username, password)
 
-        assertEquals(UserId(1L), result)
+        assertEquals(userId, result)
         verify { userRepository.existsByEmail(email) }
         verify { userRepository.existsByUsername(username) }
         verify { passwordHasher.hash(password) }
+        verify { userRepository.nextId() }
         verify { userRepository.create(any()) }
     }
 
@@ -138,7 +132,7 @@ class UserServiceTest {
 
         val user =
             User(
-                id = 1L,
+                id = UserId(1L),
                 email = email,
                 username = "testuser",
                 passwordHash = "hashed-password",
@@ -176,7 +170,7 @@ class UserServiceTest {
 
         val user =
             User(
-                id = 1L,
+                id = UserId(1L),
                 email = email,
                 username = "testuser",
                 passwordHash = "hashed-password",
@@ -195,7 +189,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should update all fields and return UserId`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val newEmail = "new@example.com"
         val newUsername = "newuser"
         val newPassword = "newpassword123"
@@ -215,17 +209,11 @@ class UserServiceTest {
         every { userRepository.existsByEmail(newEmail) } returns false
         every { userRepository.existsByUsername(newUsername) } returns false
         every { passwordHasher.hash(newPassword) } returns newPasswordHash
-
-        val updatedUser =
-            existingUser
-                .updateProfile(newEmail, newUsername, newBio, newImage)
-                .updatePassword(newPasswordHash)
-
-        every { userRepository.update(any()) } returns updatedUser
+        every { userRepository.update(any()) } answers { firstArg() }
 
         val result = userService.updateUser(userId, newEmail, newUsername, newPassword, newBio, newImage)
 
-        assertEquals(UserId(1L), result)
+        assertEquals(userId, result)
         verify { userRepository.findById(userId) }
         verify { userRepository.existsByEmail(newEmail) }
         verify { userRepository.existsByUsername(newUsername) }
@@ -235,7 +223,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should keep existing values when nulls provided`() {
-        val userId = 1L
+        val userId = UserId(1L)
 
         val existingUser =
             User(
@@ -246,14 +234,11 @@ class UserServiceTest {
             )
 
         every { userRepository.findById(userId) } returns existingUser
-
-        val updatedUser = existingUser.updateProfile(null, null, null, null)
-
-        every { userRepository.update(any()) } returns updatedUser
+        every { userRepository.update(any()) } answers { firstArg() }
 
         val result = userService.updateUser(userId, null, null, null, null, null)
 
-        assertEquals(UserId(1L), result)
+        assertEquals(userId, result)
         verify { userRepository.findById(userId) }
         verify(exactly = 0) { userRepository.existsByEmail(any()) }
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
@@ -263,7 +248,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should throw ValidationException when email already taken`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val newEmail = "taken@example.com"
 
         val existingUser =
@@ -287,7 +272,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should throw ValidationException when username already taken`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val newUsername = "takenuser"
 
         val existingUser =
@@ -311,7 +296,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should throw ValidationException when password too short`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val newPassword = "short"
 
         val existingUser =
@@ -334,7 +319,7 @@ class UserServiceTest {
 
     @Test
     fun `updateUser should allow same email and username`() {
-        val userId = 1L
+        val userId = UserId(1L)
         val email = "test@example.com"
         val username = "testuser"
 
@@ -347,16 +332,12 @@ class UserServiceTest {
             )
 
         every { userRepository.findById(userId) } returns existingUser
-
-        val updatedUser = existingUser.updateProfile(email, username, null, null)
-
-        every { userRepository.update(any()) } returns updatedUser
+        every { userRepository.update(any()) } answers { firstArg() }
 
         val result = userService.updateUser(userId, email, username, null, null, null)
 
-        assertEquals(UserId(1L), result)
+        assertEquals(userId, result)
         verify(exactly = 0) { userRepository.existsByEmail(any()) }
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
-
 }

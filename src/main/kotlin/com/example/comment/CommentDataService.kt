@@ -5,6 +5,7 @@ import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.exceptions.NotFoundException
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
@@ -17,25 +18,27 @@ class CommentDataService(
 ) {
     fun hydrate(
         id: CommentId,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ApiComment = getCommentById(id.value, viewerId)
 
-    private fun followingField(viewerId: Long?): org.jooq.Field<*> =
-        if (viewerId != null) {
+    private fun followingField(viewerId: UserId?): org.jooq.Field<*> {
+        val viewerIdValue = viewerId?.value
+        return if (viewerIdValue != null) {
             select(count())
                 .from(FOLLOWERS)
                 .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
-                .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                .and(FOLLOWERS.FOLLOWER_ID.eq(viewerIdValue))
                 .asField<Int>("following")
         } else {
             org.jooq.impl.DSL
                 .`val`(0)
                 .`as`("following")
         }
+    }
 
     fun getCommentsBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ApiComment> =
         dsl
             .select(
@@ -77,7 +80,7 @@ class CommentDataService(
 
     private fun getCommentById(
         commentId: Long,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ApiComment {
         val record =
             dsl

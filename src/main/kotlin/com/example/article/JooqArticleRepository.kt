@@ -4,38 +4,42 @@ import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.TAGS
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 
 @ApplicationScoped
 class JooqArticleRepository(
     private val dsl: DSLContext,
 ) : ArticleRepository {
-    override fun create(entity: Article): Article {
-        require(entity.id == null) { "Cannot create entity with existing ID" }
-
-        val id =
+    override fun nextId(): ArticleId =
+        ArticleId(
             dsl
-                .insertInto(ARTICLES)
-                .set(ARTICLES.SLUG, entity.slug)
-                .set(ARTICLES.TITLE, entity.title)
-                .set(ARTICLES.DESCRIPTION, entity.description)
-                .set(ARTICLES.BODY, entity.body)
-                .set(ARTICLES.AUTHOR_ID, entity.authorId)
-                .set(ARTICLES.CREATED_AT, entity.createdAt)
-                .set(ARTICLES.UPDATED_AT, entity.updatedAt)
-                .returningResult(ARTICLES.ID)
-                .fetchOne()
-                ?.value1() ?: error("Failed to insert article")
+                .select(DSL.field("nextval('articles_id_seq')", Long::class.java))
+                .fetchSingle()
+                .value1()!!,
+        )
 
-        saveTags(id, entity.tags)
+    override fun create(entity: Article): Article {
+        dsl
+            .insertInto(ARTICLES)
+            .set(ARTICLES.ID, entity.id.value)
+            .set(ARTICLES.SLUG, entity.slug)
+            .set(ARTICLES.TITLE, entity.title)
+            .set(ARTICLES.DESCRIPTION, entity.description)
+            .set(ARTICLES.BODY, entity.body)
+            .set(ARTICLES.AUTHOR_ID, entity.authorId.value)
+            .set(ARTICLES.CREATED_AT, entity.createdAt)
+            .set(ARTICLES.UPDATED_AT, entity.updatedAt)
+            .execute()
 
-        return entity.withId(id)
+        saveTags(entity.id, entity.tags)
+
+        return entity
     }
 
     override fun update(entity: Article): Article {
-        requireNotNull(entity.id) { "Cannot update entity without ID" }
-
         dsl
             .update(ARTICLES)
             .set(ARTICLES.SLUG, entity.slug)
@@ -43,12 +47,12 @@ class JooqArticleRepository(
             .set(ARTICLES.DESCRIPTION, entity.description)
             .set(ARTICLES.BODY, entity.body)
             .set(ARTICLES.UPDATED_AT, entity.updatedAt)
-            .where(ARTICLES.ID.eq(entity.id))
+            .where(ARTICLES.ID.eq(entity.id.value))
             .execute()
 
         dsl
             .deleteFrom(ARTICLE_TAGS)
-            .where(ARTICLE_TAGS.ARTICLE_ID.eq(entity.id))
+            .where(ARTICLE_TAGS.ARTICLE_ID.eq(entity.id.value))
             .execute()
 
         saveTags(entity.id, entity.tags)
@@ -57,12 +61,11 @@ class JooqArticleRepository(
     }
 
     private fun saveTags(
-        articleId: Long,
+        articleId: ArticleId,
         tags: Set<String>,
     ) {
         if (tags.isEmpty()) return
 
-        // First, ensure all tags exist (batch upsert)
         val tagInserts =
             tags.map { tagName ->
                 dsl
@@ -74,7 +77,6 @@ class JooqArticleRepository(
             }
         dsl.batch(tagInserts).execute()
 
-        // Get all tag IDs in a single query
         val tagIds =
             dsl
                 .select(TAGS.ID, TAGS.NAME)
@@ -83,13 +85,12 @@ class JooqArticleRepository(
                 .fetch()
                 .associate { it.value2()!! to it.value1()!! }
 
-        // Batch insert article_tags relationships
         val articleTagInserts =
             tags.mapNotNull { tagName ->
                 tagIds[tagName]?.let { tagId ->
                     dsl
                         .insertInto(ARTICLE_TAGS)
-                        .set(ARTICLE_TAGS.ARTICLE_ID, articleId)
+                        .set(ARTICLE_TAGS.ARTICLE_ID, articleId.value)
                         .set(ARTICLE_TAGS.TAG_ID, tagId)
                         .onConflict(ARTICLE_TAGS.ARTICLE_ID, ARTICLE_TAGS.TAG_ID)
                         .doNothing()
@@ -100,12 +101,12 @@ class JooqArticleRepository(
         }
     }
 
-    override fun findById(id: Long): Article? {
+    override fun findById(id: ArticleId): Article? {
         val result =
             dsl
                 .select(
                     ARTICLES.asterisk(),
-                    org.jooq.impl.DSL
+                    DSL
                         .multiset(
                             dsl
                                 .select(TAGS.NAME)
@@ -116,25 +117,10 @@ class JooqArticleRepository(
                         ).`as`("tags")
                         .convertFrom { it.map { r -> r.value1() } },
                 ).from(ARTICLES)
-                .where(ARTICLES.ID.eq(id))
+                .where(ARTICLES.ID.eq(id.value))
                 .fetchOne() ?: return null
 
-        val record = result.into(ARTICLES)
-
-        @Suppress("UNCHECKED_CAST")
-        val tags = result.get("tags") as? List<String> ?: emptyList()
-
-        return Article(
-            id = record.id,
-            slug = record.slug!!,
-            title = record.title!!,
-            description = record.description!!,
-            body = record.body!!,
-            authorId = record.authorId!!,
-            tags = tags.toSet(),
-            createdAt = record.createdAt!!,
-            updatedAt = record.updatedAt!!,
-        )
+        return toArticle(result)
     }
 
     override fun findBySlug(slug: String): Article? {
@@ -142,7 +128,7 @@ class JooqArticleRepository(
             dsl
                 .select(
                     ARTICLES.asterisk(),
-                    org.jooq.impl.DSL
+                    DSL
                         .multiset(
                             dsl
                                 .select(TAGS.NAME)
@@ -156,60 +142,64 @@ class JooqArticleRepository(
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: return null
 
+        return toArticle(result)
+    }
+
+    private fun toArticle(result: org.jooq.Record): Article {
         val record = result.into(ARTICLES)
 
         @Suppress("UNCHECKED_CAST")
         val tags = result.get("tags") as? List<String> ?: emptyList()
 
         return Article(
-            id = record.id,
+            id = ArticleId(record.id!!),
             slug = record.slug!!,
             title = record.title!!,
             description = record.description!!,
             body = record.body!!,
-            authorId = record.authorId!!,
+            authorId = UserId(record.authorId!!),
             tags = tags.toSet(),
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )
     }
 
-    override fun deleteById(id: Long) {
-        dsl.deleteFrom(ARTICLES).where(ARTICLES.ID.eq(id)).execute()
+    override fun deleteById(id: ArticleId) {
+        dsl.deleteFrom(ARTICLES).where(ARTICLES.ID.eq(id.value)).execute()
     }
 
     override fun favorite(
-        articleId: Long,
-        userId: Long,
+        articleId: ArticleId,
+        userId: UserId,
     ) {
         dsl
             .insertInto(FAVORITES)
-            .set(FAVORITES.ARTICLE_ID, articleId)
-            .set(FAVORITES.USER_ID, userId)
+            .set(FAVORITES.ARTICLE_ID, articleId.value)
+            .set(FAVORITES.USER_ID, userId.value)
             .onDuplicateKeyIgnore()
             .execute()
     }
 
     override fun unfavorite(
-        articleId: Long,
-        userId: Long,
+        articleId: ArticleId,
+        userId: UserId,
     ) {
         dsl
             .deleteFrom(FAVORITES)
-            .where(FAVORITES.ARTICLE_ID.eq(articleId))
-            .and(FAVORITES.USER_ID.eq(userId))
+            .where(FAVORITES.ARTICLE_ID.eq(articleId.value))
+            .and(FAVORITES.USER_ID.eq(userId.value))
             .execute()
     }
 
     override fun isFavorited(
-        articleId: Long,
-        userId: Long,
+        articleId: ArticleId,
+        userId: UserId,
     ): Boolean =
         dsl.fetchExists(
             dsl
                 .selectFrom(FAVORITES)
-                .where(FAVORITES.ARTICLE_ID.eq(articleId))
-                .and(FAVORITES.USER_ID.eq(userId)),
+                .where(FAVORITES.ARTICLE_ID.eq(articleId.value))
+                .and(FAVORITES.USER_ID.eq(userId.value)),
         )
 
     override fun getAllTags(): List<String> =
