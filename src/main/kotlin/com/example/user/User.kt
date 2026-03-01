@@ -14,7 +14,7 @@ class User(
     val image: String? = null,
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
-) : Entity<UserId> {
+) : Entity<UserId>() {
     init {
         require(email.isNotBlank()) { "Email must not be blank" }
         require(EMAIL_REGEX.matches(email)) { "Email must be a valid email address" }
@@ -58,14 +58,6 @@ class User(
             createdAt = createdAt,
             updatedAt = OffsetDateTime.now(),
         )
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is User) return false
-        return id == other.id
-    }
-
-    override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "User(id=$id, email=$email, username=$username)"
 }

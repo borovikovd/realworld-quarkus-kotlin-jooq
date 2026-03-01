@@ -37,7 +37,7 @@ class LayerDependencyRules {
     @ArchTest
     val `domain entities should not use jOOQ or JAX-RS` =
         classes()
-            .that().implement(Entity::class.java)
+            .that().areAssignableTo(Entity::class.java)
             .and(
                 object : DescribedPredicate<JavaClass>("not infrastructure classes") {
                     override fun test(input: JavaClass): Boolean {

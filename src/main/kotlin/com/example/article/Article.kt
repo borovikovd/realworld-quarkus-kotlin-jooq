@@ -16,7 +16,7 @@ class Article(
     val tags: Set<String> = emptySet(),
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
-) : Entity<ArticleId> {
+) : Entity<ArticleId>() {
     init {
         require(title.isNotBlank()) { "Title must not be blank" }
         require(description.isNotBlank()) { "Description must not be blank" }
@@ -42,14 +42,6 @@ class Article(
         )
 
     fun canBeDeletedBy(userId: UserId): Boolean = userId == authorId
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Article) return false
-        return id == other.id
-    }
-
-    override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "Article(id=$id, slug=$slug, title=$title)"
 }

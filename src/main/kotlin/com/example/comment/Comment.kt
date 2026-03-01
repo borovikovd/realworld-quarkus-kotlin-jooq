@@ -15,7 +15,7 @@ class Comment(
     val body: String,
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
-) : Entity<CommentId> {
+) : Entity<CommentId>() {
     init {
         require(body.isNotBlank()) { "Body must not be blank" }
     }
@@ -27,14 +27,6 @@ class Comment(
             throw ForbiddenException("You can only delete your own comments")
         }
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Comment) return false
-        return id == other.id
-    }
-
-    override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "Comment(id=$id, articleId=$articleId)"
 }
