@@ -1,4 +1,4 @@
-# ![RealWorld Example App](https://raw.githubusercontent.com/gothinkster/realworld/master/media/realworld.png)
+# ![RealWorld Example App](https://raw.githubusercontent.com/realworld-apps/realworld/main/assets/media/realworld.png)
 
 [![Build Status](https://github.com/borovikovd/realworld-quarkus-kotlin-jooq/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/borovikovd/realworld-quarkus-kotlin-jooq/actions)
 [![RealWorld](https://img.shields.io/badge/RealWorld-Example%20App-brightgreen)](https://github.com/gothinkster/realworld)
