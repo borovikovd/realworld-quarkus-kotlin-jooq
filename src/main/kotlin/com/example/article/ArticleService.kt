@@ -13,7 +13,6 @@ class ArticleService(
     private val slugGenerator: SlugGenerator,
     private val securityContext: SecurityContext,
 ) {
-
     @Transactional
     fun createArticle(
         title: String,

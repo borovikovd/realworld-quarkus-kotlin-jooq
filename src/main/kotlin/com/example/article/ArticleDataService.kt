@@ -22,7 +22,6 @@ import com.example.api.model.Article as ApiArticle
 class ArticleDataService(
     private val dsl: DSLContext,
 ) {
-
     fun hydrate(
         id: ArticleId,
         viewerId: Long?,

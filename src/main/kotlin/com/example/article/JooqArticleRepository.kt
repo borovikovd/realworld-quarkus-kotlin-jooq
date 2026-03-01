@@ -11,7 +11,6 @@ import org.jooq.DSLContext
 class JooqArticleRepository(
     private val dsl: DSLContext,
 ) : ArticleRepository {
-
     override fun create(entity: Article): Article {
         require(entity.id == null) { "Cannot create entity with existing ID" }
 

@@ -12,7 +12,6 @@ class CommentService(
     private val articleRepository: ArticleRepository,
     private val securityContext: SecurityContext,
 ) {
-
     @Transactional
     fun addComment(
         articleSlug: String,

@@ -8,7 +8,6 @@ import org.jooq.DSLContext
 class JooqFollowRepository(
     private val dsl: DSLContext,
 ) : FollowRepository {
-
     override fun follow(
         followerId: Long,
         followeeId: Long,

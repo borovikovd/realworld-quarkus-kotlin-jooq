@@ -8,7 +8,6 @@ import org.jooq.DSLContext
 class JooqUserRepository(
     private val dsl: DSLContext,
 ) : UserRepository {
-
     override fun create(entity: User): User {
         require(entity.id == null) { "Cannot create entity with existing ID" }
 

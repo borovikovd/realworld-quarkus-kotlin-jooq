@@ -15,7 +15,6 @@ import com.example.api.model.Comment as ApiComment
 class CommentDataService(
     private val dsl: DSLContext,
 ) {
-
     fun hydrate(
         id: CommentId,
         viewerId: Long?,

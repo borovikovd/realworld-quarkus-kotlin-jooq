@@ -13,7 +13,6 @@ class ProfileService(
     private val followRepository: FollowRepository,
     private val securityContext: SecurityContext,
 ) {
-
     @Transactional
     fun followUser(username: String) {
         val followerId = securityContext.requireCurrentUserId()

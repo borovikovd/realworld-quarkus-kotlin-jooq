@@ -15,7 +15,6 @@ class FavoriteResource(
     private val articleDataService: ArticleDataService,
     private val securityContext: SecurityContext,
 ) : FavoritesApi {
-
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): Response {
         articleService.favoriteArticle(slug)

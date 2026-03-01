@@ -13,7 +13,6 @@ import org.jooq.impl.DSL.select
 class ProfileDataService(
     private val dsl: DSLContext,
 ) {
-
     fun getProfileByUsername(
         username: String,
         viewerId: Long?,

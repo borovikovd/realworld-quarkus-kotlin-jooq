@@ -15,7 +15,6 @@ class ProfileResource(
     private val profileDataService: ProfileDataService,
     private val securityContext: SecurityContext,
 ) : ProfileApi {
-
     override fun getProfileByUsername(username: String): Response {
         val viewerId = securityContext.currentUserId
         val profile = profileDataService.getProfileByUsername(username, viewerId)

@@ -18,7 +18,6 @@ class UserAndAuthenticationResource(
     private val userDataService: UserDataService,
     private val securityContext: SecurityContext,
 ) : UserAndAuthenticationApi {
-
     override fun createUser(body: CreateUserRequest): Response {
         val newUser = body.user
         val userId =

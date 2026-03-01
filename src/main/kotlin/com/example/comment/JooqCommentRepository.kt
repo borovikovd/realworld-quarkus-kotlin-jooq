@@ -8,7 +8,6 @@ import org.jooq.DSLContext
 class JooqCommentRepository(
     private val dsl: DSLContext,
 ) : CommentRepository {
-
     override fun create(entity: Comment): Comment {
         require(entity.id == null) { "Cannot create entity with existing ID" }
 

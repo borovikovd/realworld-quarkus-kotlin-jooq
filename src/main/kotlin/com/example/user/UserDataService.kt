@@ -12,7 +12,6 @@ class UserDataService(
     private val dsl: DSLContext,
     private val jwtService: JwtService,
 ) {
-
     fun hydrate(id: UserId): ApiUser {
         val record =
             dsl

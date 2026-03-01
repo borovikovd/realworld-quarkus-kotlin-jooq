@@ -11,7 +11,6 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
 ) {
-
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
     }

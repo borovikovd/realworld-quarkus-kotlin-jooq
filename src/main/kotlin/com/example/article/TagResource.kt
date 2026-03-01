@@ -11,7 +11,6 @@ import jakarta.ws.rs.core.Response
 class TagResource(
     private val articleService: ArticleService,
 ) : TagsApi {
-
     override fun getTags(): Response {
         val tags = articleService.getAllTags()
 

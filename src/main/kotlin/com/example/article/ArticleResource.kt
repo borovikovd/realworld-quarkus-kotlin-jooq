@@ -18,7 +18,6 @@ class ArticleResource(
     private val articleDataService: ArticleDataService,
     private val securityContext: SecurityContext,
 ) : ArticlesApi {
-
     @RolesAllowed("user")
     override fun createArticle(article: CreateArticleRequest): Response {
         val newArticle = article.article

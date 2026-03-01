@@ -17,7 +17,6 @@ class CommentResource(
     private val commentDataService: CommentDataService,
     private val securityContext: SecurityContext,
 ) : CommentsApi {
-
     @RolesAllowed("user")
     override fun createArticleComment(
         slug: String,
