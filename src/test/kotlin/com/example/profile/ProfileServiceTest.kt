@@ -47,13 +47,13 @@ class ProfileServiceTest {
 
         every { securityContext.requireCurrentUserId() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
-        every { followRepository.follow(followerId.value, followee.id.value) } returns Unit
+        every { followRepository.follow(followerId, followee.id) } returns Unit
 
         profileService.followUser(username)
 
         verify { securityContext.requireCurrentUserId() }
         verify { userRepository.findByUsername(username) }
-        verify { followRepository.follow(followerId.value, followee.id.value) }
+        verify { followRepository.follow(followerId, followee.id) }
     }
 
     @Test
@@ -117,13 +117,13 @@ class ProfileServiceTest {
 
         every { securityContext.requireCurrentUserId() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
-        every { followRepository.unfollow(followerId.value, followee.id.value) } returns Unit
+        every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
         profileService.unfollowUser(username)
 
         verify { securityContext.requireCurrentUserId() }
         verify { userRepository.findByUsername(username) }
-        verify { followRepository.unfollow(followerId.value, followee.id.value) }
+        verify { followRepository.unfollow(followerId, followee.id) }
     }
 
     @Test
