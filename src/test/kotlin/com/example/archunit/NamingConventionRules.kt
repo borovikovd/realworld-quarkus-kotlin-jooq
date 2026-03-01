@@ -55,4 +55,12 @@ class NamingConventionRules {
             .and().haveSimpleNameContaining("Mapper")
             .should().haveSimpleNameEndingWith("ExceptionMapper")
             .because("JAX-RS exception mappers should be named *ExceptionMapper")
+
+    @ArchTest
+    val `data services should end with DataService` =
+        classes()
+            .that().haveSimpleNameContaining("DataService")
+            .and().resideOutsideOfPackage("..shared..")
+            .should().haveSimpleNameEndingWith("DataService")
+            .because("Data service classes should be named *DataService")
 }
