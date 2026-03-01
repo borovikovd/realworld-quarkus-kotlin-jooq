@@ -16,7 +16,7 @@ class FavoriteResource : FavoritesApi {
     lateinit var articleService: ArticleService
 
     @Inject
-    lateinit var articleQueries: ArticleQueries
+    lateinit var articleDataService: ArticleDataService
 
     @Inject
     lateinit var securityContext: SecurityContext
@@ -26,7 +26,7 @@ class FavoriteResource : FavoritesApi {
         articleService.favoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
+        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -38,7 +38,7 @@ class FavoriteResource : FavoritesApi {
         articleService.unfavoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
+        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
