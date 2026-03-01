@@ -100,6 +100,7 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/users/login")
             .then()
             .statusCode(401)
+            .body("errors.body[0]", equalTo("Invalid email or password"))
     }
 
     @Test
@@ -113,6 +114,7 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/users/login")
             .then()
             .statusCode(401)
+            .body("errors.body[0]", equalTo("Invalid email or password"))
     }
 
     @Test
@@ -135,6 +137,58 @@ class UserAuthApiTest : BaseApiTest() {
             .get("/api/user")
             .then()
             .statusCode(401)
+    }
+
+    @Test
+    fun `should not update user without token`() {
+        given()
+            .contentType(ContentType.JSON)
+            .body(TestDataBuilder.userUpdate(bio = "hacked"))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
+    fun `should not update user with duplicate email`() {
+        val user1 = ApiTestFixtures.registerUser()
+        val user2 = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user2.token)
+            .body(TestDataBuilder.userUpdate(email = user1.email))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(422)
+            .body("errors.email[0]", equalTo("is already taken"))
+    }
+
+    @Test
+    fun `should not update user with duplicate username`() {
+        val user1 = ApiTestFixtures.registerUser()
+        val user2 = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user2.token)
+            .body(TestDataBuilder.userUpdate(username = user1.username))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(422)
+            .body("errors.username[0]", equalTo("is already taken"))
+    }
+
+    @Test
+    fun `should not update user with short password`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(password = "short"))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(422)
+            .body("errors.password[0]", equalTo("must be at least 8 characters"))
     }
 
     @Test
@@ -202,6 +256,7 @@ class UserAuthApiTest : BaseApiTest() {
             .get("/api/profiles/nonexistent")
             .then()
             .statusCode(404)
+            .body("errors.body[0]", equalTo("Profile not found"))
     }
 
     @Test
@@ -244,6 +299,7 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/profiles/nonexistent/follow")
             .then()
             .statusCode(404)
+            .body("errors.body[0]", equalTo("User not found"))
     }
 
     @Test
@@ -255,5 +311,29 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/profiles/${user.username}/follow")
             .then()
             .statusCode(400)
+            .body("errors.body[0]", equalTo("Cannot follow yourself"))
+    }
+
+    @Test
+    fun `should not follow without auth`() {
+        val user = ApiTestFixtures.registerUser()
+
+        given()
+            .`when`()
+            .post("/api/profiles/${user.username}/follow")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
+    fun `should not unfollow non-existent user`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/profiles/nonexistent/follow")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("User not found"))
     }
 }
