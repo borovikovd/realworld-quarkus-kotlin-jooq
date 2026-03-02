@@ -7,6 +7,7 @@ import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
 import com.example.jooq.public.tables.references.USERS
+import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
@@ -19,6 +20,7 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
+@DataService
 @ApplicationScoped
 class ArticleDataService(
     private val dsl: DSLContext,

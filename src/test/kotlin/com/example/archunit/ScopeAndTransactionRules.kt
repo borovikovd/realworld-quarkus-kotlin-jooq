@@ -1,5 +1,7 @@
 package com.example.archunit
 
+import com.example.shared.architecture.ApplicationService
+import com.example.shared.architecture.DataService
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -33,11 +35,11 @@ class ScopeAndTransactionRules {
             .because("Service classes should be @ApplicationScoped singletons")
 
     @ArchTest
-    val `only services can have transactional methods` =
+    val `only application services can have transactional methods` =
         methods()
             .that().areAnnotatedWith(Transactional::class.java)
-            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("Service")
-            .because("@Transactional should only be on Service methods, not Repositories or Resources")
+            .should().beDeclaredInClassesThat().areAnnotatedWith(ApplicationService::class.java)
+            .because("@Transactional should only be on @ApplicationService methods, not Repositories or Resources")
 
     @ArchTest
     val `repositories should not be transactional` =
@@ -45,12 +47,12 @@ class ScopeAndTransactionRules {
             .that().haveSimpleNameEndingWith("Repository")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("Repositories should not manage transactions - Services do that")
+            .because("Repositories should not manage transactions - @ApplicationService does that")
 
     @ArchTest
     val `data services should not be transactional` =
         classes()
-            .that().haveSimpleNameEndingWith("DataService")
+            .that().areAnnotatedWith(DataService::class.java)
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("DataService classes are read-only and should not manage transactions")
+            .because("@DataService classes are read-only and should not manage transactions")
 }

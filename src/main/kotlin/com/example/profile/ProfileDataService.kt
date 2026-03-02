@@ -3,6 +3,7 @@ package com.example.profile
 import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
+import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
@@ -10,6 +11,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
+@DataService
 @ApplicationScoped
 class ProfileDataService(
     private val dsl: DSLContext,

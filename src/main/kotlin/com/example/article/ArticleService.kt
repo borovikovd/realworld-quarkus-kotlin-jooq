@@ -1,12 +1,15 @@
 package com.example.article
 
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
 class ArticleService(
     private val articleRepository: ArticleRepository,
@@ -20,6 +23,8 @@ class ArticleService(
         body: String,
         tags: List<String>,
     ): ArticleId {
+        validateArticleFields(title, description, body)
+
         val userId = securityContext.requireCurrentUserId()
         val articleId = articleRepository.nextId()
         val slug =
@@ -58,6 +63,8 @@ class ArticleService(
         if (userId != article.authorId) {
             throw ForbiddenException("You can only update your own articles")
         }
+
+        validateArticleFields(title, description, body)
 
         val updatedTitle = title ?: article.title
         val updatedDescription = description ?: article.description
@@ -116,4 +123,16 @@ class ArticleService(
     }
 
     fun getAllTags(): List<String> = articleRepository.getAllTags()
+
+    private fun validateArticleFields(
+        title: String?,
+        description: String?,
+        body: String?,
+    ) {
+        val errors = mutableMapOf<String, List<String>>()
+        title?.let { if (it.isBlank()) errors["title"] = listOf("must not be blank") }
+        description?.let { if (it.isBlank()) errors["description"] = listOf("must not be blank") }
+        body?.let { if (it.isBlank()) errors["body"] = listOf("must not be blank") }
+        if (errors.isNotEmpty()) throw ValidationException(errors)
+    }
 }

@@ -1,11 +1,14 @@
 package com.example.comment
 
 import com.example.article.ArticleRepository
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
 class CommentService(
     private val commentRepository: CommentRepository,
@@ -17,6 +20,10 @@ class CommentService(
         articleSlug: String,
         body: String,
     ): CommentId {
+        if (body.isBlank()) {
+            throw ValidationException(mapOf("body" to listOf("must not be blank")))
+        }
+
         val userId = securityContext.requireCurrentUserId()
         val article =
             articleRepository.findBySlug(articleSlug)

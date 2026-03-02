@@ -25,9 +25,9 @@ class User(
     }
 
     companion object {
-        private val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
-        private const val MIN_USERNAME_LENGTH = 3
-        private const val MAX_USERNAME_LENGTH = 50
+        internal val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
+        internal const val MIN_USERNAME_LENGTH = 3
+        internal const val MAX_USERNAME_LENGTH = 50
     }
 
     fun updateProfile(

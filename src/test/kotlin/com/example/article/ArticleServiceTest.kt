@@ -2,6 +2,7 @@ package com.example.article
 
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import com.example.user.UserId
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ArticleServiceTest {
     private lateinit var articleService: ArticleService
@@ -29,6 +31,56 @@ class ArticleServiceTest {
             slugGenerator = slugGenerator,
             securityContext = securityContext,
         )
+    }
+
+    @Test
+    fun `createArticle should throw ValidationException when title is blank`() {
+        val exception =
+            assertThrows<ValidationException> {
+                articleService.createArticle("", "Test description", "Test body", emptyList())
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["title"])
+    }
+
+    @Test
+    fun `createArticle should throw ValidationException with multiple blank fields`() {
+        val exception =
+            assertThrows<ValidationException> {
+                articleService.createArticle("", "", "", emptyList())
+            }
+
+        assertEquals(3, exception.errors.size)
+        assertTrue(exception.errors.containsKey("title"))
+        assertTrue(exception.errors.containsKey("description"))
+        assertTrue(exception.errors.containsKey("body"))
+    }
+
+    @Test
+    fun `updateArticle should throw ValidationException when title is blank`() {
+        val userId = UserId(1L)
+        val slug = "test-slug"
+
+        every { securityContext.requireCurrentUserId() } returns userId
+
+        val existingArticle =
+            Article(
+                id = ArticleId(1L),
+                slug = slug,
+                title = "Original Title",
+                description = "Original description",
+                body = "Original body",
+                authorId = userId,
+            )
+
+        every { articleRepository.findBySlug(slug) } returns existingArticle
+
+        val exception =
+            assertThrows<ValidationException> {
+                articleService.updateArticle(slug, " ", null, null)
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["title"])
     }
 
     @Test

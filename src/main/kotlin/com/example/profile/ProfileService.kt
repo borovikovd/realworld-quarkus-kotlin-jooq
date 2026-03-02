@@ -1,5 +1,6 @@
 package com.example.profile
 
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.BadRequestException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
@@ -7,6 +8,7 @@ import com.example.user.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
 class ProfileService(
     private val userRepository: UserRepository,

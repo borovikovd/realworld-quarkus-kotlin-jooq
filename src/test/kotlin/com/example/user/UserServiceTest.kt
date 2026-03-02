@@ -52,6 +52,71 @@ class UserServiceTest {
     }
 
     @Test
+    fun `register should throw ValidationException when email is blank`() {
+        every { userRepository.existsByUsername("testuser") } returns false
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.register("", "testuser", "password123")
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["email"])
+        verify(exactly = 0) { userRepository.existsByEmail(any()) }
+    }
+
+    @Test
+    fun `register should throw ValidationException when email has invalid format`() {
+        every { userRepository.existsByUsername("testuser") } returns false
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.register("not-an-email", "testuser", "password123")
+            }
+
+        assertEquals(listOf("must be a valid email address"), exception.errors["email"])
+        verify(exactly = 0) { userRepository.existsByEmail(any()) }
+    }
+
+    @Test
+    fun `register should throw ValidationException when username is blank`() {
+        every { userRepository.existsByEmail("test@example.com") } returns false
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.register("test@example.com", "", "password123")
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["username"])
+        verify(exactly = 0) { userRepository.existsByUsername(any()) }
+    }
+
+    @Test
+    fun `register should throw ValidationException when username is too short`() {
+        every { userRepository.existsByEmail("test@example.com") } returns false
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.register("test@example.com", "ab", "password123")
+            }
+
+        assertTrue(exception.errors["username"]!![0].contains("between"))
+        verify(exactly = 0) { userRepository.existsByUsername(any()) }
+    }
+
+    @Test
+    fun `register should throw ValidationException when username is too long`() {
+        every { userRepository.existsByEmail("test@example.com") } returns false
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.register("test@example.com", "a".repeat(51), "password123")
+            }
+
+        assertTrue(exception.errors["username"]!![0].contains("between"))
+        verify(exactly = 0) { userRepository.existsByUsername(any()) }
+    }
+
+    @Test
     fun `register should throw ValidationException when email already taken`() {
         val email = "taken@example.com"
         val username = "testuser"
@@ -244,6 +309,54 @@ class UserServiceTest {
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
         verify(exactly = 0) { passwordHasher.hash(any()) }
         verify { userRepository.update(any()) }
+    }
+
+    @Test
+    fun `updateUser should throw ValidationException when email is blank`() {
+        val userId = UserId(1L)
+        val existingUser =
+            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+
+        every { userRepository.findById(userId) } returns existingUser
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.updateUser(userId, "", null, null, null, null)
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["email"])
+    }
+
+    @Test
+    fun `updateUser should throw ValidationException when email has invalid format`() {
+        val userId = UserId(1L)
+        val existingUser =
+            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+
+        every { userRepository.findById(userId) } returns existingUser
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.updateUser(userId, "not-an-email", null, null, null, null)
+            }
+
+        assertEquals(listOf("must be a valid email address"), exception.errors["email"])
+    }
+
+    @Test
+    fun `updateUser should throw ValidationException when username is too short`() {
+        val userId = UserId(1L)
+        val existingUser =
+            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+
+        every { userRepository.findById(userId) } returns existingUser
+
+        val exception =
+            assertThrows<ValidationException> {
+                userService.updateUser(userId, null, "ab", null, null, null)
+            }
+
+        assertTrue(exception.errors["username"]!![0].contains("between"))
     }
 
     @Test

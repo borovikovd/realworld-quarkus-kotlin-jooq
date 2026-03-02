@@ -5,6 +5,7 @@ import com.example.article.ArticleId
 import com.example.article.ArticleRepository
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.user.UserId
 import io.mockk.every
@@ -43,6 +44,16 @@ class CommentServiceTest {
             articleRepository = articleRepository,
             securityContext = securityContext,
         )
+    }
+
+    @Test
+    fun `addComment should throw ValidationException when body is blank`() {
+        val exception =
+            assertThrows<ValidationException> {
+                commentService.addComment(slug, "")
+            }
+
+        assertEquals(listOf("must not be blank"), exception.errors["body"])
     }
 
     @Test
