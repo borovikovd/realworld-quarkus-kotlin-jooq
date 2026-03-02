@@ -6,11 +6,9 @@ import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
-import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationService
-@ApplicationScoped
 class ArticleService(
     private val articleRepository: ArticleRepository,
     private val slugGenerator: SlugGenerator,

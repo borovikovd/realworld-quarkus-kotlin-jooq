@@ -5,11 +5,9 @@ import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
-import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationService
-@ApplicationScoped
 class CommentService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,

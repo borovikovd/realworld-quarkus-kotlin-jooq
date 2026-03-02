@@ -7,7 +7,6 @@ import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods
-import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.RequestScoped
 import jakarta.transaction.Transactional
 
@@ -24,15 +23,16 @@ class ScopeAndTransactionRules {
             .because("Only SecurityContext should be @RequestScoped - all other beans should be @ApplicationScoped")
 
     @ArchTest
-    val `services should be ApplicationScoped` =
+    val `services should use DDD stereotype annotations` =
         classes()
             .that().haveSimpleNameEndingWith("Service")
             .and().resideOutsideOfPackage("..shared..")
             .and().resideOutsideOfPackage("..api..")
             .and().resideOutsideOfPackage("..jooq..")
             .and().resideOutsideOfPackage("..exceptions..")
-            .should().beAnnotatedWith(ApplicationScoped::class.java)
-            .because("Service classes should be @ApplicationScoped singletons")
+            .should().beAnnotatedWith(ApplicationService::class.java)
+            .orShould().beAnnotatedWith(DataService::class.java)
+            .because("Service classes should be annotated with @ApplicationService or @DataService")
 
     @ArchTest
     val `only application services can have transactional methods` =

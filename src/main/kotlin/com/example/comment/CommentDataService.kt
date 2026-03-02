@@ -7,14 +7,12 @@ import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
-import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 import com.example.api.model.Comment as ApiComment
 
 @DataService
-@ApplicationScoped
 class CommentDataService(
     private val dsl: DSLContext,
 ) {

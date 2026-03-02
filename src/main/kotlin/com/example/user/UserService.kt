@@ -4,11 +4,9 @@ import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.UnauthorizedException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.PasswordHasher
-import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationService
-@ApplicationScoped
 class UserService(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,

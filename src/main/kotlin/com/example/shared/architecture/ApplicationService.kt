@@ -1,5 +1,8 @@
 package com.example.shared.architecture
 
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.enterprise.inject.Stereotype
+
 /**
  * Marks a class as an Application Service (command side) in DDD.
  *
@@ -45,6 +48,8 @@ package com.example.shared.architecture
  * | Entity init block  | Domain invariants (safety net)   | IllegalArgumentException| 500  |
  * | Database           | Structural integrity (last wall) | SQL constraint violation | 500  |
  */
+@Stereotype
+@ApplicationScoped
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ApplicationService

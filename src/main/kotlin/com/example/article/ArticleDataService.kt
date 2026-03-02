@@ -10,7 +10,6 @@ import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
-import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -21,7 +20,6 @@ import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
 @DataService
-@ApplicationScoped
 class ArticleDataService(
     private val dsl: DSLContext,
 ) {

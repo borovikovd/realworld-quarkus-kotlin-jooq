@@ -4,12 +4,10 @@ import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.JwtService
-import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import com.example.api.model.User as ApiUser
 
 @DataService
-@ApplicationScoped
 class UserDataService(
     private val dsl: DSLContext,
     private val jwtService: JwtService,

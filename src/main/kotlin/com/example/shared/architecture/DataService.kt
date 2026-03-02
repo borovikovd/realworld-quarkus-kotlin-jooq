@@ -1,5 +1,8 @@
 package com.example.shared.architecture
 
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.enterprise.inject.Stereotype
+
 /**
  * Marks a class as a Data Service (read side) in CQRS.
  *
@@ -17,6 +20,8 @@ package com.example.shared.architecture
  * Data services perform **no input validation**. They receive already-validated IDs or
  * parameters from the Resource layer and simply return data or null/empty results.
  */
+@Stereotype
+@ApplicationScoped
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class DataService
