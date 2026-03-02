@@ -1,13 +1,13 @@
 package com.example.user
 
-import com.example.shared.architecture.ApplicationService
+import com.example.shared.architecture.WriteService
 import com.example.shared.exceptions.UnauthorizedException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.PasswordHasher
 import jakarta.transaction.Transactional
 
-@ApplicationService
-class UserService(
+@WriteService
+class UserWriteService(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
 ) {

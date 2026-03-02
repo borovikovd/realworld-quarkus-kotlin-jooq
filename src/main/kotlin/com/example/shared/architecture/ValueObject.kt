@@ -31,7 +31,7 @@ package com.example.shared.architecture
  * ```
  *
  * Like [AggregateRoot] invariants, these throw [IllegalArgumentException] and are a safety net.
- * User-facing input validation belongs in [ApplicationService].
+ * User-facing input validation belongs in [WriteService].
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

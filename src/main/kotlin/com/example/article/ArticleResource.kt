@@ -12,8 +12,8 @@ import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class ArticleResource(
-    private val articleService: ArticleService,
-    private val articleDataService: ArticleDataService,
+    private val articleWriteService: ArticleWriteService,
+    private val articleReadService: ArticleReadService,
     private val securityContext: SecurityContext,
 ) : ArticlesApi {
     @RolesAllowed("user")
@@ -21,7 +21,7 @@ class ArticleResource(
         val newArticle = article.article
 
         val articleId =
-            articleService.createArticle(
+            articleWriteService.createArticle(
                 title = newArticle.title,
                 description = newArticle.description,
                 body = newArticle.body,
@@ -29,7 +29,7 @@ class ArticleResource(
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleDataService.hydrate(articleId, viewerId)
+        val articleDto = articleReadService.hydrate(articleId, viewerId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -39,14 +39,14 @@ class ArticleResource(
 
     @RolesAllowed("user")
     override fun deleteArticle(slug: String): Response {
-        articleService.deleteArticle(slug)
+        articleWriteService.deleteArticle(slug)
 
         return Response.noContent().build()
     }
 
     override fun getArticle(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -63,7 +63,7 @@ class ArticleResource(
     ): Response {
         val viewerId = securityContext.currentUserId
         val articles =
-            articleDataService.getArticles(
+            articleReadService.getArticles(
                 tag = tag,
                 author = author,
                 favorited = favorited,
@@ -76,7 +76,7 @@ class ArticleResource(
             .ok(
                 GetArticlesFeed200Response()
                     .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleDataService.countArticles(tag, author, favorited)),
+                    .articlesCount(articleReadService.countArticles(tag, author, favorited)),
             ).build()
     }
 
@@ -88,7 +88,7 @@ class ArticleResource(
     ): Response {
         val viewerId = securityContext.currentUserId!!
         val articles =
-            articleDataService.getArticlesFeed(
+            articleReadService.getArticlesFeed(
                 limit = limit ?: 20,
                 offset = offset ?: 0,
                 viewerId = viewerId,
@@ -98,7 +98,7 @@ class ArticleResource(
             .ok(
                 GetArticlesFeed200Response()
                     .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleDataService.countArticlesFeed(viewerId)),
+                    .articlesCount(articleReadService.countArticlesFeed(viewerId)),
             ).build()
     }
 
@@ -110,7 +110,7 @@ class ArticleResource(
         val updateData = article.article
 
         val articleId =
-            articleService.updateArticle(
+            articleWriteService.updateArticle(
                 slug = slug,
                 title = updateData.title,
                 description = updateData.description,
@@ -118,7 +118,7 @@ class ArticleResource(
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleDataService.hydrate(articleId, viewerId)
+        val articleDto = articleReadService.hydrate(articleId, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))

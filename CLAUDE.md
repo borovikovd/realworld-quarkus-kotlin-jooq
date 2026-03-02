@@ -253,7 +253,7 @@ atlas migrate apply --env local
 gradle generateJooq
 
 # Testing
-gradle test --tests ArticleServiceTest
+gradle test --tests ArticleWriteServiceTest
 gradle test
 
 # Code quality

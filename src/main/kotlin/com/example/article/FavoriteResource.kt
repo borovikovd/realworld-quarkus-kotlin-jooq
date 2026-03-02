@@ -9,16 +9,16 @@ import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class FavoriteResource(
-    private val articleService: ArticleService,
-    private val articleDataService: ArticleDataService,
+    private val articleWriteService: ArticleWriteService,
+    private val articleReadService: ArticleReadService,
     private val securityContext: SecurityContext,
 ) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): Response {
-        articleService.favoriteArticle(slug)
+        articleWriteService.favoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -27,10 +27,10 @@ class FavoriteResource(
 
     @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): Response {
-        articleService.unfavoriteArticle(slug)
+        articleWriteService.unfavoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))

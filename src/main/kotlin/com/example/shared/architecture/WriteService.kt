@@ -4,15 +4,15 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.inject.Stereotype
 
 /**
- * Marks a class as an Application Service (command side) in DDD.
+ * Marks a class as a Write Service (command side) in CQRS.
  *
- * Application services orchestrate use cases: they accept user input, validate it, coordinate
+ * Write services orchestrate use cases: they accept user input, validate it, coordinate
  * domain objects and repositories, and manage transactions. They are the entry point for all
  * write operations.
  *
  * ## Validation
  *
- * Application services are the **primary validation layer** for user input. They validate
+ * Write services are the **primary validation layer** for user input. They validate
  * BEFORE constructing domain objects, collect field-level errors, and throw
  * [com.example.shared.exceptions.ValidationException] (HTTP 422):
  *
@@ -37,19 +37,19 @@ import jakarta.enterprise.inject.Stereotype
  *
  * ## What does NOT belong here
  * - Domain invariants (belong in [AggregateRoot] / Entity `init` blocks)
- * - DTO mapping (belongs in Resource / [DataService] layer)
+ * - DTO mapping (belongs in Resource / [ReadService] layer)
  * - Direct jOOQ / database access (belongs in Repository implementations)
  *
  * ## Validation layers (defense in depth)
  *
- * | Layer              | Purpose                          | Exception               | HTTP |
- * |--------------------|----------------------------------|-------------------------|------|
- * | ApplicationService | User input → friendly errors     | ValidationException     | 422  |
- * | Entity init block  | Domain invariants (safety net)   | IllegalArgumentException| 500  |
- * | Database           | Structural integrity (last wall) | SQL constraint violation | 500  |
+ * | Layer         | Purpose                          | Exception               | HTTP |
+ * |---------------|----------------------------------|-------------------------|------|
+ * | WriteService  | User input → friendly errors     | ValidationException     | 422  |
+ * | Entity init   | Domain invariants (safety net)   | IllegalArgumentException| 500  |
+ * | Database      | Structural integrity (last wall) | SQL constraint violation | 500  |
  */
 @Stereotype
 @ApplicationScoped
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class ApplicationService
+annotation class WriteService

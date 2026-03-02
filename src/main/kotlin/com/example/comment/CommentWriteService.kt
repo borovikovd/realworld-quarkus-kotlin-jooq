@@ -1,15 +1,15 @@
 package com.example.comment
 
 import com.example.article.ArticleRepository
-import com.example.shared.architecture.ApplicationService
+import com.example.shared.architecture.WriteService
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import jakarta.transaction.Transactional
 
-@ApplicationService
-class CommentService(
+@WriteService
+class CommentWriteService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,
     private val securityContext: SecurityContext,

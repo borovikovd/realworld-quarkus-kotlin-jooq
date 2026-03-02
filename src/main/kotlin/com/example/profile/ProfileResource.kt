@@ -9,13 +9,13 @@ import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class ProfileResource(
-    private val profileService: ProfileService,
-    private val profileDataService: ProfileDataService,
+    private val profileWriteService: ProfileWriteService,
+    private val profileReadService: ProfileReadService,
     private val securityContext: SecurityContext,
 ) : ProfileApi {
     override fun getProfileByUsername(username: String): Response {
         val viewerId = securityContext.currentUserId
-        val profile = profileDataService.getProfileByUsername(username, viewerId)
+        val profile = profileReadService.getProfileByUsername(username, viewerId)
 
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
@@ -24,10 +24,10 @@ class ProfileResource(
 
     @RolesAllowed("user")
     override fun followUserByUsername(username: String): Response {
-        profileService.followUser(username)
+        profileWriteService.followUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileDataService.getProfileByUsername(username, currentUserId)
+        val profile = profileReadService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
@@ -35,10 +35,10 @@ class ProfileResource(
 
     @RolesAllowed("user")
     override fun unfollowUserByUsername(username: String): Response {
-        profileService.unfollowUser(username)
+        profileWriteService.unfollowUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileDataService.getProfileByUsername(username, currentUserId)
+        val profile = profileReadService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()

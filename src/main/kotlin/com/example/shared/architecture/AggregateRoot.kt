@@ -19,7 +19,7 @@ package com.example.shared.architecture
  *
  * These are a **safety net**, not the primary validation path. They throw [IllegalArgumentException]
  * and signal a programming error (the caller should have validated first). User-facing input
- * validation with field-level error messages belongs in [ApplicationService].
+ * validation with field-level error messages belongs in [WriteService].
  *
  * ## What belongs here
  * - Structural invariants: non-blank fields, format rules, length bounds

@@ -3,15 +3,15 @@ package com.example.profile
 import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
-import com.example.shared.architecture.DataService
+import com.example.shared.architecture.ReadService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
-@DataService
-class ProfileDataService(
+@ReadService
+class ProfileReadService(
     private val dsl: DSLContext,
 ) {
     fun getProfileByUsername(

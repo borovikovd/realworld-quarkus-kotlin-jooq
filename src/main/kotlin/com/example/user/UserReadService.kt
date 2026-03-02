@@ -1,14 +1,14 @@
 package com.example.user
 
 import com.example.jooq.public.tables.references.USERS
-import com.example.shared.architecture.DataService
+import com.example.shared.architecture.ReadService
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.JwtService
 import org.jooq.DSLContext
 import com.example.api.model.User as ApiUser
 
-@DataService
-class UserDataService(
+@ReadService
+class UserReadService(
     private val dsl: DSLContext,
     private val jwtService: JwtService,
 ) {

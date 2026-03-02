@@ -1,7 +1,7 @@
 package com.example.archunit
 
-import com.example.shared.architecture.ApplicationService
-import com.example.shared.architecture.DataService
+import com.example.shared.architecture.ReadService
+import com.example.shared.architecture.WriteService
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -30,16 +30,16 @@ class ScopeAndTransactionRules {
             .and().resideOutsideOfPackage("..api..")
             .and().resideOutsideOfPackage("..jooq..")
             .and().resideOutsideOfPackage("..exceptions..")
-            .should().beAnnotatedWith(ApplicationService::class.java)
-            .orShould().beAnnotatedWith(DataService::class.java)
-            .because("Service classes should be annotated with @ApplicationService or @DataService")
+            .should().beAnnotatedWith(WriteService::class.java)
+            .orShould().beAnnotatedWith(ReadService::class.java)
+            .because("Service classes should be annotated with @WriteService or @ReadService")
 
     @ArchTest
     val `only application services can have transactional methods` =
         methods()
             .that().areAnnotatedWith(Transactional::class.java)
-            .should().beDeclaredInClassesThat().areAnnotatedWith(ApplicationService::class.java)
-            .because("@Transactional should only be on @ApplicationService methods, not Repositories or Resources")
+            .should().beDeclaredInClassesThat().areAnnotatedWith(WriteService::class.java)
+            .because("@Transactional should only be on @WriteService methods, not Repositories or Resources")
 
     @ArchTest
     val `repositories should not be transactional` =
@@ -47,12 +47,12 @@ class ScopeAndTransactionRules {
             .that().haveSimpleNameEndingWith("Repository")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("Repositories should not manage transactions - @ApplicationService does that")
+            .because("Repositories should not manage transactions - @WriteService does that")
 
     @ArchTest
     val `data services should not be transactional` =
         classes()
-            .that().areAnnotatedWith(DataService::class.java)
+            .that().areAnnotatedWith(ReadService::class.java)
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("@DataService classes are read-only and should not manage transactions")
+            .because("@ReadService classes are read-only and should not manage transactions")
 }

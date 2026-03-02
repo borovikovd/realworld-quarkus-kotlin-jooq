@@ -12,20 +12,20 @@ import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class UserAndAuthenticationResource(
-    private val userService: UserService,
-    private val userDataService: UserDataService,
+    private val userWriteService: UserWriteService,
+    private val userReadService: UserReadService,
     private val securityContext: SecurityContext,
 ) : UserAndAuthenticationApi {
     override fun createUser(body: CreateUserRequest): Response {
         val newUser = body.user
         val userId =
-            userService.register(
+            userWriteService.register(
                 email = newUser.email,
                 username = newUser.username,
                 password = newUser.password,
             )
 
-        val userDto = userDataService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -36,12 +36,12 @@ class UserAndAuthenticationResource(
     override fun login(body: LoginRequest): Response {
         val loginUser = body.user
         val userId =
-            userService.login(
+            userWriteService.login(
                 email = loginUser.email,
                 password = loginUser.password,
             )
 
-        val userDto = userDataService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId)
 
         return Response
             .ok(Login200Response().user(userDto))
@@ -51,7 +51,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Response {
         val userId = securityContext.requireCurrentUserId()
-        val userDto = userDataService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId)
 
         return Response
             .ok(Login200Response().user(userDto))
@@ -64,7 +64,7 @@ class UserAndAuthenticationResource(
         val updateUser = body.user
 
         val userId =
-            userService.updateUser(
+            userWriteService.updateUser(
                 userId = currentUserId,
                 email = updateUser.email,
                 username = updateUser.username,
@@ -73,7 +73,7 @@ class UserAndAuthenticationResource(
                 image = updateUser.image,
             )
 
-        val userDto = userDataService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId)
 
         return Response
             .ok(Login200Response().user(userDto))

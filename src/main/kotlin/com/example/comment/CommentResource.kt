@@ -11,8 +11,8 @@ import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class CommentResource(
-    private val commentService: CommentService,
-    private val commentDataService: CommentDataService,
+    private val commentWriteService: CommentWriteService,
+    private val commentReadService: CommentReadService,
     private val securityContext: SecurityContext,
 ) : CommentsApi {
     @RolesAllowed("user")
@@ -22,9 +22,9 @@ class CommentResource(
     ): Response {
         val viewerId = securityContext.currentUserId
         val newComment = comment.comment
-        val commentId = commentService.addComment(slug, newComment.body)
+        val commentId = commentWriteService.addComment(slug, newComment.body)
 
-        val commentDto = commentDataService.hydrate(commentId, viewerId)
+        val commentDto = commentReadService.hydrate(commentId, viewerId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -37,14 +37,14 @@ class CommentResource(
         slug: String,
         id: Int,
     ): Response {
-        commentService.deleteComment(slug, id.toLong())
+        commentWriteService.deleteComment(slug, id.toLong())
 
         return Response.noContent().build()
     }
 
     override fun getArticleComments(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val comments = commentDataService.getCommentsBySlug(slug, viewerId)
+        val comments = commentReadService.getCommentsBySlug(slug, viewerId)
 
         return Response
             .ok(GetArticleComments200Response().comments(comments))

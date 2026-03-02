@@ -1,6 +1,6 @@
 package com.example.article
 
-import com.example.shared.architecture.ApplicationService
+import com.example.shared.architecture.WriteService
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
@@ -8,8 +8,8 @@ import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import jakarta.transaction.Transactional
 
-@ApplicationService
-class ArticleService(
+@WriteService
+class ArticleWriteService(
     private val articleRepository: ArticleRepository,
     private val slugGenerator: SlugGenerator,
     private val securityContext: SecurityContext,

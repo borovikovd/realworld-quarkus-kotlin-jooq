@@ -16,15 +16,15 @@ import org.jooq.DSLContext
 )
 class TechnologyBoundaryRules {
     @ArchTest
-    val `only Resources and DataServices can import OpenAPI generated code` =
+    val `only Resources and ReadServices can import OpenAPI generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not in api package, not Resource, not Queries, and not DataService") {
+                object : DescribedPredicate<JavaClass>("not in api package, not Resource, not Queries, and not ReadService") {
                     override fun test(input: JavaClass): Boolean {
                         if (input.packageName.contains(".api")) return false
                         if (input.simpleName.endsWith("Resource")) return false
                         if (input.fullName.contains("Queries")) return false
-                        if (input.fullName.contains("DataService")) return false
+                        if (input.fullName.contains("ReadService")) return false
                         return true
                     }
                 },
@@ -34,7 +34,7 @@ class TechnologyBoundaryRules {
             .and().haveSimpleNameNotContaining("Fixture")
             .and().haveSimpleNameNotContaining("Builder")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Only Resources and DataServices should use OpenAPI DTOs")
+            .because("Only Resources and ReadServices should use OpenAPI DTOs")
 
     @ArchTest
     val `only SecurityContext can import JWT` =
@@ -46,14 +46,14 @@ class TechnologyBoundaryRules {
             ).because("JWT token handling should be isolated to SecurityContext and JwtService")
 
     @ArchTest
-    val `only Jooq repositories and DataServices can inject DSLContext` =
+    val `only Jooq repositories and ReadServices can inject DSLContext` =
         fields()
             .that().haveRawType(DSLContext::class.java)
             .should().beDeclaredInClassesThat().haveSimpleNameStartingWith("Jooq")
             .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("Queries")
-            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("DataService")
+            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("ReadService")
             .orShould().beDeclaredInClassesThat().haveSimpleNameContaining("Test")
-            .because("Only Jooq*Repository and *DataService should have direct access to jOOQ DSLContext")
+            .because("Only Jooq*Repository and *ReadService should have direct access to jOOQ DSLContext")
 
     @ArchTest
     val `services should not use JAX-RS Response` =

@@ -1,14 +1,14 @@
 package com.example.profile
 
-import com.example.shared.architecture.ApplicationService
+import com.example.shared.architecture.WriteService
 import com.example.shared.exceptions.BadRequestException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.user.UserRepository
 import jakarta.transaction.Transactional
 
-@ApplicationService
-class ProfileService(
+@WriteService
+class ProfileWriteService(
     private val userRepository: UserRepository,
     private val followRepository: FollowRepository,
     private val securityContext: SecurityContext,
