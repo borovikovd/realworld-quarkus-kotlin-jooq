@@ -1,7 +1,6 @@
 package com.example.comment
 
 import com.example.article.ArticleId
-import com.example.shared.exceptions.ForbiddenException
 import com.example.user.UserId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -64,37 +63,6 @@ class CommentTest {
             )
 
         assertFalse(comment.canBeDeletedBy(UserId(3L)))
-    }
-
-    @Test
-    fun `ensureCanBeDeletedBy should succeed for author`() {
-        val comment =
-            Comment(
-                id = CommentId(1L),
-                articleId = ArticleId(1L),
-                authorId = UserId(2L),
-                body = "Test comment body",
-            )
-
-        comment.ensureCanBeDeletedBy(UserId(2L))
-    }
-
-    @Test
-    fun `ensureCanBeDeletedBy should throw for non-author`() {
-        val comment =
-            Comment(
-                id = CommentId(1L),
-                articleId = ArticleId(1L),
-                authorId = UserId(2L),
-                body = "Test comment body",
-            )
-
-        val exception =
-            assertThrows<ForbiddenException> {
-                comment.ensureCanBeDeletedBy(UserId(3L))
-            }
-
-        assertEquals("You can only delete your own comments", exception.message)
     }
 
     @Test

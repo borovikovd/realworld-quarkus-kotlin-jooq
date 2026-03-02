@@ -2,6 +2,7 @@ package com.example.comment
 
 import com.example.article.ArticleRepository
 import com.example.shared.architecture.ApplicationService
+import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
@@ -58,7 +59,9 @@ class CommentService(
             throw NotFoundException("Comment not found for this article")
         }
 
-        comment.ensureCanBeDeletedBy(userId)
+        if (!comment.canBeDeletedBy(userId)) {
+            throw ForbiddenException("You can only delete your own comments")
+        }
         commentRepository.deleteById(typedCommentId)
     }
 }

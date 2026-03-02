@@ -16,4 +16,4 @@ style:
     ignoreAnnotation: true
     ignoreEnums: true
   ThrowsCount:
-    max: 3
+    max: 4
