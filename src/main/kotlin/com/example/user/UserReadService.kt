@@ -5,14 +5,13 @@ import com.example.shared.architecture.ReadService
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.JwtService
 import org.jooq.DSLContext
-import com.example.api.model.User as ApiUser
 
 @ReadService
 class UserReadService(
     private val dsl: DSLContext,
     private val jwtService: JwtService,
 ) {
-    fun hydrate(id: UserId): ApiUser {
+    fun hydrate(id: UserId): UserSummary {
         val record =
             dsl
                 .select(USERS.ID, USERS.EMAIL, USERS.USERNAME, USERS.BIO, USERS.IMAGE)
@@ -27,11 +26,12 @@ class UserReadService(
                 record.get(USERS.USERNAME)!!,
             )
 
-        return ApiUser()
-            .email(record.get(USERS.EMAIL))
-            .token(token)
-            .username(record.get(USERS.USERNAME))
-            .bio(record.get(USERS.BIO))
-            .image(record.get(USERS.IMAGE))
+        return UserSummary(
+            email = record.get(USERS.EMAIL)!!,
+            token = token,
+            username = record.get(USERS.USERNAME)!!,
+            bio = record.get(USERS.BIO),
+            image = record.get(USERS.IMAGE),
+        )
     }
 }

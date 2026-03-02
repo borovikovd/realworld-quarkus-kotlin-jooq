@@ -16,15 +16,15 @@ import org.jooq.DSLContext
 )
 class TechnologyBoundaryRules {
     @ArchTest
-    val `only Resources and ReadServices can import OpenAPI generated code` =
+    val `only Resources can import OpenAPI generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not in api package, not Resource, not Queries, and not ReadService") {
+                object : DescribedPredicate<JavaClass>("not in api package, not Resource, and not Queries") {
                     override fun test(input: JavaClass): Boolean {
                         if (input.packageName.contains(".api")) return false
                         if (input.simpleName.endsWith("Resource")) return false
+                        if (input.simpleName.endsWith("ResourceKt")) return false
                         if (input.fullName.contains("Queries")) return false
-                        if (input.fullName.contains("ReadService")) return false
                         return true
                     }
                 },
@@ -34,7 +34,7 @@ class TechnologyBoundaryRules {
             .and().haveSimpleNameNotContaining("Fixture")
             .and().haveSimpleNameNotContaining("Builder")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Only Resources and ReadServices should use OpenAPI DTOs")
+            .because("Only Resources should use OpenAPI DTOs")
 
     @ArchTest
     val `only SecurityContext can import JWT` =

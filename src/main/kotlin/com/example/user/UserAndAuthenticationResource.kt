@@ -9,6 +9,7 @@ import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.core.Response
+import com.example.api.model.User as ApiUser
 
 @ApplicationScoped
 class UserAndAuthenticationResource(
@@ -25,7 +26,7 @@ class UserAndAuthenticationResource(
                 password = newUser.password,
             )
 
-        val userDto = userReadService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId).toDto()
 
         return Response
             .status(Response.Status.CREATED)
@@ -41,7 +42,7 @@ class UserAndAuthenticationResource(
                 password = loginUser.password,
             )
 
-        val userDto = userReadService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId).toDto()
 
         return Response
             .ok(Login200Response().user(userDto))
@@ -51,7 +52,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Response {
         val userId = securityContext.requireCurrentUserId()
-        val userDto = userReadService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId).toDto()
 
         return Response
             .ok(Login200Response().user(userDto))
@@ -73,10 +74,18 @@ class UserAndAuthenticationResource(
                 image = updateUser.image,
             )
 
-        val userDto = userReadService.hydrate(userId)
+        val userDto = userReadService.hydrate(userId).toDto()
 
         return Response
             .ok(Login200Response().user(userDto))
             .build()
     }
 }
+
+private fun UserSummary.toDto(): ApiUser =
+    ApiUser()
+        .email(email)
+        .token(token)
+        .username(username)
+        .bio(bio)
+        .image(image)

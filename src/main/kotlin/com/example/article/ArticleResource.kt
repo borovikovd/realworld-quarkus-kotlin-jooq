@@ -4,11 +4,14 @@ import com.example.api.ArticlesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.CreateArticleRequest
 import com.example.api.model.GetArticlesFeed200Response
+import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
+import com.example.profile.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.core.Response
+import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
 class ArticleResource(
@@ -29,7 +32,7 @@ class ArticleResource(
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleReadService.hydrate(articleId, viewerId)
+        val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
         return Response
             .status(Response.Status.CREATED)
@@ -46,7 +49,7 @@ class ArticleResource(
 
     override fun getArticle(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -63,14 +66,15 @@ class ArticleResource(
     ): Response {
         val viewerId = securityContext.currentUserId
         val articles =
-            articleReadService.getArticles(
-                tag = tag,
-                author = author,
-                favorited = favorited,
-                limit = limit ?: 20,
-                offset = offset ?: 0,
-                viewerId = viewerId,
-            )
+            articleReadService
+                .getArticles(
+                    tag = tag,
+                    author = author,
+                    favorited = favorited,
+                    limit = limit ?: 20,
+                    offset = offset ?: 0,
+                    viewerId = viewerId,
+                ).map { it.toDto() }
 
         return Response
             .ok(
@@ -88,11 +92,12 @@ class ArticleResource(
     ): Response {
         val viewerId = securityContext.currentUserId!!
         val articles =
-            articleReadService.getArticlesFeed(
-                limit = limit ?: 20,
-                offset = offset ?: 0,
-                viewerId = viewerId,
-            )
+            articleReadService
+                .getArticlesFeed(
+                    limit = limit ?: 20,
+                    offset = offset ?: 0,
+                    viewerId = viewerId,
+                ).map { it.toDto() }
 
         return Response
             .ok(
@@ -118,10 +123,30 @@ class ArticleResource(
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleReadService.hydrate(articleId, viewerId)
+        val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
             .build()
     }
 }
+
+private fun ArticleSummary.toDto(): ApiArticle =
+    ApiArticle()
+        .slug(slug)
+        .title(title)
+        .description(description)
+        .body(body)
+        .tagList(tagList)
+        .createdAt(createdAt)
+        .updatedAt(updatedAt)
+        .favorited(favorited)
+        .favoritesCount(favoritesCount)
+        .author(author.toDto())
+
+private fun ProfileSummary.toDto(): Profile =
+    Profile()
+        .username(username)
+        .bio(bio)
+        .image(image)
+        .following(following)

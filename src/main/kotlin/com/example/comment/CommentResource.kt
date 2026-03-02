@@ -4,10 +4,13 @@ import com.example.api.CommentsApi
 import com.example.api.model.CreateArticleComment200Response
 import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
+import com.example.api.model.Profile
+import com.example.profile.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.core.Response
+import com.example.api.model.Comment as ApiComment
 
 @ApplicationScoped
 class CommentResource(
@@ -24,7 +27,7 @@ class CommentResource(
         val newComment = comment.comment
         val commentId = commentWriteService.addComment(slug, newComment.body)
 
-        val commentDto = commentReadService.hydrate(commentId, viewerId)
+        val commentDto = commentReadService.hydrate(commentId, viewerId).toDto()
 
         return Response
             .status(Response.Status.CREATED)
@@ -44,10 +47,25 @@ class CommentResource(
 
     override fun getArticleComments(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val comments = commentReadService.getCommentsBySlug(slug, viewerId)
+        val comments = commentReadService.getCommentsBySlug(slug, viewerId).map { it.toDto() }
 
         return Response
             .ok(GetArticleComments200Response().comments(comments))
             .build()
     }
 }
+
+private fun CommentSummary.toDto(): ApiComment =
+    ApiComment()
+        .id(id.toInt())
+        .body(body)
+        .createdAt(createdAt)
+        .updatedAt(updatedAt)
+        .author(author.toDto())
+
+private fun ProfileSummary.toDto(): Profile =
+    Profile()
+        .username(username)
+        .bio(bio)
+        .image(image)
+        .following(following)

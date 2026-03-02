@@ -1,12 +1,12 @@
 package com.example.article
 
-import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
 import com.example.jooq.public.tables.references.USERS
+import com.example.profile.ProfileSummary
 import com.example.shared.architecture.ReadService
 import com.example.shared.exceptions.NotFoundException
 import com.example.user.UserId
@@ -17,7 +17,6 @@ import org.jooq.Record
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
-import com.example.api.model.Article as ApiArticle
 
 @ReadService
 class ArticleReadService(
@@ -26,7 +25,7 @@ class ArticleReadService(
     fun hydrate(
         id: ArticleId,
         viewerId: UserId?,
-    ): ApiArticle {
+    ): ArticleSummary {
         val record =
             dsl
                 .select(articleFields(viewerId))
@@ -36,13 +35,13 @@ class ArticleReadService(
                 .where(ARTICLES.ID.eq(id.value))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        return record.toApiArticle()
+        return record.toArticleSummary()
     }
 
     fun getArticleBySlug(
         slug: String,
         viewerId: UserId?,
-    ): ApiArticle {
+    ): ArticleSummary {
         val record =
             dsl
                 .select(articleFields(viewerId))
@@ -52,7 +51,7 @@ class ArticleReadService(
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        return record.toApiArticle()
+        return record.toArticleSummary()
     }
 
     fun getArticles(
@@ -62,7 +61,7 @@ class ArticleReadService(
         limit: Int,
         offset: Int,
         viewerId: UserId?,
-    ): List<ApiArticle> =
+    ): List<ArticleSummary> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -73,7 +72,7 @@ class ArticleReadService(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toApiArticle() }
+            .map { it.toArticleSummary() }
 
     private fun buildConditions(
         tag: String?,
@@ -123,7 +122,7 @@ class ArticleReadService(
         limit: Int,
         offset: Int,
         viewerId: UserId,
-    ): List<ApiArticle> =
+    ): List<ArticleSummary> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -139,7 +138,7 @@ class ArticleReadService(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toApiArticle() }
+            .map { it.toArticleSummary() }
 
     fun countArticles(
         tag: String?,
@@ -220,24 +219,25 @@ class ArticleReadService(
         )
     }
 
-    private fun Record.toApiArticle(): ApiArticle =
-        ApiArticle()
-            .slug(get(ARTICLES.SLUG))
-            .title(get(ARTICLES.TITLE))
-            .description(get(ARTICLES.DESCRIPTION))
-            .body(get(ARTICLES.BODY))
-            .tagList(
+    private fun Record.toArticleSummary(): ArticleSummary =
+        ArticleSummary(
+            slug = get(ARTICLES.SLUG)!!,
+            title = get(ARTICLES.TITLE)!!,
+            description = get(ARTICLES.DESCRIPTION)!!,
+            body = get(ARTICLES.BODY)!!,
+            tagList =
                 @Suppress("UNCHECKED_CAST")
                 (get("tags") as? List<String> ?: emptyList()),
-            ).createdAt(get(ARTICLES.CREATED_AT))
-            .updatedAt(get(ARTICLES.UPDATED_AT))
-            .favorited(get("favorited", Int::class.java) > 0)
-            .favoritesCount(get("favoritesCount", Int::class.java))
-            .author(
-                Profile()
-                    .username(get(USERS.USERNAME))
-                    .bio(get(USERS.BIO))
-                    .image(get(USERS.IMAGE))
-                    .following(get("following", Int::class.java) > 0),
-            )
+            createdAt = get(ARTICLES.CREATED_AT)!!,
+            updatedAt = get(ARTICLES.UPDATED_AT)!!,
+            favorited = get("favorited", Int::class.java) > 0,
+            favoritesCount = get("favoritesCount", Int::class.java),
+            author =
+                ProfileSummary(
+                    username = get(USERS.USERNAME)!!,
+                    bio = get(USERS.BIO),
+                    image = get(USERS.IMAGE),
+                    following = get("following", Int::class.java) > 0,
+                ),
+        )
 }

@@ -2,6 +2,7 @@ package com.example.profile
 
 import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
+import com.example.api.model.Profile
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -15,7 +16,7 @@ class ProfileResource(
 ) : ProfileApi {
     override fun getProfileByUsername(username: String): Response {
         val viewerId = securityContext.currentUserId
-        val profile = profileReadService.getProfileByUsername(username, viewerId)
+        val profile = profileReadService.getProfileByUsername(username, viewerId).toDto()
 
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
@@ -27,7 +28,7 @@ class ProfileResource(
         profileWriteService.followUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileReadService.getProfileByUsername(username, currentUserId)
+        val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
@@ -38,9 +39,16 @@ class ProfileResource(
         profileWriteService.unfollowUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileReadService.getProfileByUsername(username, currentUserId)
+        val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
     }
 }
+
+private fun ProfileSummary.toDto(): Profile =
+    Profile()
+        .username(username)
+        .bio(bio)
+        .image(image)
+        .following(following)

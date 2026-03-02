@@ -6,13 +6,13 @@ import jakarta.enterprise.inject.Stereotype
 /**
  * Marks a class as a Read Service (read side) in CQRS.
  *
- * Read services handle read-only operations: they fetch data, map domain/database results
- * to API DTOs, and return responses. They do not modify state and do not need `@Transactional`.
+ * Read services handle read-only operations: they fetch data, map database results
+ * to read-side data classes, and return them. They do not modify state and do not need `@Transactional`.
  *
  * ## Conventions
  * - Named `*ReadService` (e.g., `UserReadService`, `ArticleReadService`)
  * - May access jOOQ `DSLContext` directly for optimized read queries
- * - May use OpenAPI-generated DTOs for response mapping
+ * - Return plain Kotlin data classes (e.g., `ArticleSummary`, `UserSummary`), not OpenAPI DTOs
  * - No `@Transactional` — connection pooling handles read concurrency
  *
  * ## Validation

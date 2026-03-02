@@ -1,6 +1,5 @@
 package com.example.profile
 
-import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.ReadService
@@ -17,7 +16,7 @@ class ProfileReadService(
     fun getProfileByUsername(
         username: String,
         viewerId: UserId?,
-    ): Profile {
+    ): ProfileSummary {
         val viewerIdValue = viewerId?.value
         val record =
             dsl
@@ -38,10 +37,11 @@ class ProfileReadService(
                 .where(USERS.USERNAME.eq(username))
                 .fetchOne() ?: throw NotFoundException("Profile not found")
 
-        return Profile()
-            .username(record.get(USERS.USERNAME))
-            .bio(record.get(USERS.BIO))
-            .image(record.get(USERS.IMAGE))
-            .following(record.get("following", Int::class.java) > 0)
+        return ProfileSummary(
+            username = record.get(USERS.USERNAME)!!,
+            bio = record.get(USERS.BIO),
+            image = record.get(USERS.IMAGE),
+            following = record.get("following", Int::class.java) > 0,
+        )
     }
 }

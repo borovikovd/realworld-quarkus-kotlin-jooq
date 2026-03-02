@@ -2,10 +2,13 @@ package com.example.article
 
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
+import com.example.api.model.Profile
+import com.example.profile.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.core.Response
+import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
 class FavoriteResource(
@@ -18,7 +21,7 @@ class FavoriteResource(
         articleWriteService.favoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -30,10 +33,30 @@ class FavoriteResource(
         articleWriteService.unfavoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId)
+        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
             .build()
     }
 }
+
+private fun ArticleSummary.toDto(): ApiArticle =
+    ApiArticle()
+        .slug(slug)
+        .title(title)
+        .description(description)
+        .body(body)
+        .tagList(tagList)
+        .createdAt(createdAt)
+        .updatedAt(updatedAt)
+        .favorited(favorited)
+        .favoritesCount(favoritesCount)
+        .author(author.toDto())
+
+private fun ProfileSummary.toDto(): Profile =
+    Profile()
+        .username(username)
+        .bio(bio)
+        .image(image)
+        .following(following)

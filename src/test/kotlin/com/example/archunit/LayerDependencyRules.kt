@@ -29,9 +29,8 @@ class LayerDependencyRules {
     val `services should not use OpenAPI DTOs` =
         noClasses()
             .that().haveSimpleNameEndingWith("Service")
-            .and().haveSimpleNameNotEndingWith("ReadService")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Services work with domain entities, not API DTOs - ReadServices and Resources handle DTO mapping")
+            .because("Services work with domain entities, not API DTOs - only Resources handle DTO mapping")
 
     @ArchTest
     val `domain entities should not use jOOQ or JAX-RS` =
