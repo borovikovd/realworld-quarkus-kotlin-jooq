@@ -2,30 +2,16 @@ build:
   maxIssues: 0
 
 complexity:
-  LongParameterList:
-    functionThreshold: 7  # Increased from 6 - service methods like updateUser can have 7 params with named args
-    constructorThreshold: 8  # Increased from 7 - domain entities can have 8+ fields
-    ignoreDefaultParameters: true
   TooManyFunctions:
-    thresholdInClasses: 15  # Increased from 11 - repositories can have many methods
+    thresholdInClasses: 13
+  LongParameterList:
+    functionThreshold: 10
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
 
 style:
   MagicNumber:
-    ignoreHashCodeFunction: true
-    ignorePropertyDeclaration: true  # Allow magic numbers in property declarations
-    ignoreLocalVariableDeclaration: false
-    ignoreConstantDeclaration: true
-    ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotation: true
-    ignoreNamedArgument: true
     ignoreEnums: true
-    ignoreNumbers:
-      - '-1'
-      - '0'
-      - '1'
-      - '2'
-      - '3'  # Common in validation (min length 3)
-      - '50' # Common in validation (max length 50)
-      - '60' # Common in time/duration
   ThrowsCount:
-    max: 3  # Increased from 2 - some validation methods throw multiple exceptions
+    max: 3
