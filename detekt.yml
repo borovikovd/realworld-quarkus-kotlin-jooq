@@ -2,6 +2,8 @@ build:
   maxIssues: 0
 
 complexity:
+  CognitiveComplexMethod:
+    active: true
   TooManyFunctions:
     thresholdInClasses: 13
   LongParameterList:
