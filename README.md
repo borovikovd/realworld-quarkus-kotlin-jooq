@@ -24,11 +24,11 @@ com.example/
 ```
 
 Each aggregate contains:
-- `*Service.kt` — commands (write), `@Transactional`, returns typed domain IDs
-- `*DataService.kt` — queries (read), jOOQ multiset, returns API DTOs
+- `*WriteService.kt` — commands, `@Transactional`, returns typed domain IDs
+- `*ReadService.kt` — queries, jOOQ multiset, returns read-side data classes (e.g., `ArticleSummary`)
 - `*Repository.kt` — interface, implemented by `Jooq*Repository.kt`
-- `*Resource.kt` — JAX-RS endpoint, delegates to Service + DataService
-- Domain entity — data class with behavior methods, `@AggregateRoot` annotated
+- `*Resource.kt` — JAX-RS endpoint, delegates to WriteService + ReadService, maps to API DTOs
+- Domain entity — class with behavior methods, `@AggregateRoot` annotated
 
 **Code generation:** OpenAPI spec generates API interfaces and DTOs (`gradle generateApi`). DB schema generates jOOQ classes (`gradle generateJooq`). Application code implements/uses the generated code, never the reverse.
 
@@ -40,7 +40,7 @@ Each aggregate contains:
 
 **Typed domain IDs.** `ArticleId`, `UserId`, `CommentId` as `@JvmInline value class`. Services return these after commands instead of full entities. This prevents leaking domain internals (e.g., `User.passwordHash`) through the service layer and makes the command/query boundary explicit: write returns ID, read hydrates it.
 
-**DataService for reads.** Renamed from the common "Queries" pattern. DataServices own DTO construction and run optimized jOOQ queries. They're the only classes (besides Resources) allowed to import OpenAPI generated models — enforced by ArchUnit.
+**ReadService for reads.** ReadServices run optimized jOOQ queries and return plain Kotlin data classes (`ArticleSummary`, `UserSummary`, etc.). Only Resources are allowed to import OpenAPI generated models — enforced by ArchUnit.
 
 **ArchUnit enforcement.** Architecture rules are tested, not documented. Aggregate boundaries, layer dependencies, technology boundaries, naming conventions, and scope/transaction rules are all compile-time verified. Rules catch violations like a service importing an API DTO or a repository managing transactions.
 
