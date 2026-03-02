@@ -7,9 +7,10 @@ import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
 import com.example.jooq.public.tables.references.USERS
+import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -19,14 +20,30 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 import com.example.api.model.Article as ApiArticle
 
+@DataService
 @ApplicationScoped
-class JooqArticleQueries : ArticleQueries {
-    @Inject
-    lateinit var dsl: DSLContext
+class ArticleDataService(
+    private val dsl: DSLContext,
+) {
+    fun hydrate(
+        id: ArticleId,
+        viewerId: UserId?,
+    ): ApiArticle {
+        val record =
+            dsl
+                .select(articleFields(viewerId))
+                .from(ARTICLES)
+                .join(USERS)
+                .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+                .where(ARTICLES.ID.eq(id.value))
+                .fetchOne() ?: throw NotFoundException("Article not found")
 
-    override fun getArticleBySlug(
+        return record.toApiArticle()
+    }
+
+    fun getArticleBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ApiArticle {
         val record =
             dsl
@@ -40,13 +57,13 @@ class JooqArticleQueries : ArticleQueries {
         return record.toApiArticle()
     }
 
-    override fun getArticles(
+    fun getArticles(
         tag: String?,
         author: String?,
         favorited: String?,
         limit: Int,
         offset: Int,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ApiArticle> =
         dsl
             .select(articleFields(viewerId))
@@ -104,10 +121,10 @@ class JooqArticleQueries : ArticleQueries {
         return conditions
     }
 
-    override fun getArticlesFeed(
+    fun getArticlesFeed(
         limit: Int,
         offset: Int,
-        viewerId: Long,
+        viewerId: UserId,
     ): List<ApiArticle> =
         dsl
             .select(articleFields(viewerId))
@@ -118,7 +135,7 @@ class JooqArticleQueries : ArticleQueries {
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
                 ),
             ).orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -126,7 +143,7 @@ class JooqArticleQueries : ArticleQueries {
             .fetch()
             .map { it.toApiArticle() }
 
-    override fun countArticles(
+    fun countArticles(
         tag: String?,
         author: String?,
         favorited: String?,
@@ -137,7 +154,7 @@ class JooqArticleQueries : ArticleQueries {
             .where(buildConditions(tag, author, favorited))
             .fetchOne(0, Int::class.java) ?: 0
 
-    override fun countArticlesFeed(viewerId: Long): Int =
+    fun countArticlesFeed(viewerId: UserId): Int =
         dsl
             .selectCount()
             .from(ARTICLES)
@@ -145,17 +162,18 @@ class JooqArticleQueries : ArticleQueries {
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
                 ),
             ).fetchOne(0, Int::class.java) ?: 0
 
-    private fun articleFields(viewerId: Long?): List<Field<*>> {
+    private fun articleFields(viewerId: UserId?): List<Field<*>> {
+        val viewerIdValue = viewerId?.value
         val favoritedField =
-            if (viewerId != null) {
+            if (viewerIdValue != null) {
                 select(count())
                     .from(FAVORITES)
                     .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .and(FAVORITES.USER_ID.eq(viewerId))
+                    .and(FAVORITES.USER_ID.eq(viewerIdValue))
                     .asField<Int>("favorited")
             } else {
                 org.jooq.impl.DSL
@@ -164,11 +182,11 @@ class JooqArticleQueries : ArticleQueries {
             }
 
         val followingField =
-            if (viewerId != null) {
+            if (viewerIdValue != null) {
                 select(count())
                     .from(FOLLOWERS)
                     .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerIdValue))
                     .asField<Int>("following")
             } else {
                 org.jooq.impl.DSL

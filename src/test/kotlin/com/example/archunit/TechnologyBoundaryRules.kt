@@ -1,6 +1,5 @@
 package com.example.archunit
 
-import com.example.shared.domain.Queries
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -18,22 +17,15 @@ import org.jooq.DSLContext
 )
 class TechnologyBoundaryRules {
     @ArchTest
-    val `only Resources and Queries can import OpenAPI generated code` =
+    val `only Resources and DataServices can import OpenAPI generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not in api package, not Resource, and not Queries") {
+                object : DescribedPredicate<JavaClass>("not in api package, not Resource, not Queries, and not DataService") {
                     override fun test(input: JavaClass): Boolean {
-                        // Exclude API package itself
                         if (input.packageName.contains(".api")) return false
-
-                        // Exclude Resources (annotated with @Path)
                         if (input.isAnnotatedWith(Path::class.java)) return false
-
-                        // Exclude Queries (implements Queries interface or contains "Queries" in name)
-                        if (input.isAssignableTo(Queries::class.java)) return false
                         if (input.fullName.contains("Queries")) return false
-
-                        // This class should be checked
+                        if (input.fullName.contains("DataService")) return false
                         return true
                     }
                 },
@@ -43,7 +35,7 @@ class TechnologyBoundaryRules {
             .and().haveSimpleNameNotContaining("Fixture")
             .and().haveSimpleNameNotContaining("Builder")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Only Resources and Queries should use OpenAPI DTOs (CQRS-lite pattern)")
+            .because("Only Resources and DataServices should use OpenAPI DTOs")
 
     @ArchTest
     val `only SecurityContext can import JWT` =
@@ -55,12 +47,14 @@ class TechnologyBoundaryRules {
             ).because("JWT token handling should be isolated to SecurityContext and JwtService")
 
     @ArchTest
-    val `only Jooq classes can inject DSLContext` =
+    val `only Jooq repositories and DataServices can inject DSLContext` =
         fields()
             .that().haveRawType(DSLContext::class.java)
             .should().beDeclaredInClassesThat().haveSimpleNameStartingWith("Jooq")
+            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("Queries")
+            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("DataService")
             .orShould().beDeclaredInClassesThat().haveSimpleNameContaining("Test")
-            .because("Only Jooq*Repository and Jooq*Queries should have direct access to jOOQ DSLContext")
+            .because("Only Jooq*Repository and *DataService should have direct access to jOOQ DSLContext")
 
     @ArchTest
     val `services should not use JAX-RS Response` =

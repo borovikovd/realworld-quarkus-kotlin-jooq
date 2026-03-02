@@ -5,102 +5,69 @@ import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
-import com.example.api.model.User
-import com.example.shared.security.JwtService
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class UserAndAuthenticationResource : UserAndAuthenticationApi {
-    @Inject
-    lateinit var userService: UserService
-
-    @Inject
-    lateinit var jwtService: JwtService
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class UserAndAuthenticationResource(
+    private val userService: UserService,
+    private val userDataService: UserDataService,
+    private val securityContext: SecurityContext,
+) : UserAndAuthenticationApi {
     override fun createUser(body: CreateUserRequest): Response {
         val newUser = body.user
-        val user =
+        val userId =
             userService.register(
                 email = newUser.email,
                 username = newUser.username,
                 password = newUser.password,
             )
 
-        val token = jwtService.generateToken(user.id!!, user.email, user.username)
+        val userDto = userDataService.hydrate(userId)
 
         return Response
             .status(Response.Status.CREATED)
-            .entity(
-                Login200Response().user(
-                    User()
-                        .email(user.email)
-                        .token(token)
-                        .username(user.username)
-                        .bio(user.bio)
-                        .image(user.image),
-                ),
-            ).build()
+            .entity(Login200Response().user(userDto))
+            .build()
     }
 
     override fun login(body: LoginRequest): Response {
         val loginUser = body.user
-        val user =
+        val userId =
             userService.login(
                 email = loginUser.email,
                 password = loginUser.password,
             )
 
-        val token = jwtService.generateToken(user.id!!, user.email, user.username)
+        val userDto = userDataService.hydrate(userId)
 
         return Response
-            .ok(
-                Login200Response().user(
-                    User()
-                        .email(user.email)
-                        .token(token)
-                        .username(user.username)
-                        .bio(user.bio)
-                        .image(user.image),
-                ),
-            ).build()
+            .ok(Login200Response().user(userDto))
+            .build()
     }
 
     @RolesAllowed("user")
     override fun getCurrentUser(): Response {
-        val userId = securityContext.currentUserId!!
-        val user = userService.getCurrentUser(userId)
-        val token = jwtService.generateToken(user.id!!, user.email, user.username)
+        val userId = securityContext.requireCurrentUserId()
+        val userDto = userDataService.hydrate(userId)
 
         return Response
-            .ok(
-                Login200Response().user(
-                    User()
-                        .email(user.email)
-                        .token(token)
-                        .username(user.username)
-                        .bio(user.bio)
-                        .image(user.image),
-                ),
-            ).build()
+            .ok(Login200Response().user(userDto))
+            .build()
     }
 
     @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Response {
-        val userId = securityContext.currentUserId!!
+        val currentUserId = securityContext.requireCurrentUserId()
         val updateUser = body.user
 
-        val user =
+        val userId =
             userService.updateUser(
-                userId = userId,
+                userId = currentUserId,
                 email = updateUser.email,
                 username = updateUser.username,
                 password = updateUser.password,
@@ -108,18 +75,10 @@ class UserAndAuthenticationResource : UserAndAuthenticationApi {
                 image = updateUser.image,
             )
 
-        val token = jwtService.generateToken(user.id!!, user.email, user.username)
+        val userDto = userDataService.hydrate(userId)
 
         return Response
-            .ok(
-                Login200Response().user(
-                    User()
-                        .email(user.email)
-                        .token(token)
-                        .username(user.username)
-                        .bio(user.bio)
-                        .image(user.image),
-                ),
-            ).build()
+            .ok(Login200Response().user(userDto))
+            .build()
     }
 }

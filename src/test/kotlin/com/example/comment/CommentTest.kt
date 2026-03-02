@@ -1,6 +1,8 @@
 package com.example.comment
 
+import com.example.article.ArticleId
 import com.example.shared.exceptions.ForbiddenException
+import com.example.user.UserId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
@@ -12,13 +14,14 @@ class CommentTest {
     fun `should create valid comment`() {
         val comment =
             Comment(
-                articleId = 1L,
-                authorId = 2L,
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
                 body = "Test comment body",
             )
 
-        assertEquals(1L, comment.articleId)
-        assertEquals(2L, comment.authorId)
+        assertEquals(ArticleId(1L), comment.articleId)
+        assertEquals(UserId(2L), comment.authorId)
         assertEquals("Test comment body", comment.body)
     }
 
@@ -27,8 +30,9 @@ class CommentTest {
         val exception =
             assertThrows<IllegalArgumentException> {
                 Comment(
-                    articleId = 1L,
-                    authorId = 2L,
+                    id = CommentId(1L),
+                    articleId = ArticleId(1L),
+                    authorId = UserId(2L),
                     body = "",
                 )
             }
@@ -40,68 +44,78 @@ class CommentTest {
     fun `should allow author to delete comment`() {
         val comment =
             Comment(
-                articleId = 1L,
-                authorId = 2L,
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
                 body = "Test comment body",
             )
 
-        assertTrue(comment.canBeDeletedBy(2L))
+        assertTrue(comment.canBeDeletedBy(UserId(2L)))
     }
 
     @Test
     fun `should not allow non-author to delete comment`() {
         val comment =
             Comment(
-                articleId = 1L,
-                authorId = 2L,
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
                 body = "Test comment body",
             )
 
-        assertFalse(comment.canBeDeletedBy(3L))
+        assertFalse(comment.canBeDeletedBy(UserId(3L)))
     }
 
     @Test
     fun `ensureCanBeDeletedBy should succeed for author`() {
         val comment =
             Comment(
-                articleId = 1L,
-                authorId = 2L,
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
                 body = "Test comment body",
             )
 
-        comment.ensureCanBeDeletedBy(2L)
+        comment.ensureCanBeDeletedBy(UserId(2L))
     }
 
     @Test
     fun `ensureCanBeDeletedBy should throw for non-author`() {
         val comment =
             Comment(
-                articleId = 1L,
-                authorId = 2L,
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
                 body = "Test comment body",
             )
 
         val exception =
             assertThrows<ForbiddenException> {
-                comment.ensureCanBeDeletedBy(3L)
+                comment.ensureCanBeDeletedBy(UserId(3L))
             }
 
         assertEquals("You can only delete your own comments", exception.message)
     }
 
     @Test
-    fun `should assign new id with withId`() {
-        val comment =
+    fun `should have identity-based equality`() {
+        val comment1 =
             Comment(
-                id = 1L,
-                articleId = 1L,
-                authorId = 2L,
-                body = "Test comment body",
+                id = CommentId(1L),
+                articleId = ArticleId(1L),
+                authorId = UserId(2L),
+                body = "Body 1",
             )
 
-        val commentWithNewId = comment.withId(2L)
+        val comment2 =
+            Comment(
+                id = CommentId(1L),
+                articleId = ArticleId(2L),
+                authorId = UserId(3L),
+                body = "Body 2",
+            )
 
-        assertEquals(2L, commentWithNewId.id)
-        assertEquals("Test comment body", commentWithNewId.body)
+        assertEquals(comment1, comment2)
+        assertEquals(comment1.hashCode(), comment2.hashCode())
     }
 }

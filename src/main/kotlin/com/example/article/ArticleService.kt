@@ -1,32 +1,32 @@
 package com.example.article
 
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.ForbiddenException
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
-class ArticleService {
-    @Inject
-    lateinit var articleRepository: ArticleRepository
-
-    @Inject
-    lateinit var slugGenerator: SlugGenerator
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class ArticleService(
+    private val articleRepository: ArticleRepository,
+    private val slugGenerator: SlugGenerator,
+    private val securityContext: SecurityContext,
+) {
     @Transactional
     fun createArticle(
         title: String,
         description: String,
         body: String,
         tags: List<String>,
-    ): Article {
+    ): ArticleId {
+        validateArticleFields(title, description, body)
+
         val userId = securityContext.requireCurrentUserId()
+        val articleId = articleRepository.nextId()
         val slug =
             slugGenerator.generateUniqueSlug(
                 title = title,
@@ -36,6 +36,7 @@ class ArticleService {
             )
         val article =
             Article(
+                id = articleId,
                 slug = slug,
                 title = title,
                 description = description,
@@ -43,7 +44,8 @@ class ArticleService {
                 authorId = userId,
                 tags = tags.toSet(),
             )
-        return articleRepository.create(article)
+        articleRepository.create(article)
+        return articleId
     }
 
     @Transactional
@@ -52,7 +54,7 @@ class ArticleService {
         title: String?,
         description: String?,
         body: String?,
-    ): Article {
+    ): ArticleId {
         val userId = securityContext.requireCurrentUserId()
         val article =
             articleRepository.findBySlug(slug)
@@ -62,13 +64,14 @@ class ArticleService {
             throw ForbiddenException("You can only update your own articles")
         }
 
-        val updatedTitle = if (title != null && title.isNotBlank()) title else article.title
-        val updatedDescription =
-            if (description != null && description.isNotBlank()) description else article.description
-        val updatedBody = if (body != null && body.isNotBlank()) body else article.body
+        validateArticleFields(title, description, body)
+
+        val updatedTitle = title ?: article.title
+        val updatedDescription = description ?: article.description
+        val updatedBody = body ?: article.body
 
         val updatedSlug =
-            if (title != null && title.isNotBlank() && title != article.title) {
+            if (title != null && title != article.title) {
                 slugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidateSlug: String ->
@@ -81,7 +84,8 @@ class ArticleService {
             }
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody)
-        return articleRepository.update(updatedArticle)
+        articleRepository.update(updatedArticle)
+        return article.id
     }
 
     @Transactional
@@ -95,7 +99,7 @@ class ArticleService {
             throw ForbiddenException("You can only delete your own articles")
         }
 
-        articleRepository.deleteById(article.id!!)
+        articleRepository.deleteById(article.id)
     }
 
     @Transactional
@@ -105,7 +109,7 @@ class ArticleService {
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.favorite(article.id!!, userId)
+        articleRepository.favorite(article.id, userId)
     }
 
     @Transactional
@@ -115,12 +119,20 @@ class ArticleService {
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.unfavorite(article.id!!, userId)
+        articleRepository.unfavorite(article.id, userId)
     }
 
-    fun getArticle(slug: String): Article =
-        articleRepository.findBySlug(slug)
-            ?: throw NotFoundException("Article not found")
-
     fun getAllTags(): List<String> = articleRepository.getAllTags()
+
+    private fun validateArticleFields(
+        title: String?,
+        description: String?,
+        body: String?,
+    ) {
+        val errors = mutableMapOf<String, List<String>>()
+        title?.let { if (it.isBlank()) errors["title"] = listOf("must not be blank") }
+        description?.let { if (it.isBlank()) errors["description"] = listOf("must not be blank") }
+        body?.let { if (it.isBlank()) errors["body"] = listOf("must not be blank") }
+        if (errors.isNotEmpty()) throw ValidationException(errors)
+    }
 }

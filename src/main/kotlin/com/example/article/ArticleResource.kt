@@ -8,27 +8,21 @@ import com.example.api.model.UpdateArticleRequest
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class ArticleResource : ArticlesApi {
-    @Inject
-    lateinit var articleService: ArticleService
-
-    @Inject
-    lateinit var articleQueries: ArticleQueries
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class ArticleResource(
+    private val articleService: ArticleService,
+    private val articleDataService: ArticleDataService,
+    private val securityContext: SecurityContext,
+) : ArticlesApi {
     @RolesAllowed("user")
     override fun createArticle(article: CreateArticleRequest): Response {
         val newArticle = article.article
 
-        val created =
+        val articleId =
             articleService.createArticle(
                 title = newArticle.title,
                 description = newArticle.description,
@@ -37,7 +31,7 @@ class ArticleResource : ArticlesApi {
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(created.slug, viewerId)
+        val articleDto = articleDataService.hydrate(articleId, viewerId)
 
         return Response
             .status(Response.Status.CREATED)
@@ -54,7 +48,7 @@ class ArticleResource : ArticlesApi {
 
     override fun getArticle(slug: String): Response {
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
+        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -71,7 +65,7 @@ class ArticleResource : ArticlesApi {
     ): Response {
         val viewerId = securityContext.currentUserId
         val articles =
-            articleQueries.getArticles(
+            articleDataService.getArticles(
                 tag = tag,
                 author = author,
                 favorited = favorited,
@@ -84,7 +78,7 @@ class ArticleResource : ArticlesApi {
             .ok(
                 GetArticlesFeed200Response()
                     .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleQueries.countArticles(tag, author, favorited)),
+                    .articlesCount(articleDataService.countArticles(tag, author, favorited)),
             ).build()
     }
 
@@ -96,7 +90,7 @@ class ArticleResource : ArticlesApi {
     ): Response {
         val viewerId = securityContext.currentUserId!!
         val articles =
-            articleQueries.getArticlesFeed(
+            articleDataService.getArticlesFeed(
                 limit = limit ?: 20,
                 offset = offset ?: 0,
                 viewerId = viewerId,
@@ -106,7 +100,7 @@ class ArticleResource : ArticlesApi {
             .ok(
                 GetArticlesFeed200Response()
                     .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleQueries.countArticlesFeed(viewerId)),
+                    .articlesCount(articleDataService.countArticlesFeed(viewerId)),
             ).build()
     }
 
@@ -117,7 +111,7 @@ class ArticleResource : ArticlesApi {
     ): Response {
         val updateData = article.article
 
-        val updated =
+        val articleId =
             articleService.updateArticle(
                 slug = slug,
                 title = updateData.title,
@@ -126,7 +120,7 @@ class ArticleResource : ArticlesApi {
             )
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(updated.slug, viewerId)
+        val articleDto = articleDataService.hydrate(articleId, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))

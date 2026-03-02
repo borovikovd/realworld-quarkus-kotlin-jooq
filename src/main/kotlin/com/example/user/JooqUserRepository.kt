@@ -2,37 +2,38 @@ package com.example.user
 
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 
 @ApplicationScoped
-class JooqUserRepository : UserRepository {
-    @Inject
-    lateinit var dsl: DSLContext
+class JooqUserRepository(
+    private val dsl: DSLContext,
+) : UserRepository {
+    override fun nextId(): UserId =
+        UserId(
+            dsl
+                .select(DSL.field("nextval('users_id_seq')", Long::class.java))
+                .fetchSingle()
+                .value1()!!,
+        )
 
     override fun create(entity: User): User {
-        require(entity.id == null) { "Cannot create entity with existing ID" }
+        dsl
+            .insertInto(USERS)
+            .set(USERS.ID, entity.id.value)
+            .set(USERS.EMAIL, entity.email)
+            .set(USERS.USERNAME, entity.username)
+            .set(USERS.PASSWORD_HASH, entity.passwordHash)
+            .set(USERS.BIO, entity.bio)
+            .set(USERS.IMAGE, entity.image)
+            .set(USERS.CREATED_AT, entity.createdAt)
+            .set(USERS.UPDATED_AT, entity.updatedAt)
+            .execute()
 
-        val id =
-            dsl
-                .insertInto(USERS)
-                .set(USERS.EMAIL, entity.email)
-                .set(USERS.USERNAME, entity.username)
-                .set(USERS.PASSWORD_HASH, entity.passwordHash)
-                .set(USERS.BIO, entity.bio)
-                .set(USERS.IMAGE, entity.image)
-                .set(USERS.CREATED_AT, entity.createdAt)
-                .set(USERS.UPDATED_AT, entity.updatedAt)
-                .returningResult(USERS.ID)
-                .fetchOne()
-                ?.value1() ?: error("Failed to insert user")
-
-        return entity.withId(id)
+        return entity
     }
 
     override fun update(entity: User): User {
-        requireNotNull(entity.id) { "Cannot update entity without ID" }
-
         dsl
             .update(USERS)
             .set(USERS.EMAIL, entity.email)
@@ -41,29 +42,20 @@ class JooqUserRepository : UserRepository {
             .set(USERS.BIO, entity.bio)
             .set(USERS.IMAGE, entity.image)
             .set(USERS.UPDATED_AT, entity.updatedAt)
-            .where(USERS.ID.eq(entity.id))
+            .where(USERS.ID.eq(entity.id.value))
             .execute()
 
         return entity
     }
 
-    override fun findById(id: Long): User? {
+    override fun findById(id: UserId): User? {
         val record =
             dsl
                 .selectFrom(USERS)
-                .where(USERS.ID.eq(id))
+                .where(USERS.ID.eq(id.value))
                 .fetchOne() ?: return null
 
-        return User(
-            id = record.id,
-            email = record.email!!,
-            username = record.username!!,
-            passwordHash = record.passwordHash!!,
-            bio = record.bio,
-            image = record.image,
-            createdAt = record.createdAt!!,
-            updatedAt = record.updatedAt!!,
-        )
+        return toUser(record)
     }
 
     override fun findByEmail(email: String): User? {
@@ -73,16 +65,7 @@ class JooqUserRepository : UserRepository {
                 .where(USERS.EMAIL.eq(email))
                 .fetchOne() ?: return null
 
-        return User(
-            id = record.id,
-            email = record.email!!,
-            username = record.username!!,
-            passwordHash = record.passwordHash!!,
-            bio = record.bio,
-            image = record.image,
-            createdAt = record.createdAt!!,
-            updatedAt = record.updatedAt!!,
-        )
+        return toUser(record)
     }
 
     override fun findByUsername(username: String): User? {
@@ -92,8 +75,12 @@ class JooqUserRepository : UserRepository {
                 .where(USERS.USERNAME.eq(username))
                 .fetchOne() ?: return null
 
-        return User(
-            id = record.id,
+        return toUser(record)
+    }
+
+    private fun toUser(record: com.example.jooq.public.tables.records.UsersRecord): User =
+        User(
+            id = UserId(record.id!!),
             email = record.email!!,
             username = record.username!!,
             passwordHash = record.passwordHash!!,
@@ -102,7 +89,6 @@ class JooqUserRepository : UserRepository {
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )
-    }
 
     override fun existsByEmail(email: String): Boolean =
         dsl.fetchExists(

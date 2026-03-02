@@ -5,28 +5,22 @@ import com.example.api.model.CreateArticle201Response
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class FavoriteResource : FavoritesApi {
-    @Inject
-    lateinit var articleService: ArticleService
-
-    @Inject
-    lateinit var articleQueries: ArticleQueries
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class FavoriteResource(
+    private val articleService: ArticleService,
+    private val articleDataService: ArticleDataService,
+    private val securityContext: SecurityContext,
+) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): Response {
         articleService.favoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
+        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))
@@ -38,7 +32,7 @@ class FavoriteResource : FavoritesApi {
         articleService.unfavoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId
-        val articleDto = articleQueries.getArticleBySlug(slug, viewerId)
+        val articleDto = articleDataService.getArticleBySlug(slug, viewerId)
 
         return Response
             .ok(CreateArticle201Response().article(articleDto))

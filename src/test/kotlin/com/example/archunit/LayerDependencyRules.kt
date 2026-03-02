@@ -30,13 +30,14 @@ class LayerDependencyRules {
     val `services should not use OpenAPI DTOs` =
         noClasses()
             .that().haveSimpleNameEndingWith("Service")
+            .and().haveSimpleNameNotEndingWith("DataService")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Services work with domain entities, not API DTOs - Resources handle DTO mapping")
+            .because("Services work with domain entities, not API DTOs - DataServices and Resources handle DTO mapping")
 
     @ArchTest
     val `domain entities should not use jOOQ or JAX-RS` =
         classes()
-            .that().implement(Entity::class.java)
+            .that().areAssignableTo(Entity::class.java)
             .and(
                 object : DescribedPredicate<JavaClass>("not infrastructure classes") {
                     override fun test(input: JavaClass): Boolean {
@@ -46,6 +47,7 @@ class LayerDependencyRules {
                             !name.contains("Service") &&
                             !name.contains("Resource") &&
                             !name.contains("Queries") &&
+                            !name.contains("DataService") &&
                             !name.startsWith("Jooq") &&
                             !input.fullName.contains("Jooq") &&
                             !input.packageName.contains(".jooq")
@@ -61,9 +63,11 @@ class LayerDependencyRules {
     val `only jooq classes can import jooq generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not Jooq classes and not in jooq package") {
+                object : DescribedPredicate<JavaClass>("not Jooq/Queries/DataService classes and not in jooq package") {
                     override fun test(input: JavaClass): Boolean =
                         !input.fullName.contains("Jooq") &&
+                            !input.fullName.contains("Queries") &&
+                            !input.fullName.contains("DataService") &&
                             !input.packageName.contains(".jooq") &&
                             !input.simpleName.contains("Test") &&
                             !input.simpleName.contains("Base") &&
@@ -71,5 +75,5 @@ class LayerDependencyRules {
                 },
             )
             .should().dependOnClassesThat().resideInAPackage("com.example.jooq..")
-            .because("Only Jooq*Repository and Jooq*Queries should access jOOQ generated code")
+            .because("Only Jooq*Repository and *DataService should access jOOQ generated code")
 }

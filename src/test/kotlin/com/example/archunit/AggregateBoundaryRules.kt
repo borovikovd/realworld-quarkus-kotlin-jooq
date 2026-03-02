@@ -1,6 +1,7 @@
 package com.example.archunit
 
 import com.example.shared.architecture.AggregateRoot
+import com.example.shared.architecture.ValueObject
 import com.example.shared.domain.Entity
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
@@ -97,6 +98,9 @@ class AggregateBoundaryRules {
                             // Allow accessing other aggregate roots (for ID references)
                             if (target.isAnnotatedWith(AggregateRoot::class.java)) return@forEach
 
+                            // Allow accessing typed ID value classes from other aggregates
+                            if (target.isAnnotatedWith(ValueObject::class.java)) return@forEach
+
                             // Allow accessing classes in the same aggregate
                             if (inSameAggregate(item, target)) return@forEach
 
@@ -131,6 +135,9 @@ class AggregateBoundaryRules {
                     ) {
                         item.directDependenciesFromSelf.forEach { dependency ->
                             val target = dependency.targetClass
+
+                            if (target.isAnnotatedWith(ValueObject::class.java)) return@forEach
+
                             if (isInAggregate(target)) {
                                 val message =
                                     "Shared class ${item.simpleName} depends on " +

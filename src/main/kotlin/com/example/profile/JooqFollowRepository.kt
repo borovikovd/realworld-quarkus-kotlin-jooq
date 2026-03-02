@@ -1,46 +1,45 @@
 package com.example.profile
 
 import com.example.jooq.public.tables.references.FOLLOWERS
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqFollowRepository : FollowRepository {
-    @Inject
-    lateinit var dsl: DSLContext
-
+class JooqFollowRepository(
+    private val dsl: DSLContext,
+) : FollowRepository {
     override fun follow(
-        followerId: Long,
-        followeeId: Long,
+        followerId: UserId,
+        followeeId: UserId,
     ) {
         dsl
             .insertInto(FOLLOWERS)
-            .set(FOLLOWERS.FOLLOWER_ID, followerId)
-            .set(FOLLOWERS.FOLLOWEE_ID, followeeId)
+            .set(FOLLOWERS.FOLLOWER_ID, followerId.value)
+            .set(FOLLOWERS.FOLLOWEE_ID, followeeId.value)
             .onDuplicateKeyIgnore()
             .execute()
     }
 
     override fun unfollow(
-        followerId: Long,
-        followeeId: Long,
+        followerId: UserId,
+        followeeId: UserId,
     ) {
         dsl
             .deleteFrom(FOLLOWERS)
-            .where(FOLLOWERS.FOLLOWER_ID.eq(followerId))
-            .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId))
+            .where(FOLLOWERS.FOLLOWER_ID.eq(followerId.value))
+            .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId.value))
             .execute()
     }
 
     override fun isFollowing(
-        followerId: Long,
-        followeeId: Long,
+        followerId: UserId,
+        followeeId: UserId,
     ): Boolean =
         dsl.fetchExists(
             dsl
                 .selectFrom(FOLLOWERS)
-                .where(FOLLOWERS.FOLLOWER_ID.eq(followerId))
-                .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId)),
+                .where(FOLLOWERS.FOLLOWER_ID.eq(followerId.value))
+                .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId.value)),
         )
 }

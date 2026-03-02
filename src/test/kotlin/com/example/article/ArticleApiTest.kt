@@ -57,6 +57,7 @@ class ArticleApiTest : BaseApiTest() {
             .get("/api/articles/nonexistent-slug")
             .then()
             .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
     }
 
     @Test
@@ -86,6 +87,31 @@ class ArticleApiTest : BaseApiTest() {
             .put("/api/articles/${article.slug}")
             .then()
             .statusCode(403)
+            .body("errors.body[0]", equalTo("You can only update your own articles"))
+    }
+
+    @Test
+    fun `should return 404 when updating non-existent article`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.articleUpdate(title = "New Title"))
+            .`when`()
+            .put("/api/articles/nonexistent-slug")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
+    }
+
+    @Test
+    fun `should return 401 when creating article without auth`() {
+        given()
+            .contentType(ContentType.JSON)
+            .body(TestDataBuilder.articleCreation())
+            .`when`()
+            .post("/api/articles")
+            .then()
+            .statusCode(401)
     }
 
     @Test
@@ -117,6 +143,19 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article.slug}")
             .then()
             .statusCode(403)
+            .body("errors.body[0]", equalTo("You can only delete your own articles"))
+    }
+
+    @Test
+    fun `should return 404 when deleting non-existent article`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/articles/nonexistent-slug")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
     }
 
     @Test
@@ -300,6 +339,72 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article.slug}/comments/${comment.id}")
             .then()
             .statusCode(403)
+            .body("errors.body[0]", equalTo("You can only delete your own comments"))
+    }
+
+    @Test
+    fun `should return 404 when favoriting non-existent article`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .post("/api/articles/nonexistent-slug/favorite")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
+    }
+
+    @Test
+    fun `should return 404 when unfavoriting non-existent article`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/articles/nonexistent-slug/favorite")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
+    }
+
+    @Test
+    fun `should return 404 when commenting on non-existent article`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.commentCreation("Test"))
+            .`when`()
+            .post("/api/articles/nonexistent-slug/comments")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Article not found"))
+    }
+
+    @Test
+    fun `should return 404 when deleting non-existent comment`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/articles/${article.slug}/comments/999999")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Comment not found"))
+    }
+
+    @Test
+    fun `should return 404 when deleting comment from wrong article`() {
+        val user = ApiTestFixtures.registerUser()
+        val article1 = ApiTestFixtures.createArticle(user.token)
+        val article2 = ApiTestFixtures.createArticle(user.token)
+        val comment = ApiTestFixtures.createComment(user.token, article1.slug)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/articles/${article2.slug}/comments/${comment.id}")
+            .then()
+            .statusCode(404)
+            .body("errors.body[0]", equalTo("Comment not found for this article"))
     }
 
     @Test

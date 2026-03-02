@@ -1,48 +1,44 @@
 package com.example.comment
 
 import com.example.article.ArticleRepository
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.NotFoundException
+import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
-class CommentService {
-    @Inject
-    lateinit var commentRepository: CommentRepository
-
-    @Inject
-    lateinit var articleRepository: ArticleRepository
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class CommentService(
+    private val commentRepository: CommentRepository,
+    private val articleRepository: ArticleRepository,
+    private val securityContext: SecurityContext,
+) {
     @Transactional
     fun addComment(
         articleSlug: String,
         body: String,
-    ): Comment {
+    ): CommentId {
+        if (body.isBlank()) {
+            throw ValidationException(mapOf("body" to listOf("must not be blank")))
+        }
+
         val userId = securityContext.requireCurrentUserId()
         val article =
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
 
+        val commentId = commentRepository.nextId()
         val comment =
             Comment(
-                articleId = article.id!!,
+                id = commentId,
+                articleId = article.id,
                 authorId = userId,
                 body = body,
             )
-        return commentRepository.create(comment)
-    }
-
-    fun getComments(articleSlug: String): List<Comment> {
-        val article =
-            articleRepository.findBySlug(articleSlug)
-                ?: throw NotFoundException("Article not found")
-
-        return commentRepository.findByArticleId(article.id!!)
+        commentRepository.create(comment)
+        return commentId
     }
 
     @Transactional
@@ -55,8 +51,9 @@ class CommentService {
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
 
+        val typedCommentId = CommentId(commentId)
         val comment =
-            commentRepository.findById(commentId)
+            commentRepository.findById(typedCommentId)
                 ?: throw NotFoundException("Comment not found")
 
         if (comment.articleId != article.id) {
@@ -64,6 +61,6 @@ class CommentService {
         }
 
         comment.ensureCanBeDeletedBy(userId)
-        commentRepository.deleteById(commentId)
+        commentRepository.deleteById(typedCommentId)
     }
 }

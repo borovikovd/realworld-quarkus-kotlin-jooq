@@ -2,27 +2,26 @@ package com.example.article
 
 import com.example.shared.architecture.AggregateRoot
 import com.example.shared.domain.Entity
+import com.example.user.UserId
 import java.time.OffsetDateTime
 
 @AggregateRoot
-data class Article(
-    override val id: Long? = null,
+class Article(
+    override val id: ArticleId,
     val slug: String,
     val title: String,
     val description: String,
     val body: String,
-    val authorId: Long,
+    val authorId: UserId,
     val tags: Set<String> = emptySet(),
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
-) : Entity<Long> {
+) : Entity<ArticleId>() {
     init {
         require(title.isNotBlank()) { "Title must not be blank" }
         require(description.isNotBlank()) { "Description must not be blank" }
         require(body.isNotBlank()) { "Body must not be blank" }
     }
-
-    override fun withId(newId: Long): Article = copy(id = newId)
 
     fun update(
         slug: String,
@@ -30,13 +29,19 @@ data class Article(
         description: String,
         body: String,
     ): Article =
-        copy(
+        Article(
+            id = id,
             slug = slug,
             title = title,
             description = description,
             body = body,
+            authorId = authorId,
+            tags = tags,
+            createdAt = createdAt,
             updatedAt = OffsetDateTime.now(),
         )
 
-    fun canBeDeletedBy(userId: Long): Boolean = userId == authorId
+    fun canBeDeletedBy(userId: UserId): Boolean = userId == authorId
+
+    override fun toString(): String = "Article(id=$id, slug=$slug, title=$title)"
 }

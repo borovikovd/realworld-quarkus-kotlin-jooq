@@ -1,20 +1,18 @@
 package com.example.user
 
+import com.example.shared.architecture.ApplicationService
 import com.example.shared.exceptions.UnauthorizedException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.PasswordHasher
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 
+@ApplicationService
 @ApplicationScoped
-class UserService {
-    @Inject
-    lateinit var userRepository: UserRepository
-
-    @Inject
-    lateinit var passwordHasher: PasswordHasher
-
+class UserService(
+    private val userRepository: UserRepository,
+    private val passwordHasher: PasswordHasher,
+) {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
     }
@@ -24,14 +22,16 @@ class UserService {
         email: String,
         username: String,
         password: String,
-    ): User {
+    ): UserId {
         val errors = mutableMapOf<String, List<String>>()
 
-        if (userRepository.existsByEmail(email)) {
+        validateEmailFormat(email, errors)
+        if ("email" !in errors && userRepository.existsByEmail(email)) {
             errors["email"] = listOf("is already taken")
         }
 
-        if (userRepository.existsByUsername(username)) {
+        validateUsernameFormat(username, errors)
+        if ("username" !in errors && userRepository.existsByUsername(username)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -43,15 +43,17 @@ class UserService {
             throw ValidationException(errors)
         }
 
+        val userId = userRepository.nextId()
         val passwordHash = passwordHasher.hash(password)
-        val user = User(email = email, username = username, passwordHash = passwordHash)
-        return userRepository.create(user)
+        val user = User(id = userId, email = email, username = username, passwordHash = passwordHash)
+        userRepository.create(user)
+        return userId
     }
 
     fun login(
         email: String,
         password: String,
-    ): User {
+    ): UserId {
         val user =
             userRepository.findByEmail(email)
                 ?: throw UnauthorizedException("Invalid email or password")
@@ -60,18 +62,18 @@ class UserService {
             throw UnauthorizedException("Invalid email or password")
         }
 
-        return user
+        return user.id
     }
 
     @Transactional
     fun updateUser(
-        userId: Long,
+        userId: UserId,
         email: String?,
         username: String?,
         password: String?,
         bio: String?,
         image: String?,
-    ): User {
+    ): UserId {
         val user =
             userRepository.findById(userId)
                 ?: throw UnauthorizedException("User not found")
@@ -79,13 +81,15 @@ class UserService {
         val errors = mutableMapOf<String, List<String>>()
 
         email?.let {
-            if (it != user.email && userRepository.existsByEmail(it)) {
+            validateEmailFormat(it, errors)
+            if ("email" !in errors && it != user.email && userRepository.existsByEmail(it)) {
                 errors["email"] = listOf("is already taken")
             }
         }
 
         username?.let {
-            if (it != user.username && userRepository.existsByUsername(it)) {
+            validateUsernameFormat(it, errors)
+            if ("username" !in errors && it != user.username && userRepository.existsByUsername(it)) {
                 errors["username"] = listOf("is already taken")
             }
         }
@@ -107,10 +111,32 @@ class UserService {
             updatedUser = updatedUser.updatePassword(newPasswordHash)
         }
 
-        return userRepository.update(updatedUser)
+        val saved = userRepository.update(updatedUser)
+        return saved.id
     }
 
-    fun getCurrentUser(userId: Long): User =
-        userRepository.findById(userId)
-            ?: throw UnauthorizedException("User not found")
+    private fun validateEmailFormat(
+        email: String,
+        errors: MutableMap<String, List<String>>,
+    ) {
+        if (email.isBlank()) {
+            errors["email"] = listOf("must not be blank")
+        } else if (!User.EMAIL_REGEX.matches(email)) {
+            errors["email"] = listOf("must be a valid email address")
+        }
+    }
+
+    private fun validateUsernameFormat(
+        username: String,
+        errors: MutableMap<String, List<String>>,
+    ) {
+        if (username.isBlank()) {
+            errors["username"] = listOf("must not be blank")
+        } else if (username.length !in User.MIN_USERNAME_LENGTH..User.MAX_USERNAME_LENGTH) {
+            errors["username"] =
+                listOf(
+                    "must be between ${User.MIN_USERNAME_LENGTH} and ${User.MAX_USERNAME_LENGTH} characters",
+                )
+        }
+    }
 }

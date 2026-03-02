@@ -4,6 +4,7 @@ import com.example.shared.exceptions.BadRequestException
 import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.user.User
+import com.example.user.UserId
 import com.example.user.UserRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -24,20 +25,21 @@ class ProfileServiceTest {
         userRepository = mockk()
         followRepository = mockk()
         securityContext = mockk()
-        profileService = ProfileService()
-        profileService.userRepository = userRepository
-        profileService.followRepository = followRepository
-        profileService.securityContext = securityContext
+        profileService = ProfileService(
+            userRepository = userRepository,
+            followRepository = followRepository,
+            securityContext = securityContext,
+        )
     }
 
     @Test
     fun `followUser should follow when user exists`() {
-        val followerId = 1L
+        val followerId = UserId(1L)
         val username = "targetuser"
 
         val followee =
             User(
-                id = 2L,
+                id = UserId(2L),
                 email = "target@example.com",
                 username = username,
                 passwordHash = "hash",
@@ -45,18 +47,18 @@ class ProfileServiceTest {
 
         every { securityContext.requireCurrentUserId() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
-        every { followRepository.follow(followerId, 2L) } returns Unit
+        every { followRepository.follow(followerId, followee.id) } returns Unit
 
         profileService.followUser(username)
 
         verify { securityContext.requireCurrentUserId() }
         verify { userRepository.findByUsername(username) }
-        verify { followRepository.follow(followerId, 2L) }
+        verify { followRepository.follow(followerId, followee.id) }
     }
 
     @Test
     fun `followUser should throw NotFoundException when user not found`() {
-        val followerId = 1L
+        val followerId = UserId(1L)
         val username = "nonexistent"
 
         every { securityContext.requireCurrentUserId() } returns followerId
@@ -75,7 +77,7 @@ class ProfileServiceTest {
 
     @Test
     fun `followUser should throw BadRequestException when trying to follow self`() {
-        val followerId = 1L
+        val followerId = UserId(1L)
         val username = "selfuser"
 
         val followee =
@@ -102,12 +104,12 @@ class ProfileServiceTest {
 
     @Test
     fun `unfollowUser should unfollow when user exists`() {
-        val followerId = 1L
+        val followerId = UserId(1L)
         val username = "targetuser"
 
         val followee =
             User(
-                id = 2L,
+                id = UserId(2L),
                 email = "target@example.com",
                 username = username,
                 passwordHash = "hash",
@@ -115,18 +117,18 @@ class ProfileServiceTest {
 
         every { securityContext.requireCurrentUserId() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
-        every { followRepository.unfollow(followerId, 2L) } returns Unit
+        every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
         profileService.unfollowUser(username)
 
         verify { securityContext.requireCurrentUserId() }
         verify { userRepository.findByUsername(username) }
-        verify { followRepository.unfollow(followerId, 2L) }
+        verify { followRepository.unfollow(followerId, followee.id) }
     }
 
     @Test
     fun `unfollowUser should throw NotFoundException when user not found`() {
-        val followerId = 1L
+        val followerId = UserId(1L)
         val username = "nonexistent"
 
         every { securityContext.requireCurrentUserId() } returns followerId

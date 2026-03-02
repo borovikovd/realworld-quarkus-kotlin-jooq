@@ -5,25 +5,19 @@ import com.example.api.model.GetProfileByUsername200Response
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
 @Path("/api")
 @ApplicationScoped
-class ProfileResource : ProfileApi {
-    @Inject
-    lateinit var profileService: ProfileService
-
-    @Inject
-    lateinit var profileQueries: ProfileQueries
-
-    @Inject
-    lateinit var securityContext: SecurityContext
-
+class ProfileResource(
+    private val profileService: ProfileService,
+    private val profileDataService: ProfileDataService,
+    private val securityContext: SecurityContext,
+) : ProfileApi {
     override fun getProfileByUsername(username: String): Response {
         val viewerId = securityContext.currentUserId
-        val profile = profileQueries.getProfileByUsername(username, viewerId)
+        val profile = profileDataService.getProfileByUsername(username, viewerId)
 
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
@@ -35,7 +29,7 @@ class ProfileResource : ProfileApi {
         profileService.followUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileQueries.getProfileByUsername(username, currentUserId)
+        val profile = profileDataService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()
@@ -46,7 +40,7 @@ class ProfileResource : ProfileApi {
         profileService.unfollowUser(username)
 
         val currentUserId = securityContext.currentUserId!!
-        val profile = profileQueries.getProfileByUsername(username, currentUserId)
+        val profile = profileDataService.getProfileByUsername(username, currentUserId)
         return Response
             .ok(GetProfileByUsername200Response().profile(profile))
             .build()

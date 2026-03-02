@@ -3,29 +3,31 @@ package com.example.profile
 import com.example.api.model.Profile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
+import com.example.shared.architecture.DataService
 import com.example.shared.exceptions.NotFoundException
+import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
+@DataService
 @ApplicationScoped
-class JooqProfileQueries : ProfileQueries {
-    @Inject
-    lateinit var dsl: DSLContext
-
-    override fun getProfileByUsername(
+class ProfileDataService(
+    private val dsl: DSLContext,
+) {
+    fun getProfileByUsername(
         username: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): Profile {
+        val viewerIdValue = viewerId?.value
         val record =
             dsl
                 .select(
                     USERS.USERNAME,
                     USERS.BIO,
                     USERS.IMAGE,
-                    viewerId?.let {
+                    viewerIdValue?.let {
                         select(count())
                             .from(FOLLOWERS)
                             .where(FOLLOWERS.FOLLOWEE_ID.eq(USERS.ID))
