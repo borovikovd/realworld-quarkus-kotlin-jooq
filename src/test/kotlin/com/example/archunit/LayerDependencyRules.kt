@@ -8,7 +8,6 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
-import jakarta.ws.rs.Path
 
 @AnalyzeClasses(
     packages = ["com.example"],

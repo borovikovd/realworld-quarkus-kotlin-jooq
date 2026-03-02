@@ -5,7 +5,6 @@ import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
-import jakarta.ws.rs.Path
 
 @AnalyzeClasses(
     packages = ["com.example"],
@@ -24,9 +23,10 @@ class NamingConventionRules {
     @ArchTest
     val `resources should end with Resource` =
         classes()
-            .that().areAnnotatedWith(Path::class.java)
-            .should().haveSimpleNameEndingWith("Resource")
-            .because("REST endpoints should be named *Resource")
+            .that().haveSimpleNameEndingWith("Resource")
+            .and().resideOutsideOfPackage("..shared..")
+            .should().beAnnotatedWith(jakarta.enterprise.context.ApplicationScoped::class.java)
+            .because("REST resource classes should be @ApplicationScoped CDI beans")
 
     @ArchTest
     val `services should end with Service` =

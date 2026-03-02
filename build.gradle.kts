@@ -122,6 +122,7 @@ openApiGenerate {
         "returnResponse" to "true",
         "useTags" to "true",
         "useJakartaEe" to "true",
+        "openApiNullable" to "false",
     )
 }
 
