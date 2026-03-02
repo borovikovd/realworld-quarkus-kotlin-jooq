@@ -8,7 +8,6 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
-import jakarta.ws.rs.Path
 import org.jooq.DSLContext
 
 @AnalyzeClasses(
@@ -23,7 +22,7 @@ class TechnologyBoundaryRules {
                 object : DescribedPredicate<JavaClass>("not in api package, not Resource, not Queries, and not DataService") {
                     override fun test(input: JavaClass): Boolean {
                         if (input.packageName.contains(".api")) return false
-                        if (input.isAnnotatedWith(Path::class.java)) return false
+                        if (input.simpleName.endsWith("Resource")) return false
                         if (input.fullName.contains("Queries")) return false
                         if (input.fullName.contains("DataService")) return false
                         return true

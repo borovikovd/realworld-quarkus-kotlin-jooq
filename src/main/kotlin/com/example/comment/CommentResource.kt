@@ -7,10 +7,8 @@ import com.example.api.model.GetArticleComments200Response
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
 
-@Path("/api")
 @ApplicationScoped
 class CommentResource(
     private val commentService: CommentService,
