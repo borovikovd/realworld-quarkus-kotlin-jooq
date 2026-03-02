@@ -40,7 +40,9 @@ Each aggregate contains:
 
 **Typed domain IDs.** `ArticleId`, `UserId`, `CommentId` as `@JvmInline value class`. Services return these after commands instead of full entities. This prevents leaking domain internals (e.g., `User.passwordHash`) through the service layer and makes the command/query boundary explicit: write returns ID, read hydrates it.
 
-**ReadService for reads.** ReadServices run optimized jOOQ queries and return plain Kotlin data classes (`ArticleSummary`, `UserSummary`, etc.). Only Resources are allowed to import OpenAPI generated models — enforced by ArchUnit.
+**WriteService for commands.** WriteServices own domain logic orchestration: validation, entity creation/mutation, and persistence. They're `@Transactional`, work with domain entities and repositories, and return typed IDs — never DTOs or entities. No direct jOOQ access; that's the repository's job.
+
+**ReadService for queries.** ReadServices run optimized jOOQ queries and return plain Kotlin data classes (`ArticleSummary`, `UserSummary`, etc.). Only Resources are allowed to import OpenAPI generated models — enforced by ArchUnit.
 
 **ArchUnit enforcement.** Architecture rules are tested, not documented. Aggregate boundaries, layer dependencies, technology boundaries, naming conventions, and scope/transaction rules are all compile-time verified. Rules catch violations like a service importing an API DTO or a repository managing transactions.
 
