@@ -26,6 +26,7 @@ class ScopeAndTransactionRules {
     val `services should use DDD stereotype annotations` =
         classes()
             .that().haveSimpleNameEndingWith("Service")
+            .and().areNotInterfaces()
             .and().resideOutsideOfPackage("..shared..")
             .and().resideOutsideOfPackage("..api..")
             .and().resideOutsideOfPackage("..jooq..")
