@@ -8,7 +8,9 @@ import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
+import io.micrometer.core.annotation.Counted
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 
 @WriteService
 class DefaultArticleWriteService(
@@ -16,6 +18,11 @@ class DefaultArticleWriteService(
     private val slugGenerator: SlugGenerator,
     private val securityContext: SecurityContext,
 ) : ArticleWriteService {
+    companion object {
+        private val logger = LoggerFactory.getLogger(DefaultArticleWriteService::class.java)
+    }
+
+    @Counted("article.creation.count")
     @Transactional
     override fun createArticle(
         title: String,
@@ -100,6 +107,7 @@ class DefaultArticleWriteService(
         }
 
         articleRepository.deleteById(article.id)
+        logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
     }
 
     @Transactional

@@ -10,6 +10,7 @@ import com.example.shared.exceptions.NotFoundException
 import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 
 @WriteService
 class DefaultCommentWriteService(
@@ -17,6 +18,10 @@ class DefaultCommentWriteService(
     private val articleRepository: ArticleRepository,
     private val securityContext: SecurityContext,
 ) : CommentWriteService {
+    companion object {
+        private val logger = LoggerFactory.getLogger(DefaultCommentWriteService::class.java)
+    }
+
     @Transactional
     override fun addComment(
         articleSlug: String,
@@ -66,5 +71,6 @@ class DefaultCommentWriteService(
             throw ForbiddenException("You can only delete your own comments")
         }
         commentRepository.deleteById(typedCommentId)
+        logger.info("Comment deleted: commentId={}", commentId)
     }
 }

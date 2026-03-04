@@ -7,7 +7,10 @@ import com.example.shared.security.PasswordHasher
 import com.example.user.domain.User
 import com.example.user.domain.UserId
 import com.example.user.domain.UserRepository
+import io.micrometer.core.annotation.Counted
+import io.micrometer.core.annotation.Timed
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 
 @WriteService
 class DefaultUserWriteService(
@@ -16,8 +19,11 @@ class DefaultUserWriteService(
 ) : UserWriteService {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
+        private val logger = LoggerFactory.getLogger(DefaultUserWriteService::class.java)
     }
 
+    @Timed("user.registration")
+    @Counted("user.registration.count")
     @Transactional
     override fun register(
         email: String,
@@ -48,18 +54,23 @@ class DefaultUserWriteService(
         val passwordHash = passwordHasher.hash(password)
         val user = User(id = userId, email = email, username = username, passwordHash = passwordHash)
         userRepository.create(user)
+        logger.info("User registered: userId={}, username={}", userId.value, username)
         return userId.value
     }
 
+    @Timed("user.login")
     override fun login(
         email: String,
         password: String,
     ): Long {
-        val user =
-            userRepository.findByEmail(email)
-                ?: throw UnauthorizedException("Invalid email or password")
+        val user = userRepository.findByEmail(email)
+        if (user == null) {
+            logger.info("Login failed: invalid credentials")
+            throw UnauthorizedException("Invalid email or password")
+        }
 
         if (!passwordHasher.verify(user.passwordHash, password)) {
+            logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
