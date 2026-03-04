@@ -50,7 +50,7 @@ dependencies {
     implementation("io.quarkiverse.jooq:quarkus-jooq:2.1.0")
 
     // Observability
-    implementation("io.quarkiverse.loggingjson:quarkus-logging-json:3.4.1")
+    implementation("io.quarkus:quarkus-logging-json")
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-opentelemetry")
