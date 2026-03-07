@@ -13,7 +13,7 @@ import com.example.profile.application.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.ResponseStatus
 import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
@@ -22,8 +22,9 @@ class ArticleResource(
     private val articleReadService: ArticleReadService,
     private val securityContext: SecurityContext,
 ) : ArticlesApi {
+    @ResponseStatus(201)
     @RolesAllowed("user")
-    override fun createArticle(article: CreateArticleRequest): Response {
+    override fun createArticle(article: CreateArticleRequest): CreateArticle201Response {
         val newArticle = article.article
 
         val articleId =
@@ -37,26 +38,20 @@ class ArticleResource(
         val viewerId = securityContext.currentUserId?.value
         val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
-        return Response
-            .status(Response.Status.CREATED)
-            .entity(CreateArticle201Response().article(articleDto))
-            .build()
+        return CreateArticle201Response().article(articleDto)
     }
 
+    @ResponseStatus(204)
     @RolesAllowed("user")
-    override fun deleteArticle(slug: String): Response {
+    override fun deleteArticle(slug: String) {
         articleWriteService.deleteArticle(slug)
-
-        return Response.noContent().build()
     }
 
-    override fun getArticle(slug: String): Response {
+    override fun getArticle(slug: String): CreateArticle201Response {
         val viewerId = securityContext.currentUserId?.value
         val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
-        return Response
-            .ok(CreateArticle201Response().article(articleDto))
-            .build()
+        return CreateArticle201Response().article(articleDto)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -66,7 +61,7 @@ class ArticleResource(
         favorited: String?,
         offset: Int?,
         limit: Int?,
-    ): Response {
+    ): GetArticlesFeed200Response {
         val viewerId = securityContext.currentUserId?.value
         val articles =
             articleReadService
@@ -79,12 +74,9 @@ class ArticleResource(
                     viewerId = viewerId,
                 ).map { it.toDto() }
 
-        return Response
-            .ok(
-                GetArticlesFeed200Response()
-                    .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleReadService.countArticles(tag, author, favorited)),
-            ).build()
+        return GetArticlesFeed200Response()
+            .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
+            .articlesCount(articleReadService.countArticles(tag, author, favorited))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -92,7 +84,7 @@ class ArticleResource(
     override fun getArticlesFeed(
         offset: Int?,
         limit: Int?,
-    ): Response {
+    ): GetArticlesFeed200Response {
         val viewerId = securityContext.currentUserId!!.value
         val articles =
             articleReadService
@@ -102,19 +94,16 @@ class ArticleResource(
                     viewerId = viewerId,
                 ).map { it.toDto() }
 
-        return Response
-            .ok(
-                GetArticlesFeed200Response()
-                    .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-                    .articlesCount(articleReadService.countArticlesFeed(viewerId)),
-            ).build()
+        return GetArticlesFeed200Response()
+            .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
+            .articlesCount(articleReadService.countArticlesFeed(viewerId))
     }
 
     @RolesAllowed("user")
     override fun updateArticle(
         slug: String,
         article: UpdateArticleRequest,
-    ): Response {
+    ): CreateArticle201Response {
         val updateData = article.article
 
         val articleId =
@@ -128,9 +117,7 @@ class ArticleResource(
         val viewerId = securityContext.currentUserId?.value
         val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
-        return Response
-            .ok(CreateArticle201Response().article(articleDto))
-            .build()
+        return CreateArticle201Response().article(articleDto)
     }
 }
 

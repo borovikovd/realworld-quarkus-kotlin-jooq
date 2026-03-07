@@ -128,7 +128,7 @@ openApiGenerate {
     configOptions = mapOf(
         "dateLibrary" to "java8",
         "interfaceOnly" to "true",
-        "returnResponse" to "true",
+        "returnResponse" to "false",
         "useTags" to "true",
         "useJakartaEe" to "true",
         "openApiNullable" to "false",

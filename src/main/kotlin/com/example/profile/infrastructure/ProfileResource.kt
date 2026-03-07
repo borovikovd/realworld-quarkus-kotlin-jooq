@@ -9,7 +9,6 @@ import com.example.profile.application.ProfileWriteService
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.core.Response
 
 @ApplicationScoped
 class ProfileResource(
@@ -17,35 +16,29 @@ class ProfileResource(
     private val profileReadService: ProfileReadService,
     private val securityContext: SecurityContext,
 ) : ProfileApi {
-    override fun getProfileByUsername(username: String): Response {
+    override fun getProfileByUsername(username: String): GetProfileByUsername200Response {
         val viewerId = securityContext.currentUserId?.value
         val profile = profileReadService.getProfileByUsername(username, viewerId).toDto()
 
-        return Response
-            .ok(GetProfileByUsername200Response().profile(profile))
-            .build()
+        return GetProfileByUsername200Response().profile(profile)
     }
 
     @RolesAllowed("user")
-    override fun followUserByUsername(username: String): Response {
+    override fun followUserByUsername(username: String): GetProfileByUsername200Response {
         profileWriteService.followUser(username)
 
         val currentUserId = securityContext.currentUserId!!.value
         val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
-        return Response
-            .ok(GetProfileByUsername200Response().profile(profile))
-            .build()
+        return GetProfileByUsername200Response().profile(profile)
     }
 
     @RolesAllowed("user")
-    override fun unfollowUserByUsername(username: String): Response {
+    override fun unfollowUserByUsername(username: String): GetProfileByUsername200Response {
         profileWriteService.unfollowUser(username)
 
         val currentUserId = securityContext.currentUserId!!.value
         val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
-        return Response
-            .ok(GetProfileByUsername200Response().profile(profile))
-            .build()
+        return GetProfileByUsername200Response().profile(profile)
     }
 }
 

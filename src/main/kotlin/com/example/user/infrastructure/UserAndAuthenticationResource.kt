@@ -11,7 +11,7 @@ import com.example.user.application.UserSummary
 import com.example.user.application.UserWriteService
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.ResponseStatus
 import com.example.api.model.User as ApiUser
 
 @ApplicationScoped
@@ -20,7 +20,8 @@ class UserAndAuthenticationResource(
     private val userReadService: UserReadService,
     private val securityContext: SecurityContext,
 ) : UserAndAuthenticationApi {
-    override fun createUser(body: CreateUserRequest): Response {
+    @ResponseStatus(201)
+    override fun createUser(body: CreateUserRequest): Login200Response {
         val newUser = body.user
         val userId =
             userWriteService.register(
@@ -31,13 +32,10 @@ class UserAndAuthenticationResource(
 
         val userDto = userReadService.hydrate(userId).toDto()
 
-        return Response
-            .status(Response.Status.CREATED)
-            .entity(Login200Response().user(userDto))
-            .build()
+        return Login200Response().user(userDto)
     }
 
-    override fun login(body: LoginRequest): Response {
+    override fun login(body: LoginRequest): Login200Response {
         val loginUser = body.user
         val userId =
             userWriteService.login(
@@ -47,23 +45,19 @@ class UserAndAuthenticationResource(
 
         val userDto = userReadService.hydrate(userId).toDto()
 
-        return Response
-            .ok(Login200Response().user(userDto))
-            .build()
+        return Login200Response().user(userDto)
     }
 
     @RolesAllowed("user")
-    override fun getCurrentUser(): Response {
+    override fun getCurrentUser(): Login200Response {
         val userId = securityContext.requireCurrentUserId().value
         val userDto = userReadService.hydrate(userId).toDto()
 
-        return Response
-            .ok(Login200Response().user(userDto))
-            .build()
+        return Login200Response().user(userDto)
     }
 
     @RolesAllowed("user")
-    override fun updateCurrentUser(body: UpdateCurrentUserRequest): Response {
+    override fun updateCurrentUser(body: UpdateCurrentUserRequest): Login200Response {
         val currentUserId = securityContext.requireCurrentUserId().value
         val updateUser = body.user
 
@@ -79,9 +73,7 @@ class UserAndAuthenticationResource(
 
         val userDto = userReadService.hydrate(userId).toDto()
 
-        return Response
-            .ok(Login200Response().user(userDto))
-            .build()
+        return Login200Response().user(userDto)
     }
 }
 

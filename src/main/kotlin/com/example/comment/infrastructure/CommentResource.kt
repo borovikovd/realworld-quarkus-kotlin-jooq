@@ -12,7 +12,7 @@ import com.example.profile.application.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.ResponseStatus
 import com.example.api.model.Comment as ApiComment
 
 @ApplicationScoped
@@ -21,40 +21,35 @@ class CommentResource(
     private val commentReadService: CommentReadService,
     private val securityContext: SecurityContext,
 ) : CommentsApi {
+    @ResponseStatus(201)
     @RolesAllowed("user")
     override fun createArticleComment(
         slug: String,
         comment: CreateArticleCommentRequest,
-    ): Response {
+    ): CreateArticleComment200Response {
         val viewerId = securityContext.currentUserId?.value
         val newComment = comment.comment
         val commentId = commentWriteService.addComment(slug, newComment.body)
 
         val commentDto = commentReadService.hydrate(commentId, viewerId).toDto()
 
-        return Response
-            .status(Response.Status.CREATED)
-            .entity(CreateArticleComment200Response().comment(commentDto))
-            .build()
+        return CreateArticleComment200Response().comment(commentDto)
     }
 
+    @ResponseStatus(204)
     @RolesAllowed("user")
     override fun deleteArticleComment(
         slug: String,
         id: Int,
-    ): Response {
+    ) {
         commentWriteService.deleteComment(slug, id.toLong())
-
-        return Response.noContent().build()
     }
 
-    override fun getArticleComments(slug: String): Response {
+    override fun getArticleComments(slug: String): GetArticleComments200Response {
         val viewerId = securityContext.currentUserId?.value
         val comments = commentReadService.getCommentsBySlug(slug, viewerId).map { it.toDto() }
 
-        return Response
-            .ok(GetArticleComments200Response().comments(comments))
-            .build()
+        return GetArticleComments200Response().comments(comments)
     }
 }
 

@@ -10,7 +10,6 @@ import com.example.profile.application.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.ws.rs.core.Response
 import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
@@ -20,27 +19,23 @@ class FavoriteResource(
     private val securityContext: SecurityContext,
 ) : FavoritesApi {
     @RolesAllowed("user")
-    override fun createArticleFavorite(slug: String): Response {
+    override fun createArticleFavorite(slug: String): CreateArticle201Response {
         articleWriteService.favoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId?.value
         val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
-        return Response
-            .ok(CreateArticle201Response().article(articleDto))
-            .build()
+        return CreateArticle201Response().article(articleDto)
     }
 
     @RolesAllowed("user")
-    override fun deleteArticleFavorite(slug: String): Response {
+    override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
         articleWriteService.unfavoriteArticle(slug)
 
         val viewerId = securityContext.currentUserId?.value
         val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
-        return Response
-            .ok(CreateArticle201Response().article(articleDto))
-            .build()
+        return CreateArticle201Response().article(articleDto)
     }
 }
 
