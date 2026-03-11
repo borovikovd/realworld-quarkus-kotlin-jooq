@@ -9,6 +9,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "14.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("nu.studer.jooq") version "10.2"
+    id("com.github.spotbugs") version "6.4.8"
 }
 
 // ============================================
@@ -67,6 +68,9 @@ dependencies {
 
     // jOOQ code generation
     jooqGenerator("org.jooq:jooq-meta-extensions:3.20.11")
+
+    // SpotBugs + FindSecBugs (bytecode security analysis)
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
 
     // Test dependencies (versions managed by BOM)
     testImplementation("io.quarkus:quarkus-junit5")
@@ -198,6 +202,25 @@ detekt {
     source.setFrom(
         "src/main/kotlin",
     )
+}
+
+// SpotBugs + FindSecBugs (bytecode security analysis)
+spotbugs {
+    ignoreFailures = true
+    effort = com.github.spotbugs.snom.Effort.MAX
+    reportLevel = com.github.spotbugs.snom.Confidence.MEDIUM
+    excludeFilter = file("gradle/spotbugs-exclude.xml")
+}
+
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
+    reports.create("sarif") { required = true }
+    reports.create("html") { required = true }
+}
+
+// SpotBugs Gradle plugin only scans Java classes by default — override for Kotlin
+tasks.named<com.github.spotbugs.snom.SpotBugsTask>("spotbugsMain") {
+    dependsOn("compileKotlin")
+    classDirs = files(layout.buildDirectory.dir("classes/kotlin/main"))
 }
 
 // ============================================

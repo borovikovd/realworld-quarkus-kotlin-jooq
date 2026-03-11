@@ -1,0 +1,33 @@
+name: "Security / DAST"
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  zap:
+    name: OWASP ZAP
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: ZAP API scan (spec-only)
+        uses: zaproxy/action-api-scan@v0.10.0
+        with:
+          target: src/main/resources/openapi.yaml
+          rules_file_name: .zap/rules.tsv
+          fail_action: false
+          cmd_options: "-I"
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: zap-report
+          path: report_html.html

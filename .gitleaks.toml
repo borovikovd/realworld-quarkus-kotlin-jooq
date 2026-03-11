@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''src/main/resources/public\.pem''',
+  '''src/test/''',
+]

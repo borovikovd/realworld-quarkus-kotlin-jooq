@@ -1,0 +1,50 @@
+name: "API Lint"
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "src/main/resources/openapi.yaml"
+      - ".spectral.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "src/main/resources/openapi.yaml"
+      - ".spectral.yml"
+
+jobs:
+  spectral:
+    name: Spectral
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run Spectral
+        uses: stoplightio/spectral-action@v0.8.13
+        with:
+          file_glob: src/main/resources/openapi.yaml
+
+  oasdiff:
+    name: oasdiff Breaking Changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+
+      - name: Checkout base branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Check for breaking API changes
+        uses: oasdiff/oasdiff-action/breaking@main
+        with:
+          base: base/src/main/resources/openapi.yaml
+          revision: src/main/resources/openapi.yaml

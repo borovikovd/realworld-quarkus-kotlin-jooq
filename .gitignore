@@ -44,3 +44,7 @@ secrets.*
 # Test artifacts
 .testcontainers/
 *.class
+
+# Security scan reports
+*.sarif
+dependency-check-report/

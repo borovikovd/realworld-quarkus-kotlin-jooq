@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude OpenAPI generated code -->
+    <Match>
+        <Package name="~com\.example\.api\..*" />
+    </Match>
+
+    <!-- Exclude jOOQ generated code -->
+    <Match>
+        <Package name="~com\.example\.jooq\..*" />
+    </Match>
+
+    <!-- Kotlin false positives: mutable field exposure (data classes, DI) -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Bug pattern="MS_EXPOSE_REP" />
+    </Match>
+</FindBugsFilter>
