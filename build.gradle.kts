@@ -231,8 +231,9 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 
 // SpotBugs Gradle plugin only scans Java classes by default — override for Kotlin
 tasks.named<com.github.spotbugs.snom.SpotBugsTask>("spotbugsMain") {
-    dependsOn("compileKotlin")
+    dependsOn("compileKotlin", "compileJava")
     classDirs = files(layout.buildDirectory.dir("classes/kotlin/main"))
+    auxClassPaths.from(files(layout.buildDirectory.dir("classes/java/main")))
 }
 
 // Disable SpotBugs on test code (too many Kotlin/MockK false positives)
