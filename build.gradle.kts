@@ -218,7 +218,7 @@ dependencyCheck {
 
 // SpotBugs + FindSecBugs (bytecode security analysis)
 spotbugs {
-    ignoreFailures = true
+    ignoreFailures = false
     effort = com.github.spotbugs.snom.Effort.MAX
     reportLevel = com.github.spotbugs.snom.Confidence.MEDIUM
     excludeFilter = file("gradle/spotbugs-exclude.xml")
@@ -233,6 +233,11 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 tasks.named<com.github.spotbugs.snom.SpotBugsTask>("spotbugsMain") {
     dependsOn("compileKotlin")
     classDirs = files(layout.buildDirectory.dir("classes/kotlin/main"))
+}
+
+// Disable SpotBugs on test code (too many Kotlin/MockK false positives)
+tasks.named<com.github.spotbugs.snom.SpotBugsTask>("spotbugsTest") {
+    enabled = false
 }
 
 // ============================================

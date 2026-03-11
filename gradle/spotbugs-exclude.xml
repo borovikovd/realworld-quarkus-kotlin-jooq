@@ -2,22 +2,35 @@
 <FindBugsFilter>
     <!-- Exclude OpenAPI generated code -->
     <Match>
-        <Package name="~com\.example\.api\..*" />
+        <Package name="~com\.example\.api(\..*)?"/>
     </Match>
 
     <!-- Exclude jOOQ generated code -->
     <Match>
-        <Package name="~com\.example\.jooq\..*" />
+        <Package name="~com\.example\.jooq(\..*)?"/>
     </Match>
 
     <!-- Kotlin false positives: mutable field exposure (data classes, DI) -->
     <Match>
-        <Bug pattern="EI_EXPOSE_REP" />
+        <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
-        <Bug pattern="EI_EXPOSE_REP2" />
+        <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
     <Match>
-        <Bug pattern="MS_EXPOSE_REP" />
+        <Bug pattern="MS_EXPOSE_REP"/>
+    </Match>
+
+    <!-- Kotlin false positives: List/Collection casts (Kotlin List compiles to java.util.List) -->
+    <Match>
+        <Bug pattern="BC_BAD_CAST_TO_ABSTRACT_COLLECTION"/>
+    </Match>
+
+    <!-- Kotlin false positives: lateinit var with @Inject -->
+    <Match>
+        <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
+    </Match>
+    <Match>
+        <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>
     </Match>
 </FindBugsFilter>
