@@ -10,6 +10,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("nu.studer.jooq") version "10.2"
     id("com.github.spotbugs") version "6.4.8"
+    id("org.owasp.dependencycheck") version "12.2.0"
 }
 
 // ============================================
@@ -202,6 +203,17 @@ detekt {
     source.setFrom(
         "src/main/kotlin",
     )
+}
+
+// OWASP Dependency-Check (SCA)
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    formats = listOf("HTML", "SARIF")
+    outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
+    nvd.apiKey = providers.environmentVariable("NVD_API_KEY").orNull
+    analyzers.assemblyEnabled = false
+    analyzers.nodeEnabled = false
+    analyzers.retirejs.enabled = false
 }
 
 // SpotBugs + FindSecBugs (bytecode security analysis)
