@@ -210,6 +210,7 @@ dependencyCheck {
     failBuildOnCVSS = 7.0f
     formats = listOf("HTML", "SARIF")
     outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
+    suppressionFile = "gradle/dependency-check-suppressions.xml"
     nvd.apiKey = providers.environmentVariable("NVD_API_KEY").orNull
     analyzers.assemblyEnabled = false
     analyzers.nodeEnabled = false

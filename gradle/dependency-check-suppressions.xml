@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- Quarkus Dev UI components incorrectly matched to historical Quarkus CVEs -->
+    <suppress>
+        <notes>qui-directory-tree is a Quarkus Dev UI web component, not Quarkus itself</notes>
+        <gav regex="true">org\.mvnpm\.at\.qomponent:qui-directory-tree:.*</gav>
+        <cpe>cpe:/a:quarkus:quarkus</cpe>
+    </suppress>
+    <suppress>
+        <notes>qui-dot is a Quarkus Dev UI web component, not Quarkus itself</notes>
+        <gav regex="true">org\.mvnpm\.at\.qomponent:qui-dot:.*</gav>
+        <cpe>cpe:/a:quarkus:quarkus</cpe>
+    </suppress>
+
+    <!-- quarkus-devservices-postgresql is a Quarkus extension, not PostgreSQL server -->
+    <suppress>
+        <notes>Quarkus DevServices extension incorrectly matched to PostgreSQL server CPE</notes>
+        <gav regex="true">io\.quarkus:quarkus-devservices-postgresql:.*</gav>
+        <cpe>cpe:/a:postgresql:postgresql</cpe>
+    </suppress>
+
+    <!-- quarkus-hibernate-validator-spi version is Quarkus version, not Hibernate Validator -->
+    <suppress>
+        <notes>Quarkus SPI jar version != Hibernate Validator version</notes>
+        <gav regex="true">io\.quarkus:quarkus-hibernate-validator-spi:.*</gav>
+        <cpe>cpe:/a:hibernate:hibernate-validator</cpe>
+    </suppress>
+
+    <!-- CVE-2020-29582: Kotlin File.createTempFile, fixed in 1.4.21. All jars are newer. -->
+    <suppress>
+        <notes>CVE-2020-29582 fixed in Kotlin 1.4.21; all project versions are 1.6+</notes>
+        <gav regex="true">org\.jetbrains\.kotlin:kotlin-.*</gav>
+        <vulnerabilityName>CVE-2020-29582</vulnerabilityName>
+    </suppress>
+
+    <!-- lit-element-state incorrectly matched to "element" product -->
+    <suppress>
+        <notes>lit-element-state is a web component library, not the "element" product</notes>
+        <gav regex="true">org\.mvnpm:lit-element-state:.*</gav>
+        <cpe>cpe:/a:element:element</cpe>
+    </suppress>
+
+    <!-- dompurify is bundled for Swagger UI only, not used in backend API -->
+    <suppress>
+        <notes>DOMPurify is a frontend sanitizer bundled for Swagger UI, not used in API code</notes>
+        <gav regex="true">org\.mvnpm:dompurify:.*</gav>
+        <cpe>cpe:/a:cure53:dompurify</cpe>
+    </suppress>
+
+</suppressions>
