@@ -8,7 +8,7 @@ plugins {
     id("org.openapi.generator") version "7.20.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("nu.studer.jooq") version "10.2"
+    id("nu.studer.jooq") version "10.2.1"
     id("com.github.spotbugs") version "6.4.8"
     id("org.owasp.dependencycheck") version "12.2.0"
 }
