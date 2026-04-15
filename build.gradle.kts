@@ -61,7 +61,7 @@ dependencies {
     implementation("io.quarkus:quarkus-caffeine")
 
     // External dependencies
-    implementation("org.bouncycastle:bcprov-jdk18on:1.83")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("io.swagger:swagger-annotations:1.6.16")
 
     // Required for OpenAPI generated code (not provided by Quarkus BOM for standalone generated classes)
