@@ -68,7 +68,7 @@ dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.1.1")
 
     // jOOQ code generation
-    jooqGenerator("org.jooq:jooq-meta-extensions:3.21.1")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.21.2")
 
     // SpotBugs + FindSecBugs (bytecode security analysis)
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
