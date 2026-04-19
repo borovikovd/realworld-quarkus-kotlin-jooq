@@ -1,4 +1,4 @@
-package com.example.profile.application
+package com.example.application.profile
 
 interface ProfileReadService {
     fun getProfileByUsername(

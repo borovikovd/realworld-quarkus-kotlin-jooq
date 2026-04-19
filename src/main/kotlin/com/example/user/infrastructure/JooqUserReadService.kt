@@ -1,11 +1,11 @@
 package com.example.user.infrastructure
 
+import com.example.application.user.UserReadService
+import com.example.application.user.UserSummary
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.ReadService
 import com.example.shared.security.JwtService
-import com.example.user.application.UserReadService
-import com.example.user.application.UserSummary
 import org.jooq.DSLContext
 
 @ReadService

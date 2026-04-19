@@ -1,4 +1,4 @@
-package com.example.profile.application
+package com.example.application.profile
 
 interface ProfileWriteService {
     fun followUser(username: String)

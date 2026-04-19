@@ -1,4 +1,4 @@
-package com.example.article.application
+package com.example.application.article
 
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleId

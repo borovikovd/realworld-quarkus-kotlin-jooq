@@ -1,7 +1,8 @@
 package com.example.article.infrastructure
 
-import com.example.article.application.ArticleReadService
-import com.example.article.application.ArticleSummary
+import com.example.application.article.ArticleReadService
+import com.example.application.article.ArticleSummary
+import com.example.application.profile.ProfileSummary
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
@@ -9,7 +10,6 @@ import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
 import com.example.jooq.public.tables.references.USERS
-import com.example.profile.application.ProfileSummary
 import com.example.shared.architecture.ReadService
 import org.jooq.Condition
 import org.jooq.DSLContext

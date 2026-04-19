@@ -1,4 +1,4 @@
-package com.example.user.application
+package com.example.application.user
 
 interface UserWriteService {
     fun register(

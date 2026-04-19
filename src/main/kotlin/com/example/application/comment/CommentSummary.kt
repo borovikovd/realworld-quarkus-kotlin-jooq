@@ -1,6 +1,6 @@
-package com.example.comment.application
+package com.example.application.comment
 
-import com.example.profile.application.ProfileSummary
+import com.example.application.profile.ProfileSummary
 import java.time.OffsetDateTime
 
 data class CommentSummary(

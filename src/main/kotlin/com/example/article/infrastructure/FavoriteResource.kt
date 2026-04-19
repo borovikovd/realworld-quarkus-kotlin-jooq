@@ -3,10 +3,10 @@ package com.example.article.infrastructure
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
-import com.example.article.application.ArticleReadService
-import com.example.article.application.ArticleSummary
-import com.example.article.application.ArticleWriteService
-import com.example.profile.application.ProfileSummary
+import com.example.application.article.ArticleReadService
+import com.example.application.article.ArticleSummary
+import com.example.application.article.ArticleWriteService
+import com.example.application.profile.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

@@ -1,4 +1,4 @@
-package com.example.user.application
+package com.example.application.user
 
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException

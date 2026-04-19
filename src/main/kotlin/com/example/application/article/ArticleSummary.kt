@@ -1,6 +1,6 @@
-package com.example.article.application
+package com.example.application.article
 
-import com.example.profile.application.ProfileSummary
+import com.example.application.profile.ProfileSummary
 import java.time.OffsetDateTime
 
 data class ArticleSummary(

@@ -3,9 +3,9 @@ package com.example.profile.infrastructure
 import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
-import com.example.profile.application.ProfileReadService
-import com.example.profile.application.ProfileSummary
-import com.example.profile.application.ProfileWriteService
+import com.example.application.profile.ProfileReadService
+import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileWriteService
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

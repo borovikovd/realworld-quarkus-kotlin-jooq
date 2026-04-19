@@ -2,7 +2,7 @@ package com.example.article.infrastructure
 
 import com.example.api.TagsApi
 import com.example.api.model.GetTags200Response
-import com.example.article.application.ArticleWriteService
+import com.example.application.article.ArticleWriteService
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped

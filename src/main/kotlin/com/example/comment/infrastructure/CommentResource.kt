@@ -5,10 +5,10 @@ import com.example.api.model.CreateArticleComment200Response
 import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
-import com.example.comment.application.CommentReadService
-import com.example.comment.application.CommentSummary
-import com.example.comment.application.CommentWriteService
-import com.example.profile.application.ProfileSummary
+import com.example.application.comment.CommentReadService
+import com.example.application.comment.CommentSummary
+import com.example.application.comment.CommentWriteService
+import com.example.application.profile.ProfileSummary
 import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

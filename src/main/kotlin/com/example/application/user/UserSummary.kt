@@ -1,4 +1,4 @@
-package com.example.user.application
+package com.example.application.user
 
 data class UserSummary(
     val email: String,

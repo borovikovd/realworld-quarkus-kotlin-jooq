@@ -5,10 +5,10 @@ import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
+import com.example.application.user.UserReadService
+import com.example.application.user.UserSummary
+import com.example.application.user.UserWriteService
 import com.example.shared.security.SecurityContext
-import com.example.user.application.UserReadService
-import com.example.user.application.UserSummary
-import com.example.user.application.UserWriteService
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

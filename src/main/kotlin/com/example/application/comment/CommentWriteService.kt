@@ -1,4 +1,4 @@
-package com.example.comment.application
+package com.example.application.comment
 
 interface CommentWriteService {
     fun addComment(

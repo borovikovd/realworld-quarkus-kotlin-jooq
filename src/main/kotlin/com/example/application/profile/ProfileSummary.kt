@@ -1,4 +1,4 @@
-package com.example.profile.application
+package com.example.application.profile
 
 data class ProfileSummary(
     val username: String,

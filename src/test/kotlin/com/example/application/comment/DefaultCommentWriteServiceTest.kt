@@ -1,4 +1,4 @@
-package com.example.comment.application
+package com.example.application.comment
 
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleId

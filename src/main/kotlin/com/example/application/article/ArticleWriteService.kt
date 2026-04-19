@@ -1,4 +1,4 @@
-package com.example.article.application
+package com.example.application.article
 
 interface ArticleWriteService {
     fun createArticle(
