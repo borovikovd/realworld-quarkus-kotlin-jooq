@@ -4,11 +4,11 @@ import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.user.UserRepository
-import com.example.shared.architecture.WriteService
 import com.example.shared.security.SecurityContext
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
-@WriteService
+@ApplicationScoped
 class DefaultProfileWriteService(
     private val userRepository: UserRepository,
     private val followRepository: FollowRepository,

@@ -4,11 +4,11 @@ import com.example.application.user.UserReadService
 import com.example.application.user.UserSummary
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.USERS
-import com.example.shared.architecture.ReadService
 import com.example.shared.security.JwtService
+import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 
-@ReadService
+@ApplicationScoped
 class JooqUserReadService(
     private val dsl: DSLContext,
     private val jwtService: JwtService,

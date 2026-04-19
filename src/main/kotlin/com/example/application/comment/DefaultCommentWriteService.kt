@@ -7,12 +7,12 @@ import com.example.domain.comment.CommentRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
-import com.example.shared.architecture.WriteService
 import com.example.shared.security.SecurityContext
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
-@WriteService
+@ApplicationScoped
 class DefaultCommentWriteService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,

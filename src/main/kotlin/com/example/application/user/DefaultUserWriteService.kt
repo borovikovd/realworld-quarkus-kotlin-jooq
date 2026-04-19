@@ -5,14 +5,14 @@ import com.example.domain.shared.ValidationException
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
-import com.example.shared.architecture.WriteService
 import com.example.shared.security.PasswordHasher
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
-@WriteService
+@ApplicationScoped
 class DefaultUserWriteService(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,

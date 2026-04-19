@@ -10,7 +10,7 @@ import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
 import com.example.jooq.public.tables.references.USERS
-import com.example.shared.architecture.ReadService
+import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -19,7 +19,7 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
-@ReadService
+@ApplicationScoped
 class JooqArticleReadService(
     private val dsl: DSLContext,
 ) : ArticleReadService {

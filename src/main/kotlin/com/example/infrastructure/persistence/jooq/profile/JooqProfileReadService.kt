@@ -5,12 +5,12 @@ import com.example.application.profile.ProfileSummary
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
-import com.example.shared.architecture.ReadService
+import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
-@ReadService
+@ApplicationScoped
 class JooqProfileReadService(
     private val dsl: DSLContext,
 ) : ProfileReadService {

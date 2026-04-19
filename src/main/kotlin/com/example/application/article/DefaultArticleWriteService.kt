@@ -6,13 +6,13 @@ import com.example.domain.article.SlugGenerator
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
-import com.example.shared.architecture.WriteService
 import com.example.shared.security.SecurityContext
 import io.micrometer.core.annotation.Counted
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
-@WriteService
+@ApplicationScoped
 class DefaultArticleWriteService(
     private val articleRepository: ArticleRepository,
     private val slugGenerator: SlugGenerator,
