@@ -1,4 +1,4 @@
-package com.example.article.infrastructure
+package com.example.presentation.rest.article
 
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
