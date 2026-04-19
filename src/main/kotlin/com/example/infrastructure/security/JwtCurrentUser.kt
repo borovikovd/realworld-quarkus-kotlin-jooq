@@ -1,7 +1,7 @@
 package com.example.infrastructure.security
 
 import com.example.application.CurrentUser
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 import jakarta.enterprise.context.RequestScoped
 import jakarta.enterprise.inject.Alternative
 import org.eclipse.microprofile.jwt.JsonWebToken

@@ -1,6 +1,6 @@
 package com.example.domain.auth
 
-import com.example.user.domain.PasswordHash
+import com.example.domain.user.PasswordHash
 
 interface PasswordHashing {
     fun hash(raw: String): PasswordHash

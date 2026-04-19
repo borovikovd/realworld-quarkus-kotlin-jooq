@@ -1,14 +1,14 @@
-package com.example.comment.domain
+package com.example.domain.article
 
 import com.example.domain.shared.ValueObject
 
 @ValueObject
 @JvmInline
-value class CommentBody(
+value class Title(
     val value: String,
 ) {
     init {
-        require(value.isNotBlank()) { "Comment body must not be blank" }
+        require(value.isNotBlank()) { "Title must not be blank" }
     }
 
     override fun toString(): String = value

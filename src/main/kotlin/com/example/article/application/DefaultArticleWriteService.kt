@@ -1,7 +1,7 @@
 package com.example.article.application
 
-import com.example.article.domain.Article
-import com.example.article.domain.ArticleRepository
+import com.example.domain.article.Article
+import com.example.domain.article.ArticleRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException

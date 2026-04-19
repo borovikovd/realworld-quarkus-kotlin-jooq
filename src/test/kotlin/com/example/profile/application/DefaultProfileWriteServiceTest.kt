@@ -1,12 +1,12 @@
 package com.example.profile.application
 
-import com.example.profile.domain.FollowRepository
+import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
 import com.example.domain.shared.NotFoundException
 import com.example.shared.security.SecurityContext
-import com.example.user.domain.User
-import com.example.user.domain.UserId
-import com.example.user.domain.UserRepository
+import com.example.domain.user.User
+import com.example.domain.user.UserId
+import com.example.domain.user.UserRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

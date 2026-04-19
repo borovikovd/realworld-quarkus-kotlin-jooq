@@ -1,13 +1,13 @@
 package com.example.article.infrastructure
 
-import com.example.article.domain.Article
-import com.example.article.domain.ArticleId
-import com.example.article.domain.ArticleRepository
+import com.example.domain.article.Article
+import com.example.domain.article.ArticleId
+import com.example.domain.article.ArticleRepository
+import com.example.domain.user.UserId
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.TAGS
-import com.example.user.domain.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

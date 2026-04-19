@@ -1,6 +1,6 @@
-package com.example.comment.domain
+package com.example.domain.comment
 
-import com.example.article.domain.ArticleId
+import com.example.domain.article.ArticleId
 import com.example.domain.shared.Repository
 
 interface CommentRepository : Repository<Comment, CommentId> {

@@ -2,11 +2,11 @@ package com.example.user.application
 
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
+import com.example.domain.user.User
+import com.example.domain.user.UserId
+import com.example.domain.user.UserRepository
 import com.example.shared.architecture.WriteService
 import com.example.shared.security.PasswordHasher
-import com.example.user.domain.User
-import com.example.user.domain.UserId
-import com.example.user.domain.UserRepository
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.transaction.Transactional

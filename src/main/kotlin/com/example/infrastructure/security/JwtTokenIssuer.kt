@@ -1,9 +1,9 @@
 package com.example.infrastructure.security
 
 import com.example.domain.auth.TokenIssuer
-import com.example.user.domain.Email
-import com.example.user.domain.UserId
-import com.example.user.domain.Username
+import com.example.domain.user.Email
+import com.example.domain.user.UserId
+import com.example.domain.user.Username
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.Duration

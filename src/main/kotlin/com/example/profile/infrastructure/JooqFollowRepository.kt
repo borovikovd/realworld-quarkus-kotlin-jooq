@@ -1,8 +1,8 @@
 package com.example.profile.infrastructure
 
+import com.example.domain.profile.FollowRepository
+import com.example.domain.user.UserId
 import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.profile.domain.FollowRepository
-import com.example.user.domain.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 

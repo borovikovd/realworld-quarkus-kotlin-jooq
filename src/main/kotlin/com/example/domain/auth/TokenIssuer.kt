@@ -1,8 +1,8 @@
 package com.example.domain.auth
 
-import com.example.user.domain.Email
-import com.example.user.domain.UserId
-import com.example.user.domain.Username
+import com.example.domain.user.Email
+import com.example.domain.user.UserId
+import com.example.domain.user.Username
 
 interface TokenIssuer {
     fun issue(

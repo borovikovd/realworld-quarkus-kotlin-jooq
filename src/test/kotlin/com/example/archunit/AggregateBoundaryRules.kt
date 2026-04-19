@@ -33,23 +33,26 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 class AggregateBoundaryRules {
     companion object {
         /**
-         * Returns the aggregate package for a given class (e.g., "com.example.article").
+         * Returns the aggregate identifier for a given class (e.g., "user", "article").
+         * Handles both layouts during the layer-first migration:
+         *   layer-first:      com.example.{domain|application|infrastructure|presentation.rest}.{aggregate}..
+         *   aggregate-first:  com.example.{aggregate}.{layer}..
          * Returns null if the class is not in an aggregate package.
          */
         private fun getAggregatePackage(javaClass: JavaClass): String? {
             val pkg = javaClass.packageName
-            // Match packages like com.example.article, com.example.user, etc.
-            val match = Regex("(com\\.example\\.\\w+)(?:\\..*)?").find(pkg)
-            return match?.groupValues?.get(1)?.takeIf {
-                // Only consider it an aggregate if it's not in a framework/layer package
-                !it.endsWith(".shared") &&
-                    !it.endsWith(".api") &&
-                    !it.endsWith(".jooq") &&
-                    !it.endsWith(".exceptions") &&
-                    !it.endsWith(".domain") &&
-                    !it.endsWith(".application") &&
-                    !it.endsWith(".infrastructure") &&
-                    !it.endsWith(".presentation")
+            val layerFirst =
+                Regex("com\\.example\\.(?:domain|application|infrastructure|presentation\\.rest)\\.(\\w+)")
+                    .find(pkg)
+            if (layerFirst != null) return layerFirst.groupValues[1]
+
+            val aggregateFirst = Regex("com\\.example\\.(\\w+)(?:\\..*)?").find(pkg)
+            return aggregateFirst?.groupValues?.get(1)?.takeIf {
+                it !in
+                    setOf(
+                        "shared", "api", "jooq", "exceptions",
+                        "domain", "application", "infrastructure", "presentation",
+                    )
             }
         }
 

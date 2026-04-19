@@ -1,9 +1,9 @@
-package com.example.comment.domain
+package com.example.domain.comment
 
-import com.example.article.domain.ArticleId
+import com.example.domain.article.ArticleId
 import com.example.domain.shared.AggregateRoot
 import com.example.domain.shared.Entity
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 import java.time.OffsetDateTime
 
 @AggregateRoot

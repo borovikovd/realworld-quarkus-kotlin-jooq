@@ -1,4 +1,4 @@
-package com.example.user.domain
+package com.example.domain.user
 
 import com.example.domain.shared.AggregateRoot
 import com.example.domain.shared.Entity

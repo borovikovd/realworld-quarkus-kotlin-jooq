@@ -1,9 +1,9 @@
-package com.example.comment.domain
+package com.example.domain.article
 
 import com.example.domain.shared.ValueObject
 
 @ValueObject
 @JvmInline
-value class CommentId(
+value class ArticleId(
     val value: Long,
 )

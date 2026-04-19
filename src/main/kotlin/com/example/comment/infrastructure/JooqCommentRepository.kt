@@ -1,11 +1,11 @@
 package com.example.comment.infrastructure
 
-import com.example.article.domain.ArticleId
-import com.example.comment.domain.Comment
-import com.example.comment.domain.CommentId
-import com.example.comment.domain.CommentRepository
+import com.example.domain.article.ArticleId
+import com.example.domain.comment.Comment
+import com.example.domain.comment.CommentId
+import com.example.domain.comment.CommentRepository
+import com.example.domain.user.UserId
 import com.example.jooq.public.tables.references.COMMENTS
-import com.example.user.domain.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

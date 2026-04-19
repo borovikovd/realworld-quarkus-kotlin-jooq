@@ -1,9 +1,9 @@
 package com.example.comment.application
 
-import com.example.article.domain.ArticleRepository
-import com.example.comment.domain.Comment
-import com.example.comment.domain.CommentId
-import com.example.comment.domain.CommentRepository
+import com.example.domain.article.ArticleRepository
+import com.example.domain.comment.Comment
+import com.example.domain.comment.CommentId
+import com.example.domain.comment.CommentRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException

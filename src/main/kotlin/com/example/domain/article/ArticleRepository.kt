@@ -1,7 +1,7 @@
-package com.example.article.domain
+package com.example.domain.article
 
 import com.example.domain.shared.Repository
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 
 interface ArticleRepository : Repository<Article, ArticleId> {
     fun findBySlug(slug: String): Article?

@@ -1,6 +1,6 @@
-package com.example.profile.domain
+package com.example.domain.profile
 
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 
 interface FollowRepository {
     fun follow(

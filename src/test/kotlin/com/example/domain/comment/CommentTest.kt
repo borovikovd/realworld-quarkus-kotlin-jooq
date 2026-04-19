@@ -1,7 +1,7 @@
-package com.example.comment.domain
+package com.example.domain.comment
 
-import com.example.article.domain.ArticleId
-import com.example.user.domain.UserId
+import com.example.domain.article.ArticleId
+import com.example.domain.user.UserId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals

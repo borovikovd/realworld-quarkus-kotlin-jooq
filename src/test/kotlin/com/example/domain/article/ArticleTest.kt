@@ -1,6 +1,6 @@
-package com.example.article.domain
+package com.example.domain.article
 
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.OffsetDateTime

@@ -1,7 +1,7 @@
 package com.example.shared.security
 
 import com.example.domain.shared.UnauthorizedException
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 import jakarta.enterprise.context.RequestScoped
 import org.eclipse.microprofile.jwt.JsonWebToken
 

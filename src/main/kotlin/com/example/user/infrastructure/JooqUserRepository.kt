@@ -1,9 +1,9 @@
 package com.example.user.infrastructure
 
+import com.example.domain.user.User
+import com.example.domain.user.UserId
+import com.example.domain.user.UserRepository
 import com.example.jooq.public.tables.references.USERS
-import com.example.user.domain.User
-import com.example.user.domain.UserId
-import com.example.user.domain.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

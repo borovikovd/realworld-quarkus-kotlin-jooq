@@ -1,7 +1,7 @@
 package com.example.application
 
 import com.example.domain.shared.UnauthorizedException
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 
 interface CurrentUser {
     val id: UserId?

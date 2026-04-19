@@ -1,4 +1,4 @@
-package com.example.user.domain
+package com.example.domain.user
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

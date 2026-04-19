@@ -3,9 +3,9 @@ package com.example.user.application
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
 import com.example.shared.security.PasswordHasher
-import com.example.user.domain.User
-import com.example.user.domain.UserId
-import com.example.user.domain.UserRepository
+import com.example.domain.user.User
+import com.example.domain.user.UserId
+import com.example.domain.user.UserRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

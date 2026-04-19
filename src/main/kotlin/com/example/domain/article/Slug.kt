@@ -1,4 +1,4 @@
-package com.example.article.domain
+package com.example.domain.article
 
 import com.example.domain.shared.ValueObject
 

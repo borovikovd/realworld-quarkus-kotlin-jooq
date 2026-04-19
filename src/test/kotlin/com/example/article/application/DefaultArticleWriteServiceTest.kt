@@ -1,14 +1,14 @@
 package com.example.article.application
 
-import com.example.article.domain.Article
-import com.example.article.domain.ArticleId
-import com.example.article.domain.ArticleRepository
+import com.example.domain.article.Article
+import com.example.domain.article.ArticleId
+import com.example.domain.article.ArticleRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
-import com.example.user.domain.UserId
+import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
