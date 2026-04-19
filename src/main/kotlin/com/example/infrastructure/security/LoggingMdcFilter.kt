@@ -1,5 +1,6 @@
-package com.example.shared.security
+package com.example.infrastructure.security
 
+import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext

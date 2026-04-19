@@ -1,4 +1,4 @@
-package com.example.shared.security
+package com.example.infrastructure.security
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine

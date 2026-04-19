@@ -1,4 +1,4 @@
-package com.example.shared.security
+package com.example.infrastructure.security
 
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerRequestContext
