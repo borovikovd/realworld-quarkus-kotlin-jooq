@@ -1,8 +1,8 @@
 package com.example.application.profile
 
-interface ProfileReadService {
+interface ProfileViewReader {
     fun getProfileByUsername(
         username: String,
         viewerId: Long?,
-    ): ProfileSummary
+    ): ProfileView
 }

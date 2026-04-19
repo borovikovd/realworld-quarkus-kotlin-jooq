@@ -1,6 +1,6 @@
 package com.example.application.user
 
-data class UserSummary(
+data class UserView(
     val email: String,
     val token: String,
     val username: String,

@@ -4,10 +4,10 @@ import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleReadService
-import com.example.application.article.ArticleSummary
+import com.example.application.article.ArticleView
+import com.example.application.article.ArticleViewReader
 import com.example.application.article.ArticleWriteService
-import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import com.example.api.model.Article as ApiArticle
@@ -15,7 +15,7 @@ import com.example.api.model.Article as ApiArticle
 @ApplicationScoped
 class FavoriteResource(
     private val articleWriteService: ArticleWriteService,
-    private val articleReadService: ArticleReadService,
+    private val articleViewReader: ArticleViewReader,
     private val currentUser: CurrentUser,
 ) : FavoritesApi {
     @RolesAllowed("user")
@@ -23,7 +23,7 @@ class FavoriteResource(
         articleWriteService.favoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
+        val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -33,13 +33,13 @@ class FavoriteResource(
         articleWriteService.unfavoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
+        val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 }
 
-private fun ArticleSummary.toDto(): ApiArticle =
+private fun ArticleView.toDto(): ApiArticle =
     ApiArticle()
         .slug(slug)
         .title(title)
@@ -52,7 +52,7 @@ private fun ArticleSummary.toDto(): ApiArticle =
         .favoritesCount(favoritesCount)
         .author(author.toDto())
 
-private fun ProfileSummary.toDto(): Profile =
+private fun ProfileView.toDto(): Profile =
     Profile()
         .username(username)
         .bio(bio)

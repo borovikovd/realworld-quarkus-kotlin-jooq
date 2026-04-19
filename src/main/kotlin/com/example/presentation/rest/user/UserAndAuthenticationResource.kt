@@ -6,8 +6,8 @@ import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.CurrentUser
-import com.example.application.user.UserReadService
-import com.example.application.user.UserSummary
+import com.example.application.user.UserView
+import com.example.application.user.UserViewReader
 import com.example.application.user.UserWriteService
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -17,7 +17,7 @@ import com.example.api.model.User as ApiUser
 @ApplicationScoped
 class UserAndAuthenticationResource(
     private val userWriteService: UserWriteService,
-    private val userReadService: UserReadService,
+    private val userViewReader: UserViewReader,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
     @ResponseStatus(201)
@@ -30,7 +30,7 @@ class UserAndAuthenticationResource(
                 password = newUser.password,
             )
 
-        val userDto = userReadService.hydrate(userId).toDto()
+        val userDto = userViewReader.hydrate(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -43,7 +43,7 @@ class UserAndAuthenticationResource(
                 password = loginUser.password,
             )
 
-        val userDto = userReadService.hydrate(userId).toDto()
+        val userDto = userViewReader.hydrate(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -51,7 +51,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
         val userId = currentUser.require().value
-        val userDto = userReadService.hydrate(userId).toDto()
+        val userDto = userViewReader.hydrate(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -71,13 +71,13 @@ class UserAndAuthenticationResource(
                 image = updateUser.image,
             )
 
-        val userDto = userReadService.hydrate(userId).toDto()
+        val userDto = userViewReader.hydrate(userId).toDto()
 
         return Login200Response().user(userDto)
     }
 }
 
-private fun UserSummary.toDto(): ApiUser =
+private fun UserView.toDto(): ApiUser =
     ApiUser()
         .email(email)
         .token(token)

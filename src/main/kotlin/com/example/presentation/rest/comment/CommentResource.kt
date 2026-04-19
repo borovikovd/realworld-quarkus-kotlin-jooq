@@ -6,10 +6,10 @@ import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.comment.CommentReadService
-import com.example.application.comment.CommentSummary
+import com.example.application.comment.CommentView
+import com.example.application.comment.CommentViewReader
 import com.example.application.comment.CommentWriteService
-import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -18,7 +18,7 @@ import com.example.api.model.Comment as ApiComment
 @ApplicationScoped
 class CommentResource(
     private val commentWriteService: CommentWriteService,
-    private val commentReadService: CommentReadService,
+    private val commentViewReader: CommentViewReader,
     private val currentUser: CurrentUser,
 ) : CommentsApi {
     @ResponseStatus(201)
@@ -31,7 +31,7 @@ class CommentResource(
         val newComment = comment.comment
         val commentId = commentWriteService.addComment(slug, newComment.body)
 
-        val commentDto = commentReadService.hydrate(commentId, viewerId).toDto()
+        val commentDto = commentViewReader.hydrate(commentId, viewerId).toDto()
 
         return CreateArticleComment200Response().comment(commentDto)
     }
@@ -47,13 +47,13 @@ class CommentResource(
 
     override fun getArticleComments(slug: String): GetArticleComments200Response {
         val viewerId = currentUser.id?.value
-        val comments = commentReadService.getCommentsBySlug(slug, viewerId).map { it.toDto() }
+        val comments = commentViewReader.getCommentsBySlug(slug, viewerId).map { it.toDto() }
 
         return GetArticleComments200Response().comments(comments)
     }
 }
 
-private fun CommentSummary.toDto(): ApiComment =
+private fun CommentView.toDto(): ApiComment =
     ApiComment()
         .id(id.toInt())
         .body(body)
@@ -61,7 +61,7 @@ private fun CommentSummary.toDto(): ApiComment =
         .updatedAt(updatedAt)
         .author(author.toDto())
 
-private fun ProfileSummary.toDto(): Profile =
+private fun ProfileView.toDto(): Profile =
     Profile()
         .username(username)
         .bio(bio)

@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.profile.ProfileReadService
-import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileView
+import com.example.application.profile.ProfileViewReader
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
@@ -11,13 +11,13 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqProfileReadService(
+class JooqProfileViewReader(
     private val dsl: DSLContext,
-) : ProfileReadService {
+) : ProfileViewReader {
     override fun getProfileByUsername(
         username: String,
         viewerId: Long?,
-    ): ProfileSummary {
+    ): ProfileView {
         val record =
             dsl
                 .select(
@@ -37,7 +37,7 @@ class JooqProfileReadService(
                 .where(USERS.USERNAME.eq(username))
                 .fetchOne() ?: throw NotFoundException("Profile not found")
 
-        return ProfileSummary(
+        return ProfileView(
             username = record.get(USERS.USERNAME)!!,
             bio = record.get(USERS.BIO),
             image = record.get(USERS.IMAGE),

@@ -1,13 +1,13 @@
 package com.example.application.comment
 
-interface CommentReadService {
+interface CommentViewReader {
     fun hydrate(
         id: Long,
         viewerId: Long?,
-    ): CommentSummary
+    ): CommentView
 
     fun getCommentsBySlug(
         slug: String,
         viewerId: Long?,
-    ): List<CommentSummary>
+    ): List<CommentView>
 }

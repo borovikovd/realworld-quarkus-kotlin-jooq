@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.comment.CommentReadService
-import com.example.application.comment.CommentSummary
-import com.example.application.profile.ProfileSummary
+import com.example.application.comment.CommentView
+import com.example.application.comment.CommentViewReader
+import com.example.application.profile.ProfileView
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
@@ -15,13 +15,13 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqCommentReadService(
+class JooqCommentViewReader(
     private val dsl: DSLContext,
-) : CommentReadService {
+) : CommentViewReader {
     override fun hydrate(
         id: Long,
         viewerId: Long?,
-    ): CommentSummary = getCommentById(id, viewerId)
+    ): CommentView = getCommentById(id, viewerId)
 
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
@@ -39,7 +39,7 @@ class JooqCommentReadService(
     override fun getCommentsBySlug(
         slug: String,
         viewerId: Long?,
-    ): List<CommentSummary> =
+    ): List<CommentView> =
         dsl
             .select(
                 COMMENTS.ID,
@@ -59,12 +59,12 @@ class JooqCommentReadService(
             .where(ARTICLES.SLUG.eq(slug))
             .orderBy(COMMENTS.CREATED_AT.desc())
             .fetch()
-            .map { it.toCommentSummary() }
+            .map { it.toCommentView() }
 
     private fun getCommentById(
         commentId: Long,
         viewerId: Long?,
-    ): CommentSummary {
+    ): CommentView {
         val record =
             dsl
                 .select(
@@ -83,17 +83,17 @@ class JooqCommentReadService(
                 .where(COMMENTS.ID.eq(commentId))
                 .fetchOne() ?: throw NotFoundException("Comment not found")
 
-        return record.toCommentSummary()
+        return record.toCommentView()
     }
 
-    private fun Record.toCommentSummary(): CommentSummary =
-        CommentSummary(
+    private fun Record.toCommentView(): CommentView =
+        CommentView(
             id = get(COMMENTS.ID)!!,
             body = get(COMMENTS.BODY)!!,
             createdAt = get(COMMENTS.CREATED_AT)!!,
             updatedAt = get(COMMENTS.UPDATED_AT)!!,
             author =
-                ProfileSummary(
+                ProfileView(
                     username = get(USERS.USERNAME)!!,
                     bio = get(USERS.BIO),
                     image = get(USERS.IMAGE),

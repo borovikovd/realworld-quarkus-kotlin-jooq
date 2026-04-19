@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.application.article.ArticleReadService
-import com.example.application.article.ArticleSummary
-import com.example.application.profile.ProfileSummary
+import com.example.application.article.ArticleView
+import com.example.application.article.ArticleViewReader
+import com.example.application.profile.ProfileView
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
@@ -20,13 +20,13 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqArticleReadService(
+class JooqArticleViewReader(
     private val dsl: DSLContext,
-) : ArticleReadService {
+) : ArticleViewReader {
     override fun hydrate(
         id: Long,
         viewerId: Long?,
-    ): ArticleSummary {
+    ): ArticleView {
         val record =
             dsl
                 .select(articleFields(viewerId))
@@ -36,13 +36,13 @@ class JooqArticleReadService(
                 .where(ARTICLES.ID.eq(id))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        return record.toArticleSummary()
+        return record.toArticleView()
     }
 
     override fun getArticleBySlug(
         slug: String,
         viewerId: Long?,
-    ): ArticleSummary {
+    ): ArticleView {
         val record =
             dsl
                 .select(articleFields(viewerId))
@@ -52,7 +52,7 @@ class JooqArticleReadService(
                 .where(ARTICLES.SLUG.eq(slug))
                 .fetchOne() ?: throw NotFoundException("Article not found")
 
-        return record.toArticleSummary()
+        return record.toArticleView()
     }
 
     override fun getArticles(
@@ -62,7 +62,7 @@ class JooqArticleReadService(
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ArticleSummary> =
+    ): List<ArticleView> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -73,7 +73,7 @@ class JooqArticleReadService(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toArticleSummary() }
+            .map { it.toArticleView() }
 
     private fun buildConditions(
         tag: String?,
@@ -123,7 +123,7 @@ class JooqArticleReadService(
         limit: Int,
         offset: Int,
         viewerId: Long,
-    ): List<ArticleSummary> =
+    ): List<ArticleView> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -139,7 +139,7 @@ class JooqArticleReadService(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toArticleSummary() }
+            .map { it.toArticleView() }
 
     override fun countArticles(
         tag: String?,
@@ -219,8 +219,8 @@ class JooqArticleReadService(
         )
     }
 
-    private fun Record.toArticleSummary(): ArticleSummary =
-        ArticleSummary(
+    private fun Record.toArticleView(): ArticleView =
+        ArticleView(
             slug = get(ARTICLES.SLUG)!!,
             title = get(ARTICLES.TITLE)!!,
             description = get(ARTICLES.DESCRIPTION)!!,
@@ -233,7 +233,7 @@ class JooqArticleReadService(
             favorited = get("favorited", Int::class.java) > 0,
             favoritesCount = get("favoritesCount", Int::class.java),
             author =
-                ProfileSummary(
+                ProfileView(
                     username = get(USERS.USERNAME)!!,
                     bio = get(USERS.BIO),
                     image = get(USERS.IMAGE),

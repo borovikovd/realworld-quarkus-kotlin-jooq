@@ -1,15 +1,15 @@
 package com.example.application.article
 
-interface ArticleReadService {
+interface ArticleViewReader {
     fun hydrate(
         id: Long,
         viewerId: Long?,
-    ): ArticleSummary
+    ): ArticleView
 
     fun getArticleBySlug(
         slug: String,
         viewerId: Long?,
-    ): ArticleSummary
+    ): ArticleView
 
     fun getArticles(
         tag: String?,
@@ -18,13 +18,13 @@ interface ArticleReadService {
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ArticleSummary>
+    ): List<ArticleView>
 
     fun getArticlesFeed(
         limit: Int,
         offset: Int,
         viewerId: Long,
-    ): List<ArticleSummary>
+    ): List<ArticleView>
 
     fun countArticles(
         tag: String?,

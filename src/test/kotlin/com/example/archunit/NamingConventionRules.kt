@@ -57,10 +57,10 @@ class NamingConventionRules {
             .because("JAX-RS exception mappers should be named *ExceptionMapper")
 
     @ArchTest
-    val `read services should end with ReadService` =
+    val `view readers should end with ViewReader` =
         classes()
-            .that().haveSimpleNameContaining("ReadService")
+            .that().haveSimpleNameContaining("ViewReader")
             .and().resideOutsideOfPackage("..shared..")
-            .should().haveSimpleNameEndingWith("ReadService")
-            .because("Read service classes should be named *ReadService")
+            .should().haveSimpleNameEndingWith("ViewReader")
+            .because("View reader classes should be named *ViewReader")
 }

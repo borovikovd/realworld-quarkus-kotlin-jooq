@@ -39,10 +39,10 @@ class ScopeAndTransactionRules {
             .because("Repositories should not manage transactions - application services do that")
 
     @ArchTest
-    val `read services should not be transactional` =
+    val `view readers should not be transactional` =
         classes()
-            .that().haveSimpleNameEndingWith("ReadService")
+            .that().haveSimpleNameEndingWith("ViewReader")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("Read services are read-only and should not manage transactions")
+            .because("View readers are read-only and should not manage transactions")
 }

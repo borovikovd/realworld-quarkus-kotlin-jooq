@@ -48,7 +48,7 @@ class LayerDependencyRules {
                             !name.contains("Service") &&
                             !name.contains("Resource") &&
                             !name.contains("Queries") &&
-                            !name.contains("ReadService") &&
+                            !name.contains("ViewReader") &&
                             !name.startsWith("Jooq") &&
                             !input.fullName.contains("Jooq") &&
                             !input.packageName.contains(".jooq")
@@ -64,11 +64,11 @@ class LayerDependencyRules {
     val `only jooq classes can import jooq generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not Jooq/Queries/ReadService classes and not in jooq package") {
+                object : DescribedPredicate<JavaClass>("not Jooq/Queries/ViewReader classes and not in jooq package") {
                     override fun test(input: JavaClass): Boolean =
                         !input.fullName.contains("Jooq") &&
                             !input.fullName.contains("Queries") &&
-                            !input.fullName.contains("ReadService") &&
+                            !input.fullName.contains("ViewReader") &&
                             !input.packageName.contains(".jooq") &&
                             !input.simpleName.contains("Test") &&
                             !input.simpleName.contains("Base") &&
@@ -76,5 +76,5 @@ class LayerDependencyRules {
                 },
             )
             .should().dependOnClassesThat().resideInAPackage("com.example.jooq..")
-            .because("Only Jooq*Repository and *ReadService should access jOOQ generated code")
+            .because("Only Jooq*Repository and *ViewReader should access jOOQ generated code")
 }

@@ -7,10 +7,10 @@ import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleReadService
-import com.example.application.article.ArticleSummary
+import com.example.application.article.ArticleView
+import com.example.application.article.ArticleViewReader
 import com.example.application.article.ArticleWriteService
-import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -19,7 +19,7 @@ import com.example.api.model.Article as ApiArticle
 @ApplicationScoped
 class ArticleResource(
     private val articleWriteService: ArticleWriteService,
-    private val articleReadService: ArticleReadService,
+    private val articleViewReader: ArticleViewReader,
     private val currentUser: CurrentUser,
 ) : ArticlesApi {
     @ResponseStatus(201)
@@ -36,7 +36,7 @@ class ArticleResource(
             )
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
+        val articleDto = articleViewReader.hydrate(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -49,7 +49,7 @@ class ArticleResource(
 
     override fun getArticle(slug: String): CreateArticle201Response {
         val viewerId = currentUser.id?.value
-        val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
+        val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -64,7 +64,7 @@ class ArticleResource(
     ): GetArticlesFeed200Response {
         val viewerId = currentUser.id?.value
         val articles =
-            articleReadService
+            articleViewReader
                 .getArticles(
                     tag = tag,
                     author = author,
@@ -76,7 +76,7 @@ class ArticleResource(
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleReadService.countArticles(tag, author, favorited))
+            .articlesCount(articleViewReader.countArticles(tag, author, favorited))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -87,7 +87,7 @@ class ArticleResource(
     ): GetArticlesFeed200Response {
         val viewerId = currentUser.require().value
         val articles =
-            articleReadService
+            articleViewReader
                 .getArticlesFeed(
                     limit = limit ?: 20,
                     offset = offset ?: 0,
@@ -96,7 +96,7 @@ class ArticleResource(
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleReadService.countArticlesFeed(viewerId))
+            .articlesCount(articleViewReader.countArticlesFeed(viewerId))
     }
 
     @RolesAllowed("user")
@@ -115,13 +115,13 @@ class ArticleResource(
             )
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
+        val articleDto = articleViewReader.hydrate(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 }
 
-private fun ArticleSummary.toDto(): ApiArticle =
+private fun ArticleView.toDto(): ApiArticle =
     ApiArticle()
         .slug(slug)
         .title(title)
@@ -134,7 +134,7 @@ private fun ArticleSummary.toDto(): ApiArticle =
         .favoritesCount(favoritesCount)
         .author(author.toDto())
 
-private fun ProfileSummary.toDto(): Profile =
+private fun ProfileView.toDto(): Profile =
     Profile()
         .username(username)
         .bio(bio)

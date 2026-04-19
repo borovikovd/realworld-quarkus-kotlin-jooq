@@ -1,9 +1,9 @@
 package com.example.application.article
 
-import com.example.application.profile.ProfileSummary
+import com.example.application.profile.ProfileView
 import java.time.OffsetDateTime
 
-data class ArticleSummary(
+data class ArticleView(
     val slug: String,
     val title: String,
     val description: String,
@@ -13,5 +13,5 @@ data class ArticleSummary(
     val updatedAt: OffsetDateTime,
     val favorited: Boolean,
     val favoritesCount: Int,
-    val author: ProfileSummary,
+    val author: ProfileView,
 )
