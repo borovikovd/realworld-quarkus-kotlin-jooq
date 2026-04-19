@@ -1,6 +1,5 @@
-package com.example.shared.security
+package com.example.infrastructure.security
 
-import com.example.infrastructure.security.RateLimiter
 import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertFalse

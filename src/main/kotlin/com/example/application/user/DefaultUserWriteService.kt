@@ -1,11 +1,12 @@
 package com.example.application.user
 
+import com.example.domain.auth.PasswordHashing
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
+import com.example.domain.user.PasswordHash
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
-import com.example.shared.security.PasswordHasher
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory
 @ApplicationScoped
 class DefaultUserWriteService(
     private val userRepository: UserRepository,
-    private val passwordHasher: PasswordHasher,
+    private val passwordHashing: PasswordHashing,
 ) : UserWriteService {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
@@ -51,7 +52,7 @@ class DefaultUserWriteService(
         }
 
         val userId = userRepository.nextId()
-        val passwordHash = passwordHasher.hash(password)
+        val passwordHash = passwordHashing.hash(password).value
         val user = User(id = userId, email = email, username = username, passwordHash = passwordHash)
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
@@ -69,7 +70,7 @@ class DefaultUserWriteService(
             throw UnauthorizedException("Invalid email or password")
         }
 
-        if (!passwordHasher.verify(user.passwordHash, password)) {
+        if (!passwordHashing.verify(PasswordHash(user.passwordHash), password)) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
@@ -120,7 +121,7 @@ class DefaultUserWriteService(
         var updatedUser = user.updateProfile(email, username, bio, image)
 
         password?.let {
-            val newPasswordHash = passwordHasher.hash(it)
+            val newPasswordHash = passwordHashing.hash(it).value
             updatedUser = updatedUser.updatePassword(newPasswordHash)
         }
 

@@ -2,7 +2,8 @@ package com.example.application.user
 
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
-import com.example.shared.security.PasswordHasher
+import com.example.domain.auth.PasswordHashing
+import com.example.domain.user.PasswordHash
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
@@ -18,15 +19,15 @@ import kotlin.test.assertTrue
 class DefaultUserWriteServiceTest {
     private lateinit var userWriteService: DefaultUserWriteService
     private lateinit var userRepository: UserRepository
-    private lateinit var passwordHasher: PasswordHasher
+    private lateinit var passwordHashing: PasswordHashing
 
     @BeforeEach
     fun setup() {
         userRepository = mockk()
-        passwordHasher = mockk()
+        passwordHashing = mockk()
         userWriteService = DefaultUserWriteService(
             userRepository = userRepository,
-            passwordHasher = passwordHasher,
+            passwordHashing = passwordHashing,
         )
     }
 
@@ -40,7 +41,7 @@ class DefaultUserWriteServiceTest {
 
         every { userRepository.existsByEmail(email) } returns false
         every { userRepository.existsByUsername(username) } returns false
-        every { passwordHasher.hash(password) } returns passwordHash
+        every { passwordHashing.hash(password) } returns PasswordHash(passwordHash)
         every { userRepository.nextId() } returns userId
         every { userRepository.create(any()) } answers { firstArg() }
 
@@ -49,7 +50,7 @@ class DefaultUserWriteServiceTest {
         assertEquals(userId.value, result)
         verify { userRepository.existsByEmail(email) }
         verify { userRepository.existsByUsername(username) }
-        verify { passwordHasher.hash(password) }
+        verify { passwordHashing.hash(password) }
         verify { userRepository.nextId() }
         verify { userRepository.create(any()) }
     }
@@ -207,13 +208,13 @@ class DefaultUserWriteServiceTest {
             )
 
         every { userRepository.findByEmail(email) } returns user
-        every { passwordHasher.verify(user.passwordHash, password) } returns true
+        every { passwordHashing.verify(PasswordHash(user.passwordHash), password) } returns true
 
         val result = userWriteService.login(email, password)
 
         assertEquals(1L, result)
         verify { userRepository.findByEmail(email) }
-        verify { passwordHasher.verify(user.passwordHash, password) }
+        verify { passwordHashing.verify(PasswordHash(user.passwordHash), password) }
     }
 
     @Test
@@ -245,7 +246,7 @@ class DefaultUserWriteServiceTest {
             )
 
         every { userRepository.findByEmail(email) } returns user
-        every { passwordHasher.verify(user.passwordHash, password) } returns false
+        every { passwordHashing.verify(PasswordHash(user.passwordHash), password) } returns false
 
         val exception =
             assertThrows<UnauthorizedException> {
@@ -276,7 +277,7 @@ class DefaultUserWriteServiceTest {
         every { userRepository.findById(userId) } returns existingUser
         every { userRepository.existsByEmail(newEmail) } returns false
         every { userRepository.existsByUsername(newUsername) } returns false
-        every { passwordHasher.hash(newPassword) } returns newPasswordHash
+        every { passwordHashing.hash(newPassword) } returns PasswordHash(newPasswordHash)
         every { userRepository.update(any()) } answers { firstArg() }
 
         val result = userWriteService.updateUser(userId.value, newEmail, newUsername, newPassword, newBio, newImage)
@@ -285,7 +286,7 @@ class DefaultUserWriteServiceTest {
         verify { userRepository.findById(userId) }
         verify { userRepository.existsByEmail(newEmail) }
         verify { userRepository.existsByUsername(newUsername) }
-        verify { passwordHasher.hash(newPassword) }
+        verify { passwordHashing.hash(newPassword) }
         verify { userRepository.update(any()) }
     }
 
@@ -310,7 +311,7 @@ class DefaultUserWriteServiceTest {
         verify { userRepository.findById(userId) }
         verify(exactly = 0) { userRepository.existsByEmail(any()) }
         verify(exactly = 0) { userRepository.existsByUsername(any()) }
-        verify(exactly = 0) { passwordHasher.hash(any()) }
+        verify(exactly = 0) { passwordHashing.hash(any()) }
         verify { userRepository.update(any()) }
     }
 

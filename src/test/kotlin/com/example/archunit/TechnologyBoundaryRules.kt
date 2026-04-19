@@ -39,8 +39,7 @@ class TechnologyBoundaryRules {
     @ArchTest
     val `only infrastructure security adapters can import JWT` =
         noClasses()
-            .that().doNotHaveSimpleName("JwtService")
-            .and().doNotHaveSimpleName("JwtCurrentUser")
+            .that().doNotHaveSimpleName("JwtCurrentUser")
             .and().doNotHaveSimpleName("JwtTokenIssuer")
             .and().doNotHaveSimpleName("JwtTokenVerifier")
             .should().dependOnClassesThat().resideInAnyPackage(
