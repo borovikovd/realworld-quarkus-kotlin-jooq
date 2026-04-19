@@ -3,7 +3,7 @@ package com.example.application.profile
 import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
 import com.example.domain.shared.NotFoundException
-import com.example.shared.security.SecurityContext
+import com.example.application.CurrentUser
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
@@ -19,17 +19,17 @@ class DefaultProfileWriteServiceTest {
     private lateinit var profileWriteService: DefaultProfileWriteService
     private lateinit var userRepository: UserRepository
     private lateinit var followRepository: FollowRepository
-    private lateinit var securityContext: SecurityContext
+    private lateinit var currentUser: CurrentUser
 
     @BeforeEach
     fun setup() {
         userRepository = mockk()
         followRepository = mockk()
-        securityContext = mockk()
+        currentUser = mockk()
         profileWriteService = DefaultProfileWriteService(
             userRepository = userRepository,
             followRepository = followRepository,
-            securityContext = securityContext,
+            currentUser = currentUser,
         )
     }
 
@@ -46,13 +46,13 @@ class DefaultProfileWriteServiceTest {
                 passwordHash = "hash",
             )
 
-        every { securityContext.requireCurrentUserId() } returns followerId
+        every { currentUser.require() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
         every { followRepository.follow(followerId, followee.id) } returns Unit
 
         profileWriteService.followUser(username)
 
-        verify { securityContext.requireCurrentUserId() }
+        verify { currentUser.require() }
         verify { userRepository.findByUsername(username) }
         verify { followRepository.follow(followerId, followee.id) }
     }
@@ -62,7 +62,7 @@ class DefaultProfileWriteServiceTest {
         val followerId = UserId(1L)
         val username = "nonexistent"
 
-        every { securityContext.requireCurrentUserId() } returns followerId
+        every { currentUser.require() } returns followerId
         every { userRepository.findByUsername(username) } returns null
 
         val exception =
@@ -71,7 +71,7 @@ class DefaultProfileWriteServiceTest {
             }
 
         assertEquals("User not found", exception.message)
-        verify { securityContext.requireCurrentUserId() }
+        verify { currentUser.require() }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
@@ -89,7 +89,7 @@ class DefaultProfileWriteServiceTest {
                 passwordHash = "hash",
             )
 
-        every { securityContext.requireCurrentUserId() } returns followerId
+        every { currentUser.require() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
 
         val exception =
@@ -98,7 +98,7 @@ class DefaultProfileWriteServiceTest {
             }
 
         assertEquals("Cannot follow yourself", exception.message)
-        verify { securityContext.requireCurrentUserId() }
+        verify { currentUser.require() }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
@@ -116,13 +116,13 @@ class DefaultProfileWriteServiceTest {
                 passwordHash = "hash",
             )
 
-        every { securityContext.requireCurrentUserId() } returns followerId
+        every { currentUser.require() } returns followerId
         every { userRepository.findByUsername(username) } returns followee
         every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
         profileWriteService.unfollowUser(username)
 
-        verify { securityContext.requireCurrentUserId() }
+        verify { currentUser.require() }
         verify { userRepository.findByUsername(username) }
         verify { followRepository.unfollow(followerId, followee.id) }
     }
@@ -132,7 +132,7 @@ class DefaultProfileWriteServiceTest {
         val followerId = UserId(1L)
         val username = "nonexistent"
 
-        every { securityContext.requireCurrentUserId() } returns followerId
+        every { currentUser.require() } returns followerId
         every { userRepository.findByUsername(username) } returns null
 
         val exception =
@@ -141,7 +141,7 @@ class DefaultProfileWriteServiceTest {
             }
 
         assertEquals("User not found", exception.message)
-        verify { securityContext.requireCurrentUserId() }
+        verify { currentUser.require() }
         verify { userRepository.findByUsername(username) }
         verify(exactly = 0) { followRepository.unfollow(any(), any()) }
     }

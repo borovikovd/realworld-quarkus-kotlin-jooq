@@ -37,17 +37,16 @@ class TechnologyBoundaryRules {
             .because("Only Resources should use OpenAPI DTOs")
 
     @ArchTest
-    val `only SecurityContext can import JWT` =
+    val `only infrastructure security adapters can import JWT` =
         noClasses()
-            .that().doNotHaveSimpleName("SecurityContext")
-            .and().doNotHaveSimpleName("JwtService")
+            .that().doNotHaveSimpleName("JwtService")
             .and().doNotHaveSimpleName("JwtCurrentUser")
             .and().doNotHaveSimpleName("JwtTokenIssuer")
             .and().doNotHaveSimpleName("JwtTokenVerifier")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "org.eclipse.microprofile.jwt..",
                 "io.smallrye.jwt..",
-            ).because("JWT token handling should be isolated to SecurityContext/JwtService and the infrastructure.security adapters")
+            ).because("JWT token handling belongs to the infrastructure.security adapters only")
 
     @ArchTest
     val `only Jooq repositories and ReadServices can inject DSLContext` =

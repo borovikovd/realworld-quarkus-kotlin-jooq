@@ -9,7 +9,7 @@ import com.example.domain.comment.CommentRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
-import com.example.shared.security.SecurityContext
+import com.example.application.CurrentUser
 import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +23,7 @@ class DefaultCommentWriteServiceTest {
     private lateinit var commentWriteService: DefaultCommentWriteService
     private lateinit var commentRepository: CommentRepository
     private lateinit var articleRepository: ArticleRepository
-    private lateinit var securityContext: SecurityContext
+    private lateinit var currentUser: CurrentUser
 
     private val userId = UserId(1L)
     private val articleId = ArticleId(10L)
@@ -41,11 +41,11 @@ class DefaultCommentWriteServiceTest {
     fun setup() {
         commentRepository = mockk()
         articleRepository = mockk()
-        securityContext = mockk()
+        currentUser = mockk()
         commentWriteService = DefaultCommentWriteService(
             commentRepository = commentRepository,
             articleRepository = articleRepository,
-            securityContext = securityContext,
+            currentUser = currentUser,
         )
     }
 
@@ -64,7 +64,7 @@ class DefaultCommentWriteServiceTest {
         val body = "Great article!"
         val commentId = CommentId(1L)
 
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns article
         every { commentRepository.nextId() } returns commentId
         every { commentRepository.create(any()) } answers { firstArg() }
@@ -78,7 +78,7 @@ class DefaultCommentWriteServiceTest {
 
     @Test
     fun `addComment should throw NotFoundException when article not found`() {
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
@@ -91,7 +91,7 @@ class DefaultCommentWriteServiceTest {
         val commentId = CommentId(5L)
         val comment = Comment(id = commentId, articleId = articleId, authorId = userId, body = "My comment")
 
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns article
         every { commentRepository.findById(commentId) } returns comment
         every { commentRepository.deleteById(commentId) } returns Unit
@@ -103,7 +103,7 @@ class DefaultCommentWriteServiceTest {
 
     @Test
     fun `deleteComment should throw NotFoundException when article not found`() {
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
@@ -113,7 +113,7 @@ class DefaultCommentWriteServiceTest {
 
     @Test
     fun `deleteComment should throw NotFoundException when comment not found`() {
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns article
         every { commentRepository.findById(CommentId(5L)) } returns null
 
@@ -127,7 +127,7 @@ class DefaultCommentWriteServiceTest {
         val commentId = CommentId(5L)
         val comment = Comment(id = commentId, articleId = ArticleId(999L), authorId = userId, body = "Wrong article")
 
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns article
         every { commentRepository.findById(commentId) } returns comment
 
@@ -142,7 +142,7 @@ class DefaultCommentWriteServiceTest {
         val differentUserId = UserId(99L)
         val comment = Comment(id = commentId, articleId = articleId, authorId = differentUserId, body = "Not my comment")
 
-        every { securityContext.requireCurrentUserId() } returns userId
+        every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns article
         every { commentRepository.findById(commentId) } returns comment
 

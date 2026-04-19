@@ -1,12 +1,12 @@
 package com.example.application.article
 
+import com.example.application.CurrentUser
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleRepository
 import com.example.domain.article.SlugGenerator
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
-import com.example.shared.security.SecurityContext
 import io.micrometer.core.annotation.Counted
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 class DefaultArticleWriteService(
     private val articleRepository: ArticleRepository,
     private val slugGenerator: SlugGenerator,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : ArticleWriteService {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArticleWriteService::class.java)
@@ -32,7 +32,7 @@ class DefaultArticleWriteService(
     ): Long {
         validateArticleFields(title, description, body)
 
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val articleId = articleRepository.nextId()
         val slug =
             slugGenerator.generateUniqueSlug(
@@ -62,7 +62,7 @@ class DefaultArticleWriteService(
         description: String?,
         body: String?,
     ): Long {
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
@@ -97,7 +97,7 @@ class DefaultArticleWriteService(
 
     @Transactional
     override fun deleteArticle(slug: String) {
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
@@ -112,7 +112,7 @@ class DefaultArticleWriteService(
 
     @Transactional
     override fun favoriteArticle(slug: String) {
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")
@@ -122,7 +122,7 @@ class DefaultArticleWriteService(
 
     @Transactional
     override fun unfavoriteArticle(slug: String) {
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(slug)
                 ?: throw NotFoundException("Article not found")

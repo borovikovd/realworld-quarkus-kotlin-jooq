@@ -5,10 +5,10 @@ import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
+import com.example.application.CurrentUser
 import com.example.application.user.UserReadService
 import com.example.application.user.UserSummary
 import com.example.application.user.UserWriteService
-import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -18,7 +18,7 @@ import com.example.api.model.User as ApiUser
 class UserAndAuthenticationResource(
     private val userWriteService: UserWriteService,
     private val userReadService: UserReadService,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
     @ResponseStatus(201)
     override fun createUser(body: CreateUserRequest): Login200Response {
@@ -50,7 +50,7 @@ class UserAndAuthenticationResource(
 
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
-        val userId = securityContext.requireCurrentUserId().value
+        val userId = currentUser.require().value
         val userDto = userReadService.hydrate(userId).toDto()
 
         return Login200Response().user(userDto)
@@ -58,7 +58,7 @@ class UserAndAuthenticationResource(
 
     @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Login200Response {
-        val currentUserId = securityContext.requireCurrentUserId().value
+        val currentUserId = currentUser.require().value
         val updateUser = body.user
 
         val userId =

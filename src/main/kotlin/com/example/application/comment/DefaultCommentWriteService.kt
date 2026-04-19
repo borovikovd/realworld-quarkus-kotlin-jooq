@@ -1,5 +1,6 @@
 package com.example.application.comment
 
+import com.example.application.CurrentUser
 import com.example.domain.article.ArticleRepository
 import com.example.domain.comment.Comment
 import com.example.domain.comment.CommentId
@@ -7,7 +8,6 @@ import com.example.domain.comment.CommentRepository
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
-import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 class DefaultCommentWriteService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : CommentWriteService {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultCommentWriteService::class.java)
@@ -31,7 +31,7 @@ class DefaultCommentWriteService(
             throw ValidationException(mapOf("body" to listOf("must not be blank")))
         }
 
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")
@@ -53,7 +53,7 @@ class DefaultCommentWriteService(
         articleSlug: String,
         commentId: Long,
     ) {
-        val userId = securityContext.requireCurrentUserId()
+        val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(articleSlug)
                 ?: throw NotFoundException("Article not found")

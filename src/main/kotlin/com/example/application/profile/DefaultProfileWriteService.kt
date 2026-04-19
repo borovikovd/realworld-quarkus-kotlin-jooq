@@ -1,10 +1,10 @@
 package com.example.application.profile
 
+import com.example.application.CurrentUser
 import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.user.UserRepository
-import com.example.shared.security.SecurityContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -12,11 +12,11 @@ import jakarta.transaction.Transactional
 class DefaultProfileWriteService(
     private val userRepository: UserRepository,
     private val followRepository: FollowRepository,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : ProfileWriteService {
     @Transactional
     override fun followUser(username: String) {
-        val followerId = securityContext.requireCurrentUserId()
+        val followerId = currentUser.require()
         val followee =
             userRepository.findByUsername(username)
                 ?: throw NotFoundException("User not found")
@@ -30,7 +30,7 @@ class DefaultProfileWriteService(
 
     @Transactional
     override fun unfollowUser(username: String) {
-        val followerId = securityContext.requireCurrentUserId()
+        val followerId = currentUser.require()
         val followee =
             userRepository.findByUsername(username)
                 ?: throw NotFoundException("User not found")

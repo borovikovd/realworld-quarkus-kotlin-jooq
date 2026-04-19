@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.shared.security.SecurityContext
+import com.example.application.CurrentUser
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
@@ -16,10 +16,10 @@ class LoggingMdcFilter :
     ContainerRequestFilter,
     ContainerResponseFilter {
     @Inject
-    lateinit var securityContext: SecurityContext
+    lateinit var currentUser: CurrentUser
 
     override fun filter(requestContext: ContainerRequestContext) {
-        securityContext.currentUserId?.let {
+        currentUser.id?.let {
             MDC.put("userId", it.value.toString())
         }
     }

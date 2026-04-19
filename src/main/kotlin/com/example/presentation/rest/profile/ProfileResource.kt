@@ -3,10 +3,10 @@ package com.example.presentation.rest.profile
 import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
+import com.example.application.CurrentUser
 import com.example.application.profile.ProfileReadService
 import com.example.application.profile.ProfileSummary
 import com.example.application.profile.ProfileWriteService
-import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 
@@ -14,10 +14,10 @@ import jakarta.enterprise.context.ApplicationScoped
 class ProfileResource(
     private val profileWriteService: ProfileWriteService,
     private val profileReadService: ProfileReadService,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : ProfileApi {
     override fun getProfileByUsername(username: String): GetProfileByUsername200Response {
-        val viewerId = securityContext.currentUserId?.value
+        val viewerId = currentUser.id?.value
         val profile = profileReadService.getProfileByUsername(username, viewerId).toDto()
 
         return GetProfileByUsername200Response().profile(profile)
@@ -27,7 +27,7 @@ class ProfileResource(
     override fun followUserByUsername(username: String): GetProfileByUsername200Response {
         profileWriteService.followUser(username)
 
-        val currentUserId = securityContext.currentUserId!!.value
+        val currentUserId = currentUser.require().value
         val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
         return GetProfileByUsername200Response().profile(profile)
     }
@@ -36,7 +36,7 @@ class ProfileResource(
     override fun unfollowUserByUsername(username: String): GetProfileByUsername200Response {
         profileWriteService.unfollowUser(username)
 
-        val currentUserId = securityContext.currentUserId!!.value
+        val currentUserId = currentUser.require().value
         val profile = profileReadService.getProfileByUsername(username, currentUserId).toDto()
         return GetProfileByUsername200Response().profile(profile)
     }

@@ -14,13 +14,12 @@ import jakarta.transaction.Transactional
 )
 class ScopeAndTransactionRules {
     @ArchTest
-    val `only SecurityContext should be RequestScoped` =
+    val `only JwtCurrentUser should be RequestScoped` =
         classes()
             .that().areAnnotatedWith(RequestScoped::class.java)
-            .should().haveSimpleName("SecurityContext")
-            .orShould().haveSimpleName("JwtCurrentUser")
+            .should().haveSimpleName("JwtCurrentUser")
             .because(
-                "Only SecurityContext / JwtCurrentUser should be @RequestScoped - " +
+                "Only JwtCurrentUser should be @RequestScoped - " +
                     "all other beans should be @ApplicationScoped",
             )
 

@@ -6,11 +6,11 @@ import com.example.api.model.CreateArticleRequest
 import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
+import com.example.application.CurrentUser
 import com.example.application.article.ArticleReadService
 import com.example.application.article.ArticleSummary
 import com.example.application.article.ArticleWriteService
 import com.example.application.profile.ProfileSummary
-import com.example.shared.security.SecurityContext
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -20,7 +20,7 @@ import com.example.api.model.Article as ApiArticle
 class ArticleResource(
     private val articleWriteService: ArticleWriteService,
     private val articleReadService: ArticleReadService,
-    private val securityContext: SecurityContext,
+    private val currentUser: CurrentUser,
 ) : ArticlesApi {
     @ResponseStatus(201)
     @RolesAllowed("user")
@@ -35,7 +35,7 @@ class ArticleResource(
                 tags = newArticle.tagList ?: emptyList(),
             )
 
-        val viewerId = securityContext.currentUserId?.value
+        val viewerId = currentUser.id?.value
         val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
@@ -48,7 +48,7 @@ class ArticleResource(
     }
 
     override fun getArticle(slug: String): CreateArticle201Response {
-        val viewerId = securityContext.currentUserId?.value
+        val viewerId = currentUser.id?.value
         val articleDto = articleReadService.getArticleBySlug(slug, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
@@ -62,7 +62,7 @@ class ArticleResource(
         offset: Int?,
         limit: Int?,
     ): GetArticlesFeed200Response {
-        val viewerId = securityContext.currentUserId?.value
+        val viewerId = currentUser.id?.value
         val articles =
             articleReadService
                 .getArticles(
@@ -85,7 +85,7 @@ class ArticleResource(
         offset: Int?,
         limit: Int?,
     ): GetArticlesFeed200Response {
-        val viewerId = securityContext.currentUserId!!.value
+        val viewerId = currentUser.require().value
         val articles =
             articleReadService
                 .getArticlesFeed(
@@ -114,7 +114,7 @@ class ArticleResource(
                 body = updateData.body,
             )
 
-        val viewerId = securityContext.currentUserId?.value
+        val viewerId = currentUser.id?.value
         val articleDto = articleReadService.hydrate(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
