@@ -1,4 +1,4 @@
-package com.example.shared.exceptions
+package com.example.infrastructure.web
 
 import com.example.domain.shared.ValidationException
 import jakarta.ws.rs.core.Response

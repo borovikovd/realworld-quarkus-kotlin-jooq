@@ -1,4 +1,4 @@
-package com.example.shared
+package com.example.infrastructure.web
 
 import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ResourceInfo
