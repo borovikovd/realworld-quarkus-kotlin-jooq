@@ -1,4 +1,4 @@
-package com.example.user.infrastructure
+package com.example.infrastructure.persistence.jooq.user
 
 import com.example.application.user.UserReadService
 import com.example.application.user.UserSummary

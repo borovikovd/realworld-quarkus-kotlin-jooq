@@ -1,4 +1,4 @@
-package com.example.comment.infrastructure
+package com.example.infrastructure.persistence.jooq.comment
 
 import com.example.domain.article.ArticleId
 import com.example.domain.comment.Comment

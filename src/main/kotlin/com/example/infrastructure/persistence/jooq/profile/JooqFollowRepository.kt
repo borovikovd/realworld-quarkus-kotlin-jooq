@@ -1,4 +1,4 @@
-package com.example.profile.infrastructure
+package com.example.infrastructure.persistence.jooq.profile
 
 import com.example.domain.profile.FollowRepository
 import com.example.domain.user.UserId

@@ -1,4 +1,4 @@
-package com.example.user.infrastructure
+package com.example.infrastructure.persistence.jooq.user
 
 import com.example.domain.user.User
 import com.example.domain.user.UserId

@@ -1,4 +1,4 @@
-package com.example.comment.infrastructure
+package com.example.infrastructure.persistence.jooq.comment
 
 import com.example.application.comment.CommentReadService
 import com.example.application.comment.CommentSummary

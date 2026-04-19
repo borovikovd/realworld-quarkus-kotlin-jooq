@@ -1,4 +1,4 @@
-package com.example.profile.infrastructure
+package com.example.infrastructure.persistence.jooq.profile
 
 import com.example.application.profile.ProfileReadService
 import com.example.application.profile.ProfileSummary

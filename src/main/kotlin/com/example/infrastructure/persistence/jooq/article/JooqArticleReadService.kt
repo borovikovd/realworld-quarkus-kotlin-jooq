@@ -1,4 +1,4 @@
-package com.example.article.infrastructure
+package com.example.infrastructure.persistence.jooq.article
 
 import com.example.application.article.ArticleReadService
 import com.example.application.article.ArticleSummary
