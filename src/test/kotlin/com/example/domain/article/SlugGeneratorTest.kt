@@ -1,4 +1,4 @@
-package com.example.shared.utils
+package com.example.domain.article
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

@@ -7,7 +7,7 @@ import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
 import com.example.shared.security.SecurityContext
-import com.example.shared.utils.SlugGenerator
+import com.example.domain.article.SlugGenerator
 import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
