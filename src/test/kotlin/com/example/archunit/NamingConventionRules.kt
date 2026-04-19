@@ -1,6 +1,6 @@
 package com.example.archunit
 
-import com.example.shared.domain.Repository
+import com.example.domain.shared.Repository
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -43,7 +43,7 @@ class NamingConventionRules {
     val `exceptions should end with Exception` =
         classes()
             .that().areAssignableTo(Exception::class.java)
-            .and().resideInAPackage("..exceptions..")
+            .and().resideInAnyPackage("..exceptions..", "..domain.shared..")
             .and().haveSimpleNameNotContaining("Mapper")
             .should().haveSimpleNameEndingWith("Exception")
             .because("Domain exceptions should be named *Exception")

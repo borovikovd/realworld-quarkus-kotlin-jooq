@@ -1,4 +1,4 @@
-package com.example.shared.architecture
+package com.example.domain.shared
 
 /**
  * Marks a class as a Value Object in DDD.

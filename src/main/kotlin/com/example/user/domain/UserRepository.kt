@@ -1,6 +1,6 @@
 package com.example.user.domain
 
-import com.example.shared.domain.Repository
+import com.example.domain.shared.Repository
 
 interface UserRepository : Repository<User, UserId> {
     fun findByEmail(email: String): User?

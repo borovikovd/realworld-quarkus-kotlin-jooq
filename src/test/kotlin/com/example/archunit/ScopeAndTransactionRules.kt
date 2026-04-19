@@ -20,7 +20,8 @@ class ScopeAndTransactionRules {
         classes()
             .that().areAnnotatedWith(RequestScoped::class.java)
             .should().haveSimpleName("SecurityContext")
-            .because("Only SecurityContext should be @RequestScoped - all other beans should be @ApplicationScoped")
+            .orShould().haveSimpleName("JwtCurrentUser")
+            .because("Only SecurityContext / JwtCurrentUser should be @RequestScoped - all other beans should be @ApplicationScoped")
 
     @ArchTest
     val `services should use DDD stereotype annotations` =

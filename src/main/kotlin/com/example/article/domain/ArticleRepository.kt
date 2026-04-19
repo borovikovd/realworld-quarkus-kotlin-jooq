@@ -1,6 +1,6 @@
 package com.example.article.domain
 
-import com.example.shared.domain.Repository
+import com.example.domain.shared.Repository
 import com.example.user.domain.UserId
 
 interface ArticleRepository : Repository<Article, ArticleId> {

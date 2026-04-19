@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.shared.domain.auth.TokenVerifier
+import com.example.domain.auth.TokenVerifier
 import com.example.user.domain.UserId
 import io.smallrye.jwt.auth.principal.JWTParser
 import jakarta.enterprise.context.ApplicationScoped

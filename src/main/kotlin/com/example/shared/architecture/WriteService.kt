@@ -14,7 +14,7 @@ import jakarta.enterprise.inject.Stereotype
  *
  * Write services are the **primary validation layer** for user input. They validate
  * BEFORE constructing domain objects, collect field-level errors, and throw
- * [com.example.shared.exceptions.ValidationException] (HTTP 422):
+ * [com.example.domain.shared.ValidationException] (HTTP 422):
  *
  * ```kotlin
  * val errors = mutableMapOf<String, List<String>>()

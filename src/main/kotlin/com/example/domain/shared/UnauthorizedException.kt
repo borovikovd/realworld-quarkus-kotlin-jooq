@@ -1,4 +1,4 @@
-package com.example.shared.exceptions
+package com.example.domain.shared
 
 class UnauthorizedException(
     message: String = "Unauthorized",

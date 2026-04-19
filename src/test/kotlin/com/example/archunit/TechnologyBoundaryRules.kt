@@ -41,9 +41,13 @@ class TechnologyBoundaryRules {
         noClasses()
             .that().doNotHaveSimpleName("SecurityContext")
             .and().doNotHaveSimpleName("JwtService")
+            .and().doNotHaveSimpleName("JwtCurrentUser")
+            .and().doNotHaveSimpleName("JwtTokenIssuer")
+            .and().doNotHaveSimpleName("JwtTokenVerifier")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "org.eclipse.microprofile.jwt..",
-            ).because("JWT token handling should be isolated to SecurityContext and JwtService")
+                "io.smallrye.jwt..",
+            ).because("JWT token handling should be isolated to SecurityContext/JwtService and the infrastructure.security adapters")
 
     @ArchTest
     val `only Jooq repositories and ReadServices can inject DSLContext` =

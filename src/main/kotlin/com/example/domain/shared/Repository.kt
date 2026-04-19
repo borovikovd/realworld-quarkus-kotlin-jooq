@@ -1,4 +1,4 @@
-package com.example.shared.domain
+package com.example.domain.shared
 
 interface Repository<T : Entity<ID>, ID> {
     fun nextId(): ID

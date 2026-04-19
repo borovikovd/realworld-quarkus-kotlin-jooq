@@ -1,6 +1,6 @@
 package com.example.archunit
 
-import com.example.shared.domain.Entity
+import com.example.domain.shared.Entity
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
@@ -22,6 +22,9 @@ class LayerDependencyRules {
                 pkg.startsWith("org.eclipse.") ||
                 pkg.startsWith("io.quarkus.") ||
                 pkg.startsWith("com.example.shared") ||
+                pkg.startsWith("com.example.domain") ||
+                pkg.startsWith("com.example.application") ||
+                pkg.startsWith("com.example.infrastructure") ||
                 pkg.startsWith("com.example.api")
     }
 

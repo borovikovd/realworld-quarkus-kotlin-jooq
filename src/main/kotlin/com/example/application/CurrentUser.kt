@@ -1,6 +1,6 @@
 package com.example.application
 
-import com.example.shared.exceptions.UnauthorizedException
+import com.example.domain.shared.UnauthorizedException
 import com.example.user.domain.UserId
 
 interface CurrentUser {

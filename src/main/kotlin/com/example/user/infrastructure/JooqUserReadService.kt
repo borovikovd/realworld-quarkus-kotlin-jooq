@@ -1,8 +1,8 @@
 package com.example.user.infrastructure
 
+import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.USERS
 import com.example.shared.architecture.ReadService
-import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.JwtService
 import com.example.user.application.UserReadService
 import com.example.user.application.UserSummary

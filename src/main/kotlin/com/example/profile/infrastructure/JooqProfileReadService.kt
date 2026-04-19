@@ -1,11 +1,11 @@
 package com.example.profile.infrastructure
 
+import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.profile.application.ProfileReadService
 import com.example.profile.application.ProfileSummary
 import com.example.shared.architecture.ReadService
-import com.example.shared.exceptions.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select

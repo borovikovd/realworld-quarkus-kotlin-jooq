@@ -1,8 +1,8 @@
 package com.example.archunit
 
-import com.example.shared.architecture.AggregateRoot
-import com.example.shared.architecture.ValueObject
-import com.example.shared.domain.Entity
+import com.example.domain.shared.AggregateRoot
+import com.example.domain.shared.ValueObject
+import com.example.domain.shared.Entity
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -41,11 +41,15 @@ class AggregateBoundaryRules {
             // Match packages like com.example.article, com.example.user, etc.
             val match = Regex("(com\\.example\\.\\w+)(?:\\..*)?").find(pkg)
             return match?.groupValues?.get(1)?.takeIf {
-                // Only consider it an aggregate if it's not in shared/api/jooq/exceptions
+                // Only consider it an aggregate if it's not in a framework/layer package
                 !it.endsWith(".shared") &&
                     !it.endsWith(".api") &&
                     !it.endsWith(".jooq") &&
-                    !it.endsWith(".exceptions")
+                    !it.endsWith(".exceptions") &&
+                    !it.endsWith(".domain") &&
+                    !it.endsWith(".application") &&
+                    !it.endsWith(".infrastructure") &&
+                    !it.endsWith(".presentation")
             }
         }
 
@@ -74,6 +78,9 @@ class AggregateBoundaryRules {
                 pkg.startsWith("io.quarkus.") ||
                 pkg.startsWith("org.jooq.") ||
                 pkg.startsWith("com.example.shared") ||
+                pkg.startsWith("com.example.domain") ||
+                pkg.startsWith("com.example.application") ||
+                pkg.startsWith("com.example.infrastructure") ||
                 pkg.startsWith("com.example.api") ||
                 pkg.startsWith("com.example.jooq")
         }

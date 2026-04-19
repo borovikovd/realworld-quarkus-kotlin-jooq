@@ -1,7 +1,7 @@
 package com.example.user.application
 
-import com.example.shared.exceptions.UnauthorizedException
-import com.example.shared.exceptions.ValidationException
+import com.example.domain.shared.UnauthorizedException
+import com.example.domain.shared.ValidationException
 import com.example.shared.security.PasswordHasher
 import com.example.user.domain.User
 import com.example.user.domain.UserId

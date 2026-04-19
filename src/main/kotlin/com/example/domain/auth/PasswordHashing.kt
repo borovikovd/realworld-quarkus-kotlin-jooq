@@ -1,4 +1,4 @@
-package com.example.shared.domain.auth
+package com.example.domain.auth
 
 import com.example.user.domain.PasswordHash
 

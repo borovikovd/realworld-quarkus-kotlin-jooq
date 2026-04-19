@@ -1,9 +1,9 @@
 package com.example.profile.application
 
+import com.example.domain.shared.BadRequestException
+import com.example.domain.shared.NotFoundException
 import com.example.profile.domain.FollowRepository
 import com.example.shared.architecture.WriteService
-import com.example.shared.exceptions.BadRequestException
-import com.example.shared.exceptions.NotFoundException
 import com.example.shared.security.SecurityContext
 import com.example.user.domain.UserRepository
 import jakarta.transaction.Transactional

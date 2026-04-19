@@ -1,4 +1,4 @@
-package com.example.shared.architecture
+package com.example.domain.shared
 
 /**
  * Marks a domain entity as an Aggregate Root in DDD.

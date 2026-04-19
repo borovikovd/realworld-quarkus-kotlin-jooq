@@ -2,10 +2,10 @@ package com.example.article.application
 
 import com.example.article.domain.Article
 import com.example.article.domain.ArticleRepository
+import com.example.domain.shared.ForbiddenException
+import com.example.domain.shared.NotFoundException
+import com.example.domain.shared.ValidationException
 import com.example.shared.architecture.WriteService
-import com.example.shared.exceptions.ForbiddenException
-import com.example.shared.exceptions.NotFoundException
-import com.example.shared.exceptions.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.shared.utils.SlugGenerator
 import io.micrometer.core.annotation.Counted

@@ -2,13 +2,13 @@ package com.example.comment.infrastructure
 
 import com.example.comment.application.CommentReadService
 import com.example.comment.application.CommentSummary
+import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import com.example.profile.application.ProfileSummary
 import com.example.shared.architecture.ReadService
-import com.example.shared.exceptions.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL.count

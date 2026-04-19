@@ -6,9 +6,9 @@ import com.example.article.domain.ArticleRepository
 import com.example.comment.domain.Comment
 import com.example.comment.domain.CommentId
 import com.example.comment.domain.CommentRepository
-import com.example.shared.exceptions.ForbiddenException
-import com.example.shared.exceptions.NotFoundException
-import com.example.shared.exceptions.ValidationException
+import com.example.domain.shared.ForbiddenException
+import com.example.domain.shared.NotFoundException
+import com.example.domain.shared.ValidationException
 import com.example.shared.security.SecurityContext
 import com.example.user.domain.UserId
 import io.mockk.every

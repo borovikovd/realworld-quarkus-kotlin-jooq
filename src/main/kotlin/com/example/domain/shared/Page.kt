@@ -1,4 +1,4 @@
-package com.example.shared.domain
+package com.example.domain.shared
 
 data class Page<T>(
     val items: List<T>,

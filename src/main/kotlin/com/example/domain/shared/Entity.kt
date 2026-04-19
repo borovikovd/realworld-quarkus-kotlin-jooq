@@ -1,4 +1,4 @@
-package com.example.shared.domain
+package com.example.domain.shared
 
 abstract class Entity<ID> {
     abstract val id: ID

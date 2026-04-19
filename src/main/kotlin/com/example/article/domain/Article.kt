@@ -1,7 +1,7 @@
 package com.example.article.domain
 
-import com.example.shared.architecture.AggregateRoot
-import com.example.shared.domain.Entity
+import com.example.domain.shared.AggregateRoot
+import com.example.domain.shared.Entity
 import com.example.user.domain.UserId
 import java.time.OffsetDateTime
 

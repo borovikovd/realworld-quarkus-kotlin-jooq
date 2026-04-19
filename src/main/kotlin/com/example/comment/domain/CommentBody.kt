@@ -1,6 +1,6 @@
 package com.example.comment.domain
 
-import com.example.shared.architecture.ValueObject
+import com.example.domain.shared.ValueObject
 
 @ValueObject
 @JvmInline
