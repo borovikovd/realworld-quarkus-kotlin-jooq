@@ -80,7 +80,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.21.4")
     testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.2")
 }
 
 // ============================================
