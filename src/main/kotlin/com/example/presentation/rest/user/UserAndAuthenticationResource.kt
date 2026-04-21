@@ -7,6 +7,7 @@ import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.CurrentUser
 import com.example.application.UserService
+import com.example.domain.auth.TokenIssuer
 import com.example.domain.user.readmodel.UserView
 import com.example.domain.user.readmodel.UserViewReader
 import jakarta.annotation.security.RolesAllowed
@@ -18,6 +19,7 @@ import com.example.api.model.User as ApiUser
 class UserAndAuthenticationResource(
     private val userService: UserService,
     private val userViewReader: UserViewReader,
+    private val tokenIssuer: TokenIssuer,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
     @ResponseStatus(201)
@@ -29,10 +31,7 @@ class UserAndAuthenticationResource(
                 username = newUser.username,
                 password = newUser.password,
             )
-
-        val userDto = userViewReader.getUserById(userId).toDto()
-
-        return Login200Response().user(userDto)
+        return Login200Response().user(userViewReader.getUserById(userId).toDto())
     }
 
     override fun login(body: LoginRequest): Login200Response {
@@ -42,18 +41,13 @@ class UserAndAuthenticationResource(
                 email = loginUser.email,
                 password = loginUser.password,
             )
-
-        val userDto = userViewReader.getUserById(userId).toDto()
-
-        return Login200Response().user(userDto)
+        return Login200Response().user(userViewReader.getUserById(userId).toDto())
     }
 
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
         val userId = currentUser.require().value
-        val userDto = userViewReader.getUserById(userId).toDto()
-
-        return Login200Response().user(userDto)
+        return Login200Response().user(userViewReader.getUserById(userId).toDto())
     }
 
     @RolesAllowed("user")
@@ -70,17 +64,14 @@ class UserAndAuthenticationResource(
                 bio = updateUser.bio,
                 image = updateUser.image,
             )
-
-        val userDto = userViewReader.getUserById(userId).toDto()
-
-        return Login200Response().user(userDto)
+        return Login200Response().user(userViewReader.getUserById(userId).toDto())
     }
-}
 
-private fun UserView.toDto(): ApiUser =
-    ApiUser()
-        .email(email)
-        .token(token)
-        .username(username)
-        .bio(bio)
-        .image(image)
+    private fun UserView.toDto(): ApiUser =
+        ApiUser()
+            .email(email.value)
+            .token(tokenIssuer.issue(id, email, username))
+            .username(username.value)
+            .bio(bio)
+            .image(image)
+}
