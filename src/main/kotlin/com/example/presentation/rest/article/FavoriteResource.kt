@@ -4,10 +4,10 @@ import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleView
 import com.example.application.article.ArticleViewReader
 import com.example.application.article.ArticleWriteService
-import com.example.application.profile.ProfileView
+import com.example.application.article.readmodel.ArticleView
+import com.example.application.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import com.example.api.model.Article as ApiArticle

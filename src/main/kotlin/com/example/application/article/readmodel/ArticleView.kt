@@ -1,6 +1,6 @@
-package com.example.application.article
+package com.example.application.article.readmodel
 
-import com.example.application.profile.ProfileView
+import com.example.application.profile.readmodel.ProfileView
 import java.time.OffsetDateTime
 
 data class ArticleView(

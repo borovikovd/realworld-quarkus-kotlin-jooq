@@ -1,5 +1,7 @@
 package com.example.application.article
 
+import com.example.application.article.readmodel.ArticleView
+
 interface ArticleViewReader {
     fun hydrate(
         id: Long,

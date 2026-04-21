@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.comment.CommentView
 import com.example.application.comment.CommentViewReader
-import com.example.application.profile.ProfileView
+import com.example.application.comment.readmodel.CommentView
+import com.example.application.profile.readmodel.ProfileView
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS

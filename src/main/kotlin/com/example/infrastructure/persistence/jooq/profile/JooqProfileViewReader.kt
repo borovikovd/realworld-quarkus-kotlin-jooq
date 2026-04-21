@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.profile.ProfileView
 import com.example.application.profile.ProfileViewReader
+import com.example.application.profile.readmodel.ProfileView
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS

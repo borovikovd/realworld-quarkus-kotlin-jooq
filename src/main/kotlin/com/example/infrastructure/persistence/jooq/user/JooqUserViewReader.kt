@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.user
 
-import com.example.application.user.UserView
 import com.example.application.user.UserViewReader
+import com.example.application.user.readmodel.UserView
 import com.example.domain.auth.TokenIssuer
 import com.example.domain.shared.NotFoundException
 import com.example.domain.user.Email
