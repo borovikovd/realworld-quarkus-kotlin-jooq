@@ -1,31 +1,33 @@
 package com.example.archunit
 
 import com.example.domain.shared.Entity
-import com.tngtech.archunit.junit.AnalyzeClasses
-import com.tngtech.archunit.junit.ArchTest
-import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
-import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
-import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
+import com.tngtech.archunit.core.importer.ImportOption
+import com.tngtech.archunit.junit.AnalyzeClasses
+import com.tngtech.archunit.junit.ArchTest
+import com.tngtech.archunit.library.Architectures.layeredArchitecture
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
 @AnalyzeClasses(
     packages = ["com.example"],
     importOptions = [ImportOption.DoNotIncludeTests::class, ImportOption.DoNotIncludeJars::class],
 )
 class LayerDependencyRules {
-    companion object {
-        private fun isFrameworkPackage(pkg: String): Boolean =
-            pkg.startsWith("java.") ||
-                pkg.startsWith("kotlin.") ||
-                pkg.startsWith("jakarta.") ||
-                pkg.startsWith("org.eclipse.") ||
-                pkg.startsWith("io.quarkus.") ||
-                pkg.startsWith("com.example.domain") ||
-                pkg.startsWith("com.example.application") ||
-                pkg.startsWith("com.example.infrastructure") ||
-                pkg.startsWith("com.example.api")
-    }
+    @ArchTest
+    val `layer dependencies respect hexagonal direction` =
+        layeredArchitecture()
+            .consideringOnlyDependenciesInLayers()
+            .layer("domain").definedBy("com.example.domain..")
+            .layer("application").definedBy("com.example.application..")
+            .layer("infrastructure").definedBy("com.example.infrastructure..")
+            .layer("presentation").definedBy("com.example.presentation..")
+            .whereLayer("presentation").mayNotBeAccessedByAnyLayer()
+            .whereLayer("infrastructure").mayNotBeAccessedByAnyLayer()
+            .whereLayer("application").mayOnlyBeAccessedByLayers("infrastructure", "presentation")
+            .whereLayer("domain").mayOnlyBeAccessedByLayers("application", "infrastructure", "presentation")
+            .because("Dependencies flow inward: presentation -> application -> domain; infrastructure adapts domain ports")
 
     @ArchTest
     val `services should not use OpenAPI DTOs` =
@@ -42,7 +44,6 @@ class LayerDependencyRules {
                 object : DescribedPredicate<JavaClass>("not infrastructure classes") {
                     override fun test(input: JavaClass): Boolean {
                         val name = input.simpleName
-                        // Exclude infrastructure classes (repositories, services, queries, resources)
                         return !name.contains("Repository") &&
                             !name.contains("Service") &&
                             !name.contains("Resource") &&

@@ -34,25 +34,19 @@ class AggregateBoundaryRules {
     companion object {
         /**
          * Returns the aggregate identifier for a given class (e.g., "user", "article").
-         * Handles both layouts during the layer-first migration:
-         *   layer-first:      com.example.{domain|application|infrastructure|presentation.rest}.{aggregate}..
-         *   aggregate-first:  com.example.{aggregate}.{layer}..
+         * Layer-first layout: com.example.{domain|application|infrastructure(.persistence.jooq)?|presentation.rest}.{aggregate}..
          * Returns null if the class is not in an aggregate package.
          */
         private fun getAggregatePackage(javaClass: JavaClass): String? {
             val pkg = javaClass.packageName
             val layerFirst =
-                Regex("com\\.example\\.(?:domain|application|infrastructure|presentation\\.rest)\\.(\\w+)")
-                    .find(pkg)
-            if (layerFirst != null) return layerFirst.groupValues[1]
-
-            val aggregateFirst = Regex("com\\.example\\.(\\w+)(?:\\..*)?").find(pkg)
-            return aggregateFirst?.groupValues?.get(1)?.takeIf {
-                it !in
-                    setOf(
-                        "shared", "api", "jooq", "exceptions",
-                        "domain", "application", "infrastructure", "presentation",
-                    )
+                Regex(
+                    "com\\.example\\." +
+                        "(?:domain|application|presentation\\.rest|infrastructure(?:\\.persistence\\.jooq)?)" +
+                        "\\.(\\w+)",
+                ).find(pkg)
+            return layerFirst?.groupValues?.get(1)?.takeIf {
+                it !in setOf("shared", "auth", "web", "security", "time")
             }
         }
 
