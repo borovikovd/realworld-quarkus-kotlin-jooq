@@ -11,7 +11,10 @@ import com.example.domain.article.SlugGenerator
 import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -21,19 +24,22 @@ import kotlin.test.assertTrue
 class DefaultArticleWriteServiceTest {
     private lateinit var articleWriteService: DefaultArticleWriteService
     private lateinit var articleRepository: ArticleRepository
-    private lateinit var slugGenerator: SlugGenerator
     private lateinit var currentUser: CurrentUser
 
     @BeforeEach
     fun setup() {
         articleRepository = mockk()
-        slugGenerator = mockk()
         currentUser = mockk()
+        mockkObject(SlugGenerator)
         articleWriteService = DefaultArticleWriteService(
             articleRepository = articleRepository,
-            slugGenerator = slugGenerator,
             currentUser = currentUser,
         )
+    }
+
+    @AfterEach
+    fun tearDown() {
+        unmockkObject(SlugGenerator)
     }
 
     @Test
@@ -100,7 +106,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.nextId() } returns articleId
 
         every {
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = title,
                 existingSlugChecker = any(),
             )
@@ -112,7 +118,7 @@ class DefaultArticleWriteServiceTest {
 
         assertEquals(articleId.value, result)
         verify { articleRepository.nextId() }
-        verify { slugGenerator.generateUniqueSlug(title = title, existingSlugChecker = any()) }
+        verify { SlugGenerator.generateUniqueSlug(title = title, existingSlugChecker = any()) }
         verify { articleRepository.create(any()) }
     }
 
@@ -139,7 +145,7 @@ class DefaultArticleWriteServiceTest {
 
         every { articleRepository.findBySlug(originalSlug) } returns existingArticle
         every {
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = newTitle,
                 existingSlugChecker = any(),
             )
@@ -151,7 +157,7 @@ class DefaultArticleWriteServiceTest {
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(originalSlug) }
-        verify { slugGenerator.generateUniqueSlug(title = newTitle, existingSlugChecker = any()) }
+        verify { SlugGenerator.generateUniqueSlug(title = newTitle, existingSlugChecker = any()) }
         verify { articleRepository.update(any()) }
     }
 
@@ -179,7 +185,7 @@ class DefaultArticleWriteServiceTest {
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(slug) }
-        verify(exactly = 0) { slugGenerator.generateUniqueSlug(any(), any()) }
+        verify(exactly = 0) { SlugGenerator.generateUniqueSlug(any(), any()) }
         verify { articleRepository.update(any()) }
     }
 

@@ -1,12 +1,7 @@
 package com.example.domain.article
 
-import jakarta.enterprise.context.ApplicationScoped
-
-@ApplicationScoped
-class SlugGenerator {
-    companion object {
-        private const val MAX_SLUG_ATTEMPTS = 100
-    }
+object SlugGenerator {
+    private const val MAX_SLUG_ATTEMPTS = 100
 
     fun generateUniqueSlug(
         title: String,

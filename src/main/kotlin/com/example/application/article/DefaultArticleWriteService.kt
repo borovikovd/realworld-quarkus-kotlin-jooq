@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory
 @ApplicationScoped
 class DefaultArticleWriteService(
     private val articleRepository: ArticleRepository,
-    private val slugGenerator: SlugGenerator,
     private val currentUser: CurrentUser,
 ) : ArticleWriteService {
     companion object {
@@ -35,7 +34,7 @@ class DefaultArticleWriteService(
         val userId = currentUser.require()
         val articleId = articleRepository.nextId()
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = title,
                 existingSlugChecker = { candidateSlug: String ->
                     articleRepository.findBySlug(candidateSlug) != null
@@ -79,7 +78,7 @@ class DefaultArticleWriteService(
 
         val updatedSlug =
             if (title != null && title != article.title) {
-                slugGenerator.generateUniqueSlug(
+                SlugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidateSlug: String ->
                         val existing = articleRepository.findBySlug(candidateSlug)

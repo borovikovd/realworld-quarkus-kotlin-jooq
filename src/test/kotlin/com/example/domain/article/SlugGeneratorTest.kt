@@ -6,12 +6,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class SlugGeneratorTest {
-    private val slugGenerator = SlugGenerator()
+    
 
     @Test
     fun `should generate simple slug from title`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello World",
                 existingSlugChecker = { false },
             )
@@ -22,7 +22,7 @@ class SlugGeneratorTest {
     @Test
     fun `should handle special characters`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello! World? #Test",
                 existingSlugChecker = { false },
             )
@@ -33,7 +33,7 @@ class SlugGeneratorTest {
     @Test
     fun `should handle accented characters`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Café Français",
                 existingSlugChecker = { false },
             )
@@ -44,7 +44,7 @@ class SlugGeneratorTest {
     @Test
     fun `should collapse multiple spaces`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello    World    Test",
                 existingSlugChecker = { false },
             )
@@ -55,7 +55,7 @@ class SlugGeneratorTest {
     @Test
     fun `should collapse multiple dashes`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello---World",
                 existingSlugChecker = { false },
             )
@@ -66,7 +66,7 @@ class SlugGeneratorTest {
     @Test
     fun `should trim spaces`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "  Hello World  ",
                 existingSlugChecker = { false },
             )
@@ -79,7 +79,7 @@ class SlugGeneratorTest {
         val existingSlugs = mutableSetOf("hello-world")
 
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello World",
                 existingSlugChecker = { it in existingSlugs },
             )
@@ -92,7 +92,7 @@ class SlugGeneratorTest {
         val existingSlugs = mutableSetOf("hello-world", "hello-world-2", "hello-world-3")
 
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello World",
                 existingSlugChecker = { it in existingSlugs },
             )
@@ -103,7 +103,7 @@ class SlugGeneratorTest {
     @Test
     fun `should handle titles with numbers`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Kotlin 2.0 Release",
                 existingSlugChecker = { false },
             )
@@ -114,7 +114,7 @@ class SlugGeneratorTest {
     @Test
     fun `should handle mixed case`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "MiXeD CaSe TiTlE",
                 existingSlugChecker = { false },
             )
@@ -125,7 +125,7 @@ class SlugGeneratorTest {
     @Test
     fun `should handle emoji and unicode`() {
         val slug =
-            slugGenerator.generateUniqueSlug(
+            SlugGenerator.generateUniqueSlug(
                 title = "Hello 🌍 World",
                 existingSlugChecker = { false },
             )
@@ -137,7 +137,7 @@ class SlugGeneratorTest {
     fun `should throw exception when max attempts exhausted`() {
         val exception =
             assertThrows<IllegalStateException> {
-                slugGenerator.generateUniqueSlug(
+                SlugGenerator.generateUniqueSlug(
                     title = "Hello World",
                     existingSlugChecker = { true },
                 )
