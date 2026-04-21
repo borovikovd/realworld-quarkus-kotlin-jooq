@@ -4,7 +4,7 @@ import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleWriteService
+import com.example.application.article.ArticleService
 import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
 import com.example.domain.profile.readmodel.ProfileView
@@ -14,13 +14,13 @@ import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
 class FavoriteResource(
-    private val articleWriteService: ArticleWriteService,
+    private val articleService: ArticleService,
     private val articleViewReader: ArticleViewReader,
     private val currentUser: CurrentUser,
 ) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): CreateArticle201Response {
-        articleWriteService.favoriteArticle(slug)
+        articleService.favoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
         val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
@@ -30,7 +30,7 @@ class FavoriteResource(
 
     @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
-        articleWriteService.unfavoriteArticle(slug)
+        articleService.unfavoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
         val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()

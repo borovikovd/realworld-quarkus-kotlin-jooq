@@ -24,8 +24,8 @@ import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class DefaultArticleWriteServiceTest {
-    private lateinit var articleWriteService: DefaultArticleWriteService
+class ArticleServiceTest {
+    private lateinit var articleService: ArticleService
     private lateinit var articleRepository: ArticleRepository
     private lateinit var currentUser: CurrentUser
     private lateinit var clock: Clock
@@ -37,7 +37,7 @@ class DefaultArticleWriteServiceTest {
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
         mockkObject(SlugGenerator)
-        articleWriteService = DefaultArticleWriteService(
+        articleService = ArticleService(
             articleRepository = articleRepository,
             currentUser = currentUser,
             clock = clock,
@@ -53,7 +53,7 @@ class DefaultArticleWriteServiceTest {
     fun `createArticle should throw ValidationException when title is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                articleWriteService.createArticle("", "Test description", "Test body", emptyList())
+                articleService.createArticle("", "Test description", "Test body", emptyList())
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -63,7 +63,7 @@ class DefaultArticleWriteServiceTest {
     fun `createArticle should throw ValidationException with multiple blank fields`() {
         val exception =
             assertThrows<ValidationException> {
-                articleWriteService.createArticle("", "", "", emptyList())
+                articleService.createArticle("", "", "", emptyList())
             }
 
         assertEquals(3, exception.errors.size)
@@ -93,7 +93,7 @@ class DefaultArticleWriteServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                articleWriteService.updateArticle(slug.value, " ", null, null)
+                articleService.updateArticle(slug.value, " ", null, null)
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -121,7 +121,7 @@ class DefaultArticleWriteServiceTest {
 
         every { articleRepository.create(any()) } answers { firstArg() }
 
-        val result = articleWriteService.createArticle(title, description, body, tags)
+        val result = articleService.createArticle(title, description, body, tags)
 
         assertEquals(articleId.value, result)
         verify { articleRepository.nextId() }
@@ -160,7 +160,7 @@ class DefaultArticleWriteServiceTest {
 
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleWriteService.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
+        val result = articleService.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(originalSlug) }
@@ -188,7 +188,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleWriteService.updateArticle(slug.value, null, null, null)
+        val result = articleService.updateArticle(slug.value, null, null, null)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(slug) }
@@ -205,7 +205,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.updateArticle(slug.value, "New Title", null, null)
+            articleService.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
@@ -230,7 +230,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
 
         assertThrows<ForbiddenException> {
-            articleWriteService.updateArticle(slug.value, "New Title", null, null)
+            articleService.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
@@ -254,7 +254,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.deleteById(ArticleId(1L)) } returns Unit
 
-        articleWriteService.deleteArticle(slug.value)
+        articleService.deleteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.deleteById(ArticleId(1L)) }
@@ -269,7 +269,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.deleteArticle(slug.value)
+            articleService.deleteArticle(slug.value)
         }
     }
 
@@ -294,7 +294,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
 
         assertThrows<ForbiddenException> {
-            articleWriteService.deleteArticle(slug.value)
+            articleService.deleteArticle(slug.value)
         }
     }
 
@@ -318,7 +318,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.favorite(ArticleId(1L), userId) } returns Unit
 
-        articleWriteService.favoriteArticle(slug.value)
+        articleService.favoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.favorite(ArticleId(1L), userId) }
@@ -333,7 +333,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.favoriteArticle(slug.value)
+            articleService.favoriteArticle(slug.value)
         }
     }
 
@@ -357,7 +357,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
-        articleWriteService.unfavoriteArticle(slug.value)
+        articleService.unfavoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.unfavorite(ArticleId(1L), userId) }
@@ -369,7 +369,7 @@ class DefaultArticleWriteServiceTest {
 
         every { articleRepository.getAllTags() } returns tags
 
-        val result = articleWriteService.getAllTags()
+        val result = articleService.getAllTags()
 
         assertEquals(tags, result)
         verify { articleRepository.getAllTags() }

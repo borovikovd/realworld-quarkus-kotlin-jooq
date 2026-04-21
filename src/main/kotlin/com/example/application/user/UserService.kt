@@ -16,20 +16,20 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class DefaultUserWriteService(
+class UserService(
     private val userRepository: UserRepository,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
-) : UserWriteService {
+) {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private val logger = LoggerFactory.getLogger(DefaultUserWriteService::class.java)
+        private val logger = LoggerFactory.getLogger(UserService::class.java)
     }
 
     @Timed("user.registration")
     @Counted("user.registration.count")
     @Transactional
-    override fun register(
+    fun register(
         email: String,
         username: String,
         password: String,
@@ -68,7 +68,7 @@ class DefaultUserWriteService(
     }
 
     @Timed("user.login")
-    override fun login(
+    fun login(
         email: String,
         password: String,
     ): Long {
@@ -91,7 +91,7 @@ class DefaultUserWriteService(
     }
 
     @Transactional
-    override fun updateUser(
+    fun updateUser(
         userId: Long,
         email: String?,
         username: String?,

@@ -14,17 +14,17 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class DefaultCommentWriteService(
+class CommentService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
-) : CommentWriteService {
+) {
     companion object {
-        private val logger = LoggerFactory.getLogger(DefaultCommentWriteService::class.java)
+        private val logger = LoggerFactory.getLogger(CommentService::class.java)
     }
 
     @Transactional
-    override fun addComment(
+    fun addComment(
         articleSlug: String,
         body: String,
     ): Long {
@@ -50,7 +50,7 @@ class DefaultCommentWriteService(
     }
 
     @Transactional
-    override fun deleteComment(
+    fun deleteComment(
         articleSlug: String,
         commentId: Long,
     ) {

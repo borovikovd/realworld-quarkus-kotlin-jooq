@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class DefaultProfileWriteServiceTest {
-    private lateinit var profileWriteService: DefaultProfileWriteService
+class ProfileServiceTest {
+    private lateinit var profileService: ProfileService
     private lateinit var userRepository: UserRepository
     private lateinit var followRepository: FollowRepository
     private lateinit var currentUser: CurrentUser
@@ -29,7 +29,7 @@ class DefaultProfileWriteServiceTest {
         userRepository = mockk()
         followRepository = mockk()
         currentUser = mockk()
-        profileWriteService = DefaultProfileWriteService(
+        profileService = ProfileService(
             userRepository = userRepository,
             followRepository = followRepository,
             currentUser = currentUser,
@@ -53,7 +53,7 @@ class DefaultProfileWriteServiceTest {
         every { userRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.follow(followerId, followee.id) } returns Unit
 
-        profileWriteService.followUser(username)
+        profileService.followUser(username)
 
         verify { currentUser.require() }
         verify { userRepository.findByUsername(Username(username)) }
@@ -70,7 +70,7 @@ class DefaultProfileWriteServiceTest {
 
         val exception =
             assertThrows<NotFoundException> {
-                profileWriteService.followUser(username)
+                profileService.followUser(username)
             }
 
         assertEquals("User not found", exception.message)
@@ -97,7 +97,7 @@ class DefaultProfileWriteServiceTest {
 
         val exception =
             assertThrows<BadRequestException> {
-                profileWriteService.followUser(username)
+                profileService.followUser(username)
             }
 
         assertEquals("Cannot follow yourself", exception.message)
@@ -123,7 +123,7 @@ class DefaultProfileWriteServiceTest {
         every { userRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
-        profileWriteService.unfollowUser(username)
+        profileService.unfollowUser(username)
 
         verify { currentUser.require() }
         verify { userRepository.findByUsername(Username(username)) }
@@ -140,7 +140,7 @@ class DefaultProfileWriteServiceTest {
 
         val exception =
             assertThrows<NotFoundException> {
-                profileWriteService.unfollowUser(username)
+                profileService.unfollowUser(username)
             }
 
         assertEquals("User not found", exception.message)

@@ -6,7 +6,7 @@ import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.comment.CommentWriteService
+import com.example.application.comment.CommentService
 import com.example.domain.comment.CommentViewReader
 import com.example.domain.comment.readmodel.CommentView
 import com.example.domain.profile.readmodel.ProfileView
@@ -17,7 +17,7 @@ import com.example.api.model.Comment as ApiComment
 
 @ApplicationScoped
 class CommentResource(
-    private val commentWriteService: CommentWriteService,
+    private val commentService: CommentService,
     private val commentViewReader: CommentViewReader,
     private val currentUser: CurrentUser,
 ) : CommentsApi {
@@ -29,7 +29,7 @@ class CommentResource(
     ): CreateArticleComment200Response {
         val viewerId = currentUser.id?.value
         val newComment = comment.comment
-        val commentId = commentWriteService.addComment(slug, newComment.body)
+        val commentId = commentService.addComment(slug, newComment.body)
 
         val commentDto = commentViewReader.hydrate(commentId, viewerId).toDto()
 
@@ -42,7 +42,7 @@ class CommentResource(
         slug: String,
         id: Int,
     ) {
-        commentWriteService.deleteComment(slug, id.toLong())
+        commentService.deleteComment(slug, id.toLong())
     }
 
     override fun getArticleComments(slug: String): GetArticleComments200Response {

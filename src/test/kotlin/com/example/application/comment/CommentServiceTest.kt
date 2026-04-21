@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class DefaultCommentWriteServiceTest {
-    private lateinit var commentWriteService: DefaultCommentWriteService
+class CommentServiceTest {
+    private lateinit var commentService: CommentService
     private lateinit var commentRepository: CommentRepository
     private lateinit var articleRepository: ArticleRepository
     private lateinit var currentUser: CurrentUser
@@ -43,7 +43,7 @@ class DefaultCommentWriteServiceTest {
         commentRepository = mockk()
         articleRepository = mockk()
         currentUser = mockk()
-        commentWriteService = DefaultCommentWriteService(
+        commentService = CommentService(
             commentRepository = commentRepository,
             articleRepository = articleRepository,
             currentUser = currentUser,
@@ -54,7 +54,7 @@ class DefaultCommentWriteServiceTest {
     fun `addComment should throw ValidationException when body is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                commentWriteService.addComment(slug.value, "")
+                commentService.addComment(slug.value, "")
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["body"])
@@ -70,7 +70,7 @@ class DefaultCommentWriteServiceTest {
         every { commentRepository.nextId() } returns commentId
         every { commentRepository.create(any()) } answers { firstArg() }
 
-        val result = commentWriteService.addComment(slug.value, body)
+        val result = commentService.addComment(slug.value, body)
 
         assertEquals(commentId.value, result)
         verify { commentRepository.nextId() }
@@ -83,7 +83,7 @@ class DefaultCommentWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentWriteService.addComment(slug.value, "comment body")
+            commentService.addComment(slug.value, "comment body")
         }
     }
 
@@ -97,7 +97,7 @@ class DefaultCommentWriteServiceTest {
         every { commentRepository.findById(commentId) } returns comment
         every { commentRepository.deleteById(commentId) } returns Unit
 
-        commentWriteService.deleteComment(slug.value, 5L)
+        commentService.deleteComment(slug.value, 5L)
 
         verify { commentRepository.deleteById(commentId) }
     }
@@ -108,7 +108,7 @@ class DefaultCommentWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentWriteService.deleteComment(slug.value, 5L)
+            commentService.deleteComment(slug.value, 5L)
         }
     }
 
@@ -119,7 +119,7 @@ class DefaultCommentWriteServiceTest {
         every { commentRepository.findById(CommentId(5L)) } returns null
 
         assertThrows<NotFoundException> {
-            commentWriteService.deleteComment(slug.value, 5L)
+            commentService.deleteComment(slug.value, 5L)
         }
     }
 
@@ -133,7 +133,7 @@ class DefaultCommentWriteServiceTest {
         every { commentRepository.findById(commentId) } returns comment
 
         assertThrows<NotFoundException> {
-            commentWriteService.deleteComment(slug.value, 5L)
+            commentService.deleteComment(slug.value, 5L)
         }
     }
 
@@ -148,7 +148,7 @@ class DefaultCommentWriteServiceTest {
         every { commentRepository.findById(commentId) } returns comment
 
         assertThrows<ForbiddenException> {
-            commentWriteService.deleteComment(slug.value, 5L)
+            commentService.deleteComment(slug.value, 5L)
         }
     }
 }

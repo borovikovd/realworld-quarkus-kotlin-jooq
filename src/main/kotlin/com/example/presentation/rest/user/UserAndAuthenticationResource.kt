@@ -6,7 +6,7 @@ import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.CurrentUser
-import com.example.application.user.UserWriteService
+import com.example.application.user.UserService
 import com.example.domain.user.UserViewReader
 import com.example.domain.user.readmodel.UserView
 import jakarta.annotation.security.RolesAllowed
@@ -16,7 +16,7 @@ import com.example.api.model.User as ApiUser
 
 @ApplicationScoped
 class UserAndAuthenticationResource(
-    private val userWriteService: UserWriteService,
+    private val userService: UserService,
     private val userViewReader: UserViewReader,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
@@ -24,7 +24,7 @@ class UserAndAuthenticationResource(
     override fun createUser(body: CreateUserRequest): Login200Response {
         val newUser = body.user
         val userId =
-            userWriteService.register(
+            userService.register(
                 email = newUser.email,
                 username = newUser.username,
                 password = newUser.password,
@@ -38,7 +38,7 @@ class UserAndAuthenticationResource(
     override fun login(body: LoginRequest): Login200Response {
         val loginUser = body.user
         val userId =
-            userWriteService.login(
+            userService.login(
                 email = loginUser.email,
                 password = loginUser.password,
             )
@@ -62,7 +62,7 @@ class UserAndAuthenticationResource(
         val updateUser = body.user
 
         val userId =
-            userWriteService.updateUser(
+            userService.updateUser(
                 userId = currentUserId,
                 email = updateUser.email,
                 username = updateUser.username,

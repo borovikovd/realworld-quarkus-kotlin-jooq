@@ -10,13 +10,13 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class DefaultProfileWriteService(
+class ProfileService(
     private val userRepository: UserRepository,
     private val followRepository: FollowRepository,
     private val currentUser: CurrentUser,
-) : ProfileWriteService {
+) {
     @Transactional
-    override fun followUser(username: String) {
+    fun followUser(username: String) {
         val followerId = currentUser.require()
         val followee =
             userRepository.findByUsername(Username(username))
@@ -30,7 +30,7 @@ class DefaultProfileWriteService(
     }
 
     @Transactional
-    override fun unfollowUser(username: String) {
+    fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followee =
             userRepository.findByUsername(Username(username))

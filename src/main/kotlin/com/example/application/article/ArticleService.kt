@@ -15,18 +15,18 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class DefaultArticleWriteService(
+class ArticleService(
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
-) : ArticleWriteService {
+) {
     companion object {
-        private val logger = LoggerFactory.getLogger(DefaultArticleWriteService::class.java)
+        private val logger = LoggerFactory.getLogger(ArticleService::class.java)
     }
 
     @Counted("article.creation.count")
     @Transactional
-    override fun createArticle(
+    fun createArticle(
         title: String,
         description: String,
         body: String,
@@ -56,7 +56,7 @@ class DefaultArticleWriteService(
     }
 
     @Transactional
-    override fun updateArticle(
+    fun updateArticle(
         slug: String,
         title: String?,
         description: String?,
@@ -96,7 +96,7 @@ class DefaultArticleWriteService(
     }
 
     @Transactional
-    override fun deleteArticle(slug: String) {
+    fun deleteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(Slug(slug))
@@ -111,7 +111,7 @@ class DefaultArticleWriteService(
     }
 
     @Transactional
-    override fun favoriteArticle(slug: String) {
+    fun favoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(Slug(slug))
@@ -121,7 +121,7 @@ class DefaultArticleWriteService(
     }
 
     @Transactional
-    override fun unfavoriteArticle(slug: String) {
+    fun unfavoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(Slug(slug))
@@ -130,7 +130,7 @@ class DefaultArticleWriteService(
         articleRepository.unfavorite(article.id, userId)
     }
 
-    override fun getAllTags(): List<String> = articleRepository.getAllTags()
+    fun getAllTags(): List<String> = articleRepository.getAllTags()
 
     private fun validateArticleFields(
         title: String?,

@@ -4,7 +4,7 @@ import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.profile.ProfileWriteService
+import com.example.application.profile.ProfileService
 import com.example.domain.profile.ProfileViewReader
 import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
@@ -12,7 +12,7 @@ import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class ProfileResource(
-    private val profileWriteService: ProfileWriteService,
+    private val profileService: ProfileService,
     private val profileViewReader: ProfileViewReader,
     private val currentUser: CurrentUser,
 ) : ProfileApi {
@@ -25,7 +25,7 @@ class ProfileResource(
 
     @RolesAllowed("user")
     override fun followUserByUsername(username: String): GetProfileByUsername200Response {
-        profileWriteService.followUser(username)
+        profileService.followUser(username)
 
         val currentUserId = currentUser.require().value
         val profile = profileViewReader.getProfileByUsername(username, currentUserId).toDto()
@@ -34,7 +34,7 @@ class ProfileResource(
 
     @RolesAllowed("user")
     override fun unfollowUserByUsername(username: String): GetProfileByUsername200Response {
-        profileWriteService.unfollowUser(username)
+        profileService.unfollowUser(username)
 
         val currentUserId = currentUser.require().value
         val profile = profileViewReader.getProfileByUsername(username, currentUserId).toDto()

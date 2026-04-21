@@ -7,7 +7,7 @@ import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleWriteService
+import com.example.application.article.ArticleService
 import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
 import com.example.domain.profile.readmodel.ProfileView
@@ -18,7 +18,7 @@ import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
 class ArticleResource(
-    private val articleWriteService: ArticleWriteService,
+    private val articleService: ArticleService,
     private val articleViewReader: ArticleViewReader,
     private val currentUser: CurrentUser,
 ) : ArticlesApi {
@@ -28,7 +28,7 @@ class ArticleResource(
         val newArticle = article.article
 
         val articleId =
-            articleWriteService.createArticle(
+            articleService.createArticle(
                 title = newArticle.title,
                 description = newArticle.description,
                 body = newArticle.body,
@@ -44,7 +44,7 @@ class ArticleResource(
     @ResponseStatus(204)
     @RolesAllowed("user")
     override fun deleteArticle(slug: String) {
-        articleWriteService.deleteArticle(slug)
+        articleService.deleteArticle(slug)
     }
 
     override fun getArticle(slug: String): CreateArticle201Response {
@@ -107,7 +107,7 @@ class ArticleResource(
         val updateData = article.article
 
         val articleId =
-            articleWriteService.updateArticle(
+            articleService.updateArticle(
                 slug = slug,
                 title = updateData.title,
                 description = updateData.description,
