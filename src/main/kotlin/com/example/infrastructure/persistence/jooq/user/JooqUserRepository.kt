@@ -1,8 +1,11 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.domain.user.Email
+import com.example.domain.user.PasswordHash
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
+import com.example.domain.user.Username
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -24,9 +27,9 @@ class JooqUserRepository(
         dsl
             .insertInto(USERS)
             .set(USERS.ID, entity.id.value)
-            .set(USERS.EMAIL, entity.email)
-            .set(USERS.USERNAME, entity.username)
-            .set(USERS.PASSWORD_HASH, entity.passwordHash)
+            .set(USERS.EMAIL, entity.email.value)
+            .set(USERS.USERNAME, entity.username.value)
+            .set(USERS.PASSWORD_HASH, entity.passwordHash.value)
             .set(USERS.BIO, entity.bio)
             .set(USERS.IMAGE, entity.image)
             .set(USERS.CREATED_AT, entity.createdAt)
@@ -39,9 +42,9 @@ class JooqUserRepository(
     override fun update(entity: User): User {
         dsl
             .update(USERS)
-            .set(USERS.EMAIL, entity.email)
-            .set(USERS.USERNAME, entity.username)
-            .set(USERS.PASSWORD_HASH, entity.passwordHash)
+            .set(USERS.EMAIL, entity.email.value)
+            .set(USERS.USERNAME, entity.username.value)
+            .set(USERS.PASSWORD_HASH, entity.passwordHash.value)
             .set(USERS.BIO, entity.bio)
             .set(USERS.IMAGE, entity.image)
             .set(USERS.UPDATED_AT, entity.updatedAt)
@@ -61,21 +64,21 @@ class JooqUserRepository(
         return toUser(record)
     }
 
-    override fun findByEmail(email: String): User? {
+    override fun findByEmail(email: Email): User? {
         val record =
             dsl
                 .selectFrom(USERS)
-                .where(USERS.EMAIL.eq(email))
+                .where(USERS.EMAIL.eq(email.value))
                 .fetchOne() ?: return null
 
         return toUser(record)
     }
 
-    override fun findByUsername(username: String): User? {
+    override fun findByUsername(username: Username): User? {
         val record =
             dsl
                 .selectFrom(USERS)
-                .where(USERS.USERNAME.eq(username))
+                .where(USERS.USERNAME.eq(username.value))
                 .fetchOne() ?: return null
 
         return toUser(record)
@@ -84,26 +87,26 @@ class JooqUserRepository(
     private fun toUser(record: com.example.jooq.public.tables.records.UsersRecord): User =
         User(
             id = UserId(record.id!!),
-            email = record.email!!,
-            username = record.username!!,
-            passwordHash = record.passwordHash!!,
+            email = Email(record.email!!),
+            username = Username(record.username!!),
+            passwordHash = PasswordHash(record.passwordHash!!),
             bio = record.bio,
             image = record.image,
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )
 
-    override fun existsByEmail(email: String): Boolean =
+    override fun existsByEmail(email: Email): Boolean =
         dsl.fetchExists(
             dsl
                 .selectFrom(USERS)
-                .where(USERS.EMAIL.eq(email)),
+                .where(USERS.EMAIL.eq(email.value)),
         )
 
-    override fun existsByUsername(username: String): Boolean =
+    override fun existsByUsername(username: Username): Boolean =
         dsl.fetchExists(
             dsl
                 .selectFrom(USERS)
-                .where(USERS.USERNAME.eq(username)),
+                .where(USERS.USERNAME.eq(username.value)),
         )
 }

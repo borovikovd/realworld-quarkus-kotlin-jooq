@@ -12,92 +12,47 @@ class UserTest {
         val user =
             User(
                 id = UserId(1L),
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hashed-password",
+                email = Email("test@example.com"),
+                username = Username("testuser"),
+                passwordHash = PasswordHash("hashed-password"),
                 bio = "Test bio",
                 image = "https://example.com/image.jpg",
             )
 
-        assertEquals("test@example.com", user.email)
-        assertEquals("testuser", user.username)
-        assertEquals("hashed-password", user.passwordHash)
+        assertEquals("test@example.com", user.email.value)
+        assertEquals("testuser", user.username.value)
+        assertEquals("hashed-password", user.passwordHash.value)
         assertEquals("Test bio", user.bio)
         assertEquals("https://example.com/image.jpg", user.image)
     }
 
     @Test
     fun `should fail when email is blank`() {
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                User(
-                    id = UserId(1L),
-                    email = "",
-                    username = "testuser",
-                    passwordHash = "hashed-password",
-                )
-            }
-
+        val exception = assertThrows<IllegalArgumentException> { Email("") }
         assertEquals("Email must not be blank", exception.message)
     }
 
     @Test
     fun `should fail when email is invalid`() {
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                User(
-                    id = UserId(1L),
-                    email = "invalid-email",
-                    username = "testuser",
-                    passwordHash = "hashed-password",
-                )
-            }
-
+        val exception = assertThrows<IllegalArgumentException> { Email("invalid-email") }
         assertEquals("Email must be a valid email address", exception.message)
     }
 
     @Test
     fun `should fail when username is blank`() {
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                User(
-                    id = UserId(1L),
-                    email = "test@example.com",
-                    username = "",
-                    passwordHash = "hashed-password",
-                )
-            }
-
+        val exception = assertThrows<IllegalArgumentException> { Username("") }
         assertEquals("Username must not be blank", exception.message)
     }
 
     @Test
     fun `should fail when username is too short`() {
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                User(
-                    id = UserId(1L),
-                    email = "test@example.com",
-                    username = "ab",
-                    passwordHash = "hashed-password",
-                )
-            }
-
+        val exception = assertThrows<IllegalArgumentException> { Username("ab") }
         assertEquals("Username must be between 3 and 50 characters", exception.message)
     }
 
     @Test
     fun `should fail when username is too long`() {
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                User(
-                    id = UserId(1L),
-                    email = "test@example.com",
-                    username = "a".repeat(51),
-                    passwordHash = "hashed-password",
-                )
-            }
-
+        val exception = assertThrows<IllegalArgumentException> { Username("a".repeat(51)) }
         assertEquals("Username must be between 3 and 50 characters", exception.message)
     }
 
@@ -106,9 +61,9 @@ class UserTest {
         val originalUser =
             User(
                 id = UserId(1L),
-                email = "original@example.com",
-                username = "original",
-                passwordHash = "hashed-password",
+                email = Email("original@example.com"),
+                username = Username("original"),
+                passwordHash = PasswordHash("hashed-password"),
                 bio = "Original bio",
                 image = "https://example.com/original.jpg",
                 updatedAt = OffsetDateTime.now().minusDays(1),
@@ -117,14 +72,14 @@ class UserTest {
         val updatedUser =
             originalUser.updateProfile(
                 updatedAt = OffsetDateTime.now(),
-                email = "updated@example.com",
-                username = "updated",
+                email = Email("updated@example.com"),
+                username = Username("updated"),
                 bio = "Updated bio",
                 image = "https://example.com/updated.jpg",
             )
 
-        assertEquals("updated@example.com", updatedUser.email)
-        assertEquals("updated", updatedUser.username)
+        assertEquals("updated@example.com", updatedUser.email.value)
+        assertEquals("updated", updatedUser.username.value)
         assertEquals("Updated bio", updatedUser.bio)
         assertEquals("https://example.com/updated.jpg", updatedUser.image)
         assertTrue(updatedUser.updatedAt.isAfter(originalUser.updatedAt))
@@ -135,9 +90,9 @@ class UserTest {
         val originalUser =
             User(
                 id = UserId(1L),
-                email = "original@example.com",
-                username = "original",
-                passwordHash = "hashed-password",
+                email = Email("original@example.com"),
+                username = Username("original"),
+                passwordHash = PasswordHash("hashed-password"),
             )
 
         val updatedUser =
@@ -147,8 +102,8 @@ class UserTest {
                 image = "https://example.com/new.jpg",
             )
 
-        assertEquals("original@example.com", updatedUser.email)
-        assertEquals("original", updatedUser.username)
+        assertEquals("original@example.com", updatedUser.email.value)
+        assertEquals("original", updatedUser.username.value)
         assertEquals("New bio", updatedUser.bio)
         assertEquals("https://example.com/new.jpg", updatedUser.image)
     }
@@ -158,9 +113,9 @@ class UserTest {
         val originalUser =
             User(
                 id = UserId(1L),
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hashed-password",
+                email = Email("test@example.com"),
+                username = Username("testuser"),
+                passwordHash = PasswordHash("hashed-password"),
                 bio = "Original bio",
                 image = "https://example.com/original.jpg",
             )
@@ -181,15 +136,15 @@ class UserTest {
         val originalUser =
             User(
                 id = UserId(1L),
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "old-hash",
+                email = Email("test@example.com"),
+                username = Username("testuser"),
+                passwordHash = PasswordHash("old-hash"),
                 updatedAt = OffsetDateTime.now().minusDays(1),
             )
 
-        val updatedUser = originalUser.updatePassword("new-hash", OffsetDateTime.now())
+        val updatedUser = originalUser.updatePassword(PasswordHash("new-hash"), OffsetDateTime.now())
 
-        assertEquals("new-hash", updatedUser.passwordHash)
+        assertEquals("new-hash", updatedUser.passwordHash.value)
         assertTrue(updatedUser.updatedAt.isAfter(originalUser.updatedAt))
     }
 
@@ -198,17 +153,17 @@ class UserTest {
         val user1 =
             User(
                 id = UserId(1L),
-                email = "user1@example.com",
-                username = "user1",
-                passwordHash = "hash1",
+                email = Email("user1@example.com"),
+                username = Username("user1"),
+                passwordHash = PasswordHash("hash1"),
             )
 
         val user2 =
             User(
                 id = UserId(1L),
-                email = "user2@example.com",
-                username = "user2",
-                passwordHash = "hash2",
+                email = Email("user2@example.com"),
+                username = Username("user2"),
+                passwordHash = PasswordHash("hash2"),
             )
 
         assertEquals(user1, user2)

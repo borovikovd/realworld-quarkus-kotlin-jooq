@@ -4,10 +4,11 @@ import com.example.domain.auth.PasswordHashing
 import com.example.domain.shared.Clock
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
-import com.example.domain.user.PasswordHash
+import com.example.domain.user.Email
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
+import com.example.domain.user.Username
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
@@ -35,13 +36,13 @@ class DefaultUserWriteService(
     ): Long {
         val errors = mutableMapOf<String, List<String>>()
 
-        validateEmailFormat(email, errors)
-        if ("email" !in errors && userRepository.existsByEmail(email)) {
+        val emailVo = parseEmail(email, errors)
+        if (emailVo != null && userRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
-        validateUsernameFormat(username, errors)
-        if ("username" !in errors && userRepository.existsByUsername(username)) {
+        val usernameVo = parseUsername(username, errors)
+        if (usernameVo != null && userRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -54,8 +55,13 @@ class DefaultUserWriteService(
         }
 
         val userId = userRepository.nextId()
-        val passwordHash = passwordHashing.hash(password).value
-        val user = User(id = userId, email = email, username = username, passwordHash = passwordHash)
+        val user =
+            User(
+                id = userId,
+                email = emailVo!!,
+                username = usernameVo!!,
+                passwordHash = passwordHashing.hash(password),
+            )
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
         return userId.value
@@ -66,13 +72,17 @@ class DefaultUserWriteService(
         email: String,
         password: String,
     ): Long {
-        val user = userRepository.findByEmail(email)
+        val emailVo =
+            runCatching { Email(email) }
+                .getOrElse { throw UnauthorizedException("Invalid email or password") }
+
+        val user = userRepository.findByEmail(emailVo)
         if (user == null) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
-        if (!passwordHashing.verify(PasswordHash(user.passwordHash), password)) {
+        if (!passwordHashing.verify(user.passwordHash, password)) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
@@ -96,19 +106,23 @@ class DefaultUserWriteService(
 
         val errors = mutableMapOf<String, List<String>>()
 
-        email?.let {
-            validateEmailFormat(it, errors)
-            if ("email" !in errors && it != user.email && userRepository.existsByEmail(it)) {
-                errors["email"] = listOf("is already taken")
+        val emailVo =
+            email?.let {
+                parseEmail(it, errors)?.also { parsed ->
+                    if (parsed != user.email && userRepository.existsByEmail(parsed)) {
+                        errors["email"] = listOf("is already taken")
+                    }
+                }
             }
-        }
 
-        username?.let {
-            validateUsernameFormat(it, errors)
-            if ("username" !in errors && it != user.username && userRepository.existsByUsername(it)) {
-                errors["username"] = listOf("is already taken")
+        val usernameVo =
+            username?.let {
+                parseUsername(it, errors)?.also { parsed ->
+                    if (parsed != user.username && userRepository.existsByUsername(parsed)) {
+                        errors["username"] = listOf("is already taken")
+                    }
+                }
             }
-        }
 
         password?.let {
             if (it.length < MIN_PASSWORD_LENGTH) {
@@ -121,39 +135,43 @@ class DefaultUserWriteService(
         }
 
         val now = clock.now()
-        var updatedUser = user.updateProfile(now, email, username, bio, image)
+        var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
 
         password?.let {
-            val newPasswordHash = passwordHashing.hash(it).value
-            updatedUser = updatedUser.updatePassword(newPasswordHash, now)
+            updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
         val saved = userRepository.update(updatedUser)
         return saved.id.value
     }
 
-    private fun validateEmailFormat(
-        email: String,
+    private fun parseEmail(
+        value: String,
         errors: MutableMap<String, List<String>>,
-    ) {
-        if (email.isBlank()) {
+    ): Email? {
+        if (value.isBlank()) {
             errors["email"] = listOf("must not be blank")
-        } else if (!User.EMAIL_REGEX.matches(email)) {
-            errors["email"] = listOf("must be a valid email address")
+            return null
         }
+        return runCatching { Email(value) }
+            .onFailure { errors["email"] = listOf("must be a valid email address") }
+            .getOrNull()
     }
 
-    private fun validateUsernameFormat(
-        username: String,
+    private fun parseUsername(
+        value: String,
         errors: MutableMap<String, List<String>>,
-    ) {
-        if (username.isBlank()) {
+    ): Username? {
+        if (value.isBlank()) {
             errors["username"] = listOf("must not be blank")
-        } else if (username.length !in User.MIN_USERNAME_LENGTH..User.MAX_USERNAME_LENGTH) {
-            errors["username"] =
-                listOf(
-                    "must be between ${User.MIN_USERNAME_LENGTH} and ${User.MAX_USERNAME_LENGTH} characters",
-                )
+            return null
         }
+        return runCatching { Username(value) }
+            .onFailure {
+                errors["username"] =
+                    listOf(
+                        "must be between ${Username.MIN_LENGTH} and ${Username.MAX_LENGTH} characters",
+                    )
+            }.getOrNull()
     }
 }

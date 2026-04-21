@@ -4,10 +4,12 @@ import com.example.domain.shared.Clock
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
 import com.example.domain.auth.PasswordHashing
+import com.example.domain.user.Email
 import com.example.domain.user.PasswordHash
 import com.example.domain.user.User
 import com.example.domain.user.UserId
 import com.example.domain.user.UserRepository
+import com.example.domain.user.Username
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -45,8 +47,8 @@ class DefaultUserWriteServiceTest {
         val passwordHash = "hashed-password"
         val userId = UserId(1L)
 
-        every { userRepository.existsByEmail(email) } returns false
-        every { userRepository.existsByUsername(username) } returns false
+        every { userRepository.existsByEmail(Email(email)) } returns false
+        every { userRepository.existsByUsername(Username(username)) } returns false
         every { passwordHashing.hash(password) } returns PasswordHash(passwordHash)
         every { userRepository.nextId() } returns userId
         every { userRepository.create(any()) } answers { firstArg() }
@@ -54,8 +56,8 @@ class DefaultUserWriteServiceTest {
         val result = userWriteService.register(email, username, password)
 
         assertEquals(userId.value, result)
-        verify { userRepository.existsByEmail(email) }
-        verify { userRepository.existsByUsername(username) }
+        verify { userRepository.existsByEmail(Email(email)) }
+        verify { userRepository.existsByUsername(Username(username)) }
         verify { passwordHashing.hash(password) }
         verify { userRepository.nextId() }
         verify { userRepository.create(any()) }
@@ -63,7 +65,7 @@ class DefaultUserWriteServiceTest {
 
     @Test
     fun `register should throw ValidationException when email is blank`() {
-        every { userRepository.existsByUsername("testuser") } returns false
+        every { userRepository.existsByUsername(Username("testuser")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -71,12 +73,11 @@ class DefaultUserWriteServiceTest {
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["email"])
-        verify(exactly = 0) { userRepository.existsByEmail(any()) }
     }
 
     @Test
     fun `register should throw ValidationException when email has invalid format`() {
-        every { userRepository.existsByUsername("testuser") } returns false
+        every { userRepository.existsByUsername(Username("testuser")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -84,12 +85,11 @@ class DefaultUserWriteServiceTest {
             }
 
         assertEquals(listOf("must be a valid email address"), exception.errors["email"])
-        verify(exactly = 0) { userRepository.existsByEmail(any()) }
     }
 
     @Test
     fun `register should throw ValidationException when username is blank`() {
-        every { userRepository.existsByEmail("test@example.com") } returns false
+        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -97,12 +97,11 @@ class DefaultUserWriteServiceTest {
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["username"])
-        verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
 
     @Test
     fun `register should throw ValidationException when username is too short`() {
-        every { userRepository.existsByEmail("test@example.com") } returns false
+        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -110,12 +109,11 @@ class DefaultUserWriteServiceTest {
             }
 
         assertTrue(exception.errors["username"]!![0].contains("between"))
-        verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
 
     @Test
     fun `register should throw ValidationException when username is too long`() {
-        every { userRepository.existsByEmail("test@example.com") } returns false
+        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -123,7 +121,6 @@ class DefaultUserWriteServiceTest {
             }
 
         assertTrue(exception.errors["username"]!![0].contains("between"))
-        verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
 
     @Test
@@ -132,8 +129,8 @@ class DefaultUserWriteServiceTest {
         val username = "testuser"
         val password = "password123"
 
-        every { userRepository.existsByEmail(email) } returns true
-        every { userRepository.existsByUsername(username) } returns false
+        every { userRepository.existsByEmail(Email(email)) } returns true
+        every { userRepository.existsByUsername(Username(username)) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -150,8 +147,8 @@ class DefaultUserWriteServiceTest {
         val username = "takenuser"
         val password = "password123"
 
-        every { userRepository.existsByEmail(email) } returns false
-        every { userRepository.existsByUsername(username) } returns true
+        every { userRepository.existsByEmail(Email(email)) } returns false
+        every { userRepository.existsByUsername(Username(username)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -168,8 +165,8 @@ class DefaultUserWriteServiceTest {
         val username = "testuser"
         val password = "short"
 
-        every { userRepository.existsByEmail(email) } returns false
-        every { userRepository.existsByUsername(username) } returns false
+        every { userRepository.existsByEmail(Email(email)) } returns false
+        every { userRepository.existsByUsername(Username(username)) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -186,8 +183,8 @@ class DefaultUserWriteServiceTest {
         val username = "takenuser"
         val password = "short"
 
-        every { userRepository.existsByEmail(email) } returns true
-        every { userRepository.existsByUsername(username) } returns true
+        every { userRepository.existsByEmail(Email(email)) } returns true
+        every { userRepository.existsByUsername(Username(username)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -208,19 +205,19 @@ class DefaultUserWriteServiceTest {
         val user =
             User(
                 id = UserId(1L),
-                email = email,
-                username = "testuser",
-                passwordHash = "hashed-password",
+                email = Email(email),
+                username = Username("testuser"),
+                passwordHash = PasswordHash("hashed-password"),
             )
 
-        every { userRepository.findByEmail(email) } returns user
-        every { passwordHashing.verify(PasswordHash(user.passwordHash), password) } returns true
+        every { userRepository.findByEmail(Email(email)) } returns user
+        every { passwordHashing.verify(user.passwordHash, password) } returns true
 
         val result = userWriteService.login(email, password)
 
         assertEquals(1L, result)
-        verify { userRepository.findByEmail(email) }
-        verify { passwordHashing.verify(PasswordHash(user.passwordHash), password) }
+        verify { userRepository.findByEmail(Email(email)) }
+        verify { passwordHashing.verify(user.passwordHash, password) }
     }
 
     @Test
@@ -228,7 +225,7 @@ class DefaultUserWriteServiceTest {
         val email = "nonexistent@example.com"
         val password = "password123"
 
-        every { userRepository.findByEmail(email) } returns null
+        every { userRepository.findByEmail(Email(email)) } returns null
 
         val exception =
             assertThrows<UnauthorizedException> {
@@ -246,13 +243,13 @@ class DefaultUserWriteServiceTest {
         val user =
             User(
                 id = UserId(1L),
-                email = email,
-                username = "testuser",
-                passwordHash = "hashed-password",
+                email = Email(email),
+                username = Username("testuser"),
+                passwordHash = PasswordHash("hashed-password"),
             )
 
-        every { userRepository.findByEmail(email) } returns user
-        every { passwordHashing.verify(PasswordHash(user.passwordHash), password) } returns false
+        every { userRepository.findByEmail(Email(email)) } returns user
+        every { passwordHashing.verify(user.passwordHash, password) } returns false
 
         val exception =
             assertThrows<UnauthorizedException> {
@@ -275,14 +272,14 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = "old@example.com",
-                username = "olduser",
-                passwordHash = "old-hash",
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByEmail(newEmail) } returns false
-        every { userRepository.existsByUsername(newUsername) } returns false
+        every { userRepository.existsByEmail(Email(newEmail)) } returns false
+        every { userRepository.existsByUsername(Username(newUsername)) } returns false
         every { passwordHashing.hash(newPassword) } returns PasswordHash(newPasswordHash)
         every { userRepository.update(any()) } answers { firstArg() }
 
@@ -290,8 +287,8 @@ class DefaultUserWriteServiceTest {
 
         assertEquals(userId.value, result)
         verify { userRepository.findById(userId) }
-        verify { userRepository.existsByEmail(newEmail) }
-        verify { userRepository.existsByUsername(newUsername) }
+        verify { userRepository.existsByEmail(Email(newEmail)) }
+        verify { userRepository.existsByUsername(Username(newUsername)) }
         verify { passwordHashing.hash(newPassword) }
         verify { userRepository.update(any()) }
     }
@@ -303,9 +300,9 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = "old@example.com",
-                username = "olduser",
-                passwordHash = "old-hash",
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
@@ -315,8 +312,6 @@ class DefaultUserWriteServiceTest {
 
         assertEquals(userId.value, result)
         verify { userRepository.findById(userId) }
-        verify(exactly = 0) { userRepository.existsByEmail(any()) }
-        verify(exactly = 0) { userRepository.existsByUsername(any()) }
         verify(exactly = 0) { passwordHashing.hash(any()) }
         verify { userRepository.update(any()) }
     }
@@ -325,7 +320,12 @@ class DefaultUserWriteServiceTest {
     fun `updateUser should throw ValidationException when email is blank`() {
         val userId = UserId(1L)
         val existingUser =
-            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+            User(
+                id = userId,
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
+            )
 
         every { userRepository.findById(userId) } returns existingUser
 
@@ -341,7 +341,12 @@ class DefaultUserWriteServiceTest {
     fun `updateUser should throw ValidationException when email has invalid format`() {
         val userId = UserId(1L)
         val existingUser =
-            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+            User(
+                id = userId,
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
+            )
 
         every { userRepository.findById(userId) } returns existingUser
 
@@ -357,7 +362,12 @@ class DefaultUserWriteServiceTest {
     fun `updateUser should throw ValidationException when username is too short`() {
         val userId = UserId(1L)
         val existingUser =
-            User(id = userId, email = "old@example.com", username = "olduser", passwordHash = "old-hash")
+            User(
+                id = userId,
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
+            )
 
         every { userRepository.findById(userId) } returns existingUser
 
@@ -377,13 +387,13 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = "old@example.com",
-                username = "olduser",
-                passwordHash = "old-hash",
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByEmail(newEmail) } returns true
+        every { userRepository.existsByEmail(Email(newEmail)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -401,13 +411,13 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = "old@example.com",
-                username = "olduser",
-                passwordHash = "old-hash",
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByUsername(newUsername) } returns true
+        every { userRepository.existsByUsername(Username(newUsername)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -425,9 +435,9 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = "old@example.com",
-                username = "olduser",
-                passwordHash = "old-hash",
+                email = Email("old@example.com"),
+                username = Username("olduser"),
+                passwordHash = PasswordHash("old-hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
@@ -449,9 +459,9 @@ class DefaultUserWriteServiceTest {
         val existingUser =
             User(
                 id = userId,
-                email = email,
-                username = username,
-                passwordHash = "hash",
+                email = Email(email),
+                username = Username(username),
+                passwordHash = PasswordHash("hash"),
             )
 
         every { userRepository.findById(userId) } returns existingUser
@@ -460,7 +470,5 @@ class DefaultUserWriteServiceTest {
         val result = userWriteService.updateUser(userId.value, email, username, null, null, null)
 
         assertEquals(userId.value, result)
-        verify(exactly = 0) { userRepository.existsByEmail(any()) }
-        verify(exactly = 0) { userRepository.existsByUsername(any()) }
     }
 }

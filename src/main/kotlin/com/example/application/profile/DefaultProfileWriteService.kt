@@ -5,6 +5,7 @@ import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.user.UserRepository
+import com.example.domain.user.Username
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -18,7 +19,7 @@ class DefaultProfileWriteService(
     override fun followUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userRepository.findByUsername(username)
+            userRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         if (followee.id == followerId) {
@@ -32,7 +33,7 @@ class DefaultProfileWriteService(
     override fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userRepository.findByUsername(username)
+            userRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         followRepository.unfollow(followerId, followee.id)
