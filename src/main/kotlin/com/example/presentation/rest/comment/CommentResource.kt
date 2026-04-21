@@ -6,10 +6,10 @@ import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.comment.CommentViewReader
 import com.example.application.comment.CommentWriteService
-import com.example.application.comment.readmodel.CommentView
-import com.example.application.profile.readmodel.ProfileView
+import com.example.domain.comment.CommentViewReader
+import com.example.domain.comment.readmodel.CommentView
+import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

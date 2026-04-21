@@ -1,6 +1,6 @@
-package com.example.application.comment.readmodel
+package com.example.domain.comment.readmodel
 
-import com.example.application.profile.readmodel.ProfileView
+import com.example.domain.profile.readmodel.ProfileView
 import java.time.OffsetDateTime
 
 data class CommentView(

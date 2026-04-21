@@ -4,9 +4,9 @@ import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
 import com.example.application.CurrentUser
-import com.example.application.profile.ProfileViewReader
 import com.example.application.profile.ProfileWriteService
-import com.example.application.profile.readmodel.ProfileView
+import com.example.domain.profile.ProfileViewReader
+import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 

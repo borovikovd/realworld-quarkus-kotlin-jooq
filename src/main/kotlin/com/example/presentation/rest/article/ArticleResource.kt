@@ -7,10 +7,10 @@ import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleViewReader
 import com.example.application.article.ArticleWriteService
-import com.example.application.article.readmodel.ArticleView
-import com.example.application.profile.readmodel.ProfileView
+import com.example.domain.article.ArticleViewReader
+import com.example.domain.article.readmodel.ArticleView
+import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

@@ -1,4 +1,4 @@
-package com.example.application.user.readmodel
+package com.example.domain.user.readmodel
 
 data class UserView(
     val email: String,

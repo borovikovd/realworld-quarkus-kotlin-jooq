@@ -1,6 +1,6 @@
-package com.example.application.article
+package com.example.domain.article
 
-import com.example.application.article.readmodel.ArticleView
+import com.example.domain.article.readmodel.ArticleView
 
 interface ArticleViewReader {
     fun hydrate(

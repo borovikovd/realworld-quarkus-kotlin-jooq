@@ -1,4 +1,4 @@
-package com.example.application.profile.readmodel
+package com.example.domain.profile.readmodel
 
 data class ProfileView(
     val username: String,

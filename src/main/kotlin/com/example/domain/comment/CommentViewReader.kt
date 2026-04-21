@@ -1,6 +1,6 @@
-package com.example.application.comment
+package com.example.domain.comment
 
-import com.example.application.comment.readmodel.CommentView
+import com.example.domain.comment.readmodel.CommentView
 
 interface CommentViewReader {
     fun hydrate(

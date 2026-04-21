@@ -6,9 +6,9 @@ import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.CurrentUser
-import com.example.application.user.UserViewReader
 import com.example.application.user.UserWriteService
-import com.example.application.user.readmodel.UserView
+import com.example.domain.user.UserViewReader
+import com.example.domain.user.readmodel.UserView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
