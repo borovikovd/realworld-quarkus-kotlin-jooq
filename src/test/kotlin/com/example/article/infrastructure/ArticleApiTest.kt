@@ -1,8 +1,8 @@
 package com.example.article.infrastructure
 
-import com.example.shared.ApiTestFixtures
-import com.example.shared.BaseApiTest
-import com.example.shared.TestDataBuilder
+import com.example.testsupport.ApiTestFixtures
+import com.example.testsupport.BaseApiTest
+import com.example.testsupport.TestDataBuilder
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType

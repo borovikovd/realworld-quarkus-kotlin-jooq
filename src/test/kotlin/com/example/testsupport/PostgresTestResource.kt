@@ -1,4 +1,4 @@
-package com.example.shared
+package com.example.testsupport
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager
 import org.testcontainers.containers.PostgreSQLContainer

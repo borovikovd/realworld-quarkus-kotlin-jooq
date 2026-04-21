@@ -80,7 +80,6 @@ class AggregateBoundaryRules {
                 pkg.startsWith("org.eclipse.") ||
                 pkg.startsWith("io.quarkus.") ||
                 pkg.startsWith("org.jooq.") ||
-                pkg.startsWith("com.example.shared") ||
                 pkg.startsWith("com.example.domain") ||
                 pkg.startsWith("com.example.application") ||
                 pkg.startsWith("com.example.infrastructure") ||

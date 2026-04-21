@@ -1,4 +1,4 @@
-package com.example.shared
+package com.example.testsupport
 
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
