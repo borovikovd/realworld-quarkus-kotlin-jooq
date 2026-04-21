@@ -106,23 +106,15 @@ class DefaultUserWriteService(
 
         val errors = mutableMapOf<String, List<String>>()
 
-        val emailVo =
-            email?.let {
-                parseEmail(it, errors)?.also { parsed ->
-                    if (parsed != user.email && userRepository.existsByEmail(parsed)) {
-                        errors["email"] = listOf("is already taken")
-                    }
-                }
-            }
+        val emailVo = email?.let { parseEmail(it, errors) }
+        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
+            errors["email"] = listOf("is already taken")
+        }
 
-        val usernameVo =
-            username?.let {
-                parseUsername(it, errors)?.also { parsed ->
-                    if (parsed != user.username && userRepository.existsByUsername(parsed)) {
-                        errors["username"] = listOf("is already taken")
-                    }
-                }
-            }
+        val usernameVo = username?.let { parseUsername(it, errors) }
+        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
+            errors["username"] = listOf("is already taken")
+        }
 
         password?.let {
             if (it.length < MIN_PASSWORD_LENGTH) {
