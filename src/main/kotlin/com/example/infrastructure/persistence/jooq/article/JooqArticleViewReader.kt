@@ -23,7 +23,7 @@ import org.jooq.impl.DSL.select
 class JooqArticleViewReader(
     private val dsl: DSLContext,
 ) : ArticleViewReader {
-    override fun hydrate(
+    override fun getArticleById(
         id: Long,
         viewerId: Long?,
     ): ArticleView {

@@ -3,7 +3,7 @@ package com.example.domain.comment
 import com.example.domain.comment.readmodel.CommentView
 
 interface CommentViewReader {
-    fun hydrate(
+    fun getCommentById(
         id: Long,
         viewerId: Long?,
     ): CommentView

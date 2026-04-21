@@ -18,11 +18,6 @@ import org.jooq.impl.DSL.select
 class JooqCommentViewReader(
     private val dsl: DSLContext,
 ) : CommentViewReader {
-    override fun hydrate(
-        id: Long,
-        viewerId: Long?,
-    ): CommentView = getCommentById(id, viewerId)
-
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
             select(count())
@@ -61,8 +56,8 @@ class JooqCommentViewReader(
             .fetch()
             .map { it.toCommentView() }
 
-    private fun getCommentById(
-        commentId: Long,
+    override fun getCommentById(
+        id: Long,
         viewerId: Long?,
     ): CommentView {
         val record =
@@ -80,7 +75,7 @@ class JooqCommentViewReader(
                 ).from(COMMENTS)
                 .join(USERS)
                 .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-                .where(COMMENTS.ID.eq(commentId))
+                .where(COMMENTS.ID.eq(id))
                 .fetchOne() ?: throw NotFoundException("Comment not found")
 
         return record.toCommentView()

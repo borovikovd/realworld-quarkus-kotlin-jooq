@@ -3,7 +3,7 @@ package com.example.domain.article
 import com.example.domain.article.readmodel.ArticleView
 
 interface ArticleViewReader {
-    fun hydrate(
+    fun getArticleById(
         id: Long,
         viewerId: Long?,
     ): ArticleView

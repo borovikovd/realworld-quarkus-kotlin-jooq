@@ -31,7 +31,7 @@ class CommentResource(
         val newComment = comment.comment
         val commentId = commentService.addComment(slug, newComment.body)
 
-        val commentDto = commentViewReader.hydrate(commentId, viewerId).toDto()
+        val commentDto = commentViewReader.getCommentById(commentId, viewerId).toDto()
 
         return CreateArticleComment200Response().comment(commentDto)
     }

@@ -30,7 +30,7 @@ class UserAndAuthenticationResource(
                 password = newUser.password,
             )
 
-        val userDto = userViewReader.hydrate(userId).toDto()
+        val userDto = userViewReader.getUserById(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -43,7 +43,7 @@ class UserAndAuthenticationResource(
                 password = loginUser.password,
             )
 
-        val userDto = userViewReader.hydrate(userId).toDto()
+        val userDto = userViewReader.getUserById(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -51,7 +51,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
         val userId = currentUser.require().value
-        val userDto = userViewReader.hydrate(userId).toDto()
+        val userDto = userViewReader.getUserById(userId).toDto()
 
         return Login200Response().user(userDto)
     }
@@ -71,7 +71,7 @@ class UserAndAuthenticationResource(
                 image = updateUser.image,
             )
 
-        val userDto = userViewReader.hydrate(userId).toDto()
+        val userDto = userViewReader.getUserById(userId).toDto()
 
         return Login200Response().user(userDto)
     }

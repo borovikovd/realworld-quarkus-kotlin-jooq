@@ -16,7 +16,7 @@ class JooqUserViewReader(
     private val dsl: DSLContext,
     private val tokenIssuer: TokenIssuer,
 ) : UserViewReader {
-    override fun hydrate(id: Long): UserView {
+    override fun getUserById(id: Long): UserView {
         val record =
             dsl
                 .select(USERS.ID, USERS.EMAIL, USERS.USERNAME, USERS.BIO, USERS.IMAGE)

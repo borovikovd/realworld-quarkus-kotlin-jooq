@@ -36,7 +36,7 @@ class ArticleResource(
             )
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleViewReader.hydrate(articleId, viewerId).toDto()
+        val articleDto = articleViewReader.getArticleById(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -115,7 +115,7 @@ class ArticleResource(
             )
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleViewReader.hydrate(articleId, viewerId).toDto()
+        val articleDto = articleViewReader.getArticleById(articleId, viewerId).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
