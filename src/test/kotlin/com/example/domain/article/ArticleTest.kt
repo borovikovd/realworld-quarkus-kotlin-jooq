@@ -101,6 +101,7 @@ class ArticleTest {
                 title = "Updated Title",
                 description = "Updated description",
                 body = "Updated body",
+                updatedAt = OffsetDateTime.now(),
             )
 
         assertEquals("updated-slug", updatedArticle.slug)

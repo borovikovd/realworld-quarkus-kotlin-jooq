@@ -4,6 +4,7 @@ import com.example.application.CurrentUser
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleRepository
 import com.example.domain.article.SlugGenerator
+import com.example.domain.shared.Clock
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory
 class DefaultArticleWriteService(
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
+    private val clock: Clock,
 ) : ArticleWriteService {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArticleWriteService::class.java)
@@ -89,7 +91,7 @@ class DefaultArticleWriteService(
                 article.slug
             }
 
-        val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody)
+        val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody, clock.now())
         articleRepository.update(updatedArticle)
         return article.id.value
     }

@@ -1,5 +1,6 @@
 package com.example.application.user
 
+import com.example.domain.shared.Clock
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
 import com.example.domain.auth.PasswordHashing
@@ -13,6 +14,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -20,14 +22,18 @@ class DefaultUserWriteServiceTest {
     private lateinit var userWriteService: DefaultUserWriteService
     private lateinit var userRepository: UserRepository
     private lateinit var passwordHashing: PasswordHashing
+    private lateinit var clock: Clock
 
     @BeforeEach
     fun setup() {
         userRepository = mockk()
         passwordHashing = mockk()
+        clock = mockk()
+        every { clock.now() } returns OffsetDateTime.now()
         userWriteService = DefaultUserWriteService(
             userRepository = userRepository,
             passwordHashing = passwordHashing,
+            clock = clock,
         )
     }
 

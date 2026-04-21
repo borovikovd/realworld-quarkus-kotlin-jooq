@@ -116,6 +116,7 @@ class UserTest {
 
         val updatedUser =
             originalUser.updateProfile(
+                updatedAt = OffsetDateTime.now(),
                 email = "updated@example.com",
                 username = "updated",
                 bio = "Updated bio",
@@ -141,6 +142,7 @@ class UserTest {
 
         val updatedUser =
             originalUser.updateProfile(
+                updatedAt = OffsetDateTime.now(),
                 bio = "New bio",
                 image = "https://example.com/new.jpg",
             )
@@ -165,6 +167,7 @@ class UserTest {
 
         val updatedUser =
             originalUser.updateProfile(
+                updatedAt = OffsetDateTime.now(),
                 bio = null,
                 image = null,
             )
@@ -184,7 +187,7 @@ class UserTest {
                 updatedAt = OffsetDateTime.now().minusDays(1),
             )
 
-        val updatedUser = originalUser.updatePassword("new-hash")
+        val updatedUser = originalUser.updatePassword("new-hash", OffsetDateTime.now())
 
         assertEquals("new-hash", updatedUser.passwordHash)
         assertTrue(updatedUser.updatedAt.isAfter(originalUser.updatedAt))

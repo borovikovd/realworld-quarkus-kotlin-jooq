@@ -31,6 +31,7 @@ class User(
     }
 
     fun updateProfile(
+        updatedAt: OffsetDateTime,
         email: String? = null,
         username: String? = null,
         bio: String? = null,
@@ -44,10 +45,13 @@ class User(
             bio = bio ?: this.bio,
             image = image ?: this.image,
             createdAt = createdAt,
-            updatedAt = OffsetDateTime.now(),
+            updatedAt = updatedAt,
         )
 
-    fun updatePassword(newPasswordHash: String): User =
+    fun updatePassword(
+        newPasswordHash: String,
+        updatedAt: OffsetDateTime,
+    ): User =
         User(
             id = id,
             email = email,
@@ -56,7 +60,7 @@ class User(
             bio = bio,
             image = image,
             createdAt = createdAt,
-            updatedAt = OffsetDateTime.now(),
+            updatedAt = updatedAt,
         )
 
     override fun toString(): String = "User(id=$id, email=$email, username=$username)"

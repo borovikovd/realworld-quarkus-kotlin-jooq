@@ -1,6 +1,7 @@
 package com.example.application.user
 
 import com.example.domain.auth.PasswordHashing
+import com.example.domain.shared.Clock
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
 import com.example.domain.user.PasswordHash
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory
 class DefaultUserWriteService(
     private val userRepository: UserRepository,
     private val passwordHashing: PasswordHashing,
+    private val clock: Clock,
 ) : UserWriteService {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
@@ -118,11 +120,12 @@ class DefaultUserWriteService(
             throw ValidationException(errors)
         }
 
-        var updatedUser = user.updateProfile(email, username, bio, image)
+        val now = clock.now()
+        var updatedUser = user.updateProfile(now, email, username, bio, image)
 
         password?.let {
             val newPasswordHash = passwordHashing.hash(it).value
-            updatedUser = updatedUser.updatePassword(newPasswordHash)
+            updatedUser = updatedUser.updatePassword(newPasswordHash, now)
         }
 
         val saved = userRepository.update(updatedUser)

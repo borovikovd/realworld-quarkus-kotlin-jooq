@@ -8,6 +8,7 @@ import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
 import com.example.application.CurrentUser
 import com.example.domain.article.SlugGenerator
+import com.example.domain.shared.Clock
 import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -25,15 +27,19 @@ class DefaultArticleWriteServiceTest {
     private lateinit var articleWriteService: DefaultArticleWriteService
     private lateinit var articleRepository: ArticleRepository
     private lateinit var currentUser: CurrentUser
+    private lateinit var clock: Clock
 
     @BeforeEach
     fun setup() {
         articleRepository = mockk()
         currentUser = mockk()
+        clock = mockk()
+        every { clock.now() } returns OffsetDateTime.now()
         mockkObject(SlugGenerator)
         articleWriteService = DefaultArticleWriteService(
             articleRepository = articleRepository,
             currentUser = currentUser,
+            clock = clock,
         )
     }
 

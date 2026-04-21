@@ -28,6 +28,7 @@ class Article(
         title: String,
         description: String,
         body: String,
+        updatedAt: OffsetDateTime,
     ): Article =
         Article(
             id = id,
@@ -38,7 +39,7 @@ class Article(
             authorId = authorId,
             tags = tags,
             createdAt = createdAt,
-            updatedAt = OffsetDateTime.now(),
+            updatedAt = updatedAt,
         )
 
     fun canBeDeletedBy(userId: UserId): Boolean = userId == authorId
