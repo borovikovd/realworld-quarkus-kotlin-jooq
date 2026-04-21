@@ -5,15 +5,16 @@ object SlugGenerator {
 
     fun generateUniqueSlug(
         title: String,
-        existingSlugChecker: (String) -> Boolean,
-    ): String {
+        existingSlugChecker: (Slug) -> Boolean,
+    ): Slug {
         val baseSlug = generateBaseSlug(title)
         var candidateSlug = baseSlug
         var counter = 2
 
         repeat(MAX_SLUG_ATTEMPTS) {
-            if (!existingSlugChecker(candidateSlug)) {
-                return candidateSlug
+            val slug = Slug(candidateSlug)
+            if (!existingSlugChecker(slug)) {
+                return slug
             }
             candidateSlug = "$baseSlug-$counter"
             counter++

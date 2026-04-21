@@ -3,6 +3,7 @@ package com.example.application.article
 import com.example.application.CurrentUser
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleRepository
+import com.example.domain.article.Slug
 import com.example.domain.article.SlugGenerator
 import com.example.domain.shared.Clock
 import com.example.domain.shared.ForbiddenException
@@ -38,9 +39,7 @@ class DefaultArticleWriteService(
         val slug =
             SlugGenerator.generateUniqueSlug(
                 title = title,
-                existingSlugChecker = { candidateSlug: String ->
-                    articleRepository.findBySlug(candidateSlug) != null
-                },
+                existingSlugChecker = { candidate -> articleRepository.findBySlug(candidate) != null },
             )
         val article =
             Article(
@@ -65,7 +64,7 @@ class DefaultArticleWriteService(
     ): Long {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(slug)
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (userId != article.authorId) {
@@ -82,8 +81,8 @@ class DefaultArticleWriteService(
             if (title != null && title != article.title) {
                 SlugGenerator.generateUniqueSlug(
                     title = title,
-                    existingSlugChecker = { candidateSlug: String ->
-                        val existing = articleRepository.findBySlug(candidateSlug)
+                    existingSlugChecker = { candidate ->
+                        val existing = articleRepository.findBySlug(candidate)
                         existing != null && existing.id != article.id
                     },
                 )
@@ -100,7 +99,7 @@ class DefaultArticleWriteService(
     override fun deleteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(slug)
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (!article.canBeDeletedBy(userId)) {
@@ -115,7 +114,7 @@ class DefaultArticleWriteService(
     override fun favoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(slug)
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         articleRepository.favorite(article.id, userId)
@@ -125,7 +124,7 @@ class DefaultArticleWriteService(
     override fun unfavoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(slug)
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         articleRepository.unfavorite(article.id, userId)

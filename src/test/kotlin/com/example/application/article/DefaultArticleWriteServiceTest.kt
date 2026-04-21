@@ -7,6 +7,7 @@ import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException
 import com.example.application.CurrentUser
+import com.example.domain.article.Slug
 import com.example.domain.article.SlugGenerator
 import com.example.domain.shared.Clock
 import com.example.domain.user.UserId
@@ -74,7 +75,7 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `updateArticle should throw ValidationException when title is blank`() {
         val userId = UserId(1L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -92,7 +93,7 @@ class DefaultArticleWriteServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                articleWriteService.updateArticle(slug, " ", null, null)
+                articleWriteService.updateArticle(slug.value, " ", null, null)
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -106,7 +107,7 @@ class DefaultArticleWriteServiceTest {
         val description = "Test description"
         val body = "Test body"
         val tags = listOf("tag1", "tag2")
-        val generatedSlug = "test-article"
+        val generatedSlug = Slug("test-article")
 
         every { currentUser.require() } returns userId
         every { articleRepository.nextId() } returns articleId
@@ -131,11 +132,11 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `updateArticle should update all fields and return article id`() {
         val userId = UserId(1L)
-        val originalSlug = "original-slug"
+        val originalSlug = Slug("original-slug")
         val newTitle = "New Title"
         val newDescription = "New description"
         val newBody = "New body"
-        val newSlug = "new-title"
+        val newSlug = Slug("new-title")
 
         every { currentUser.require() } returns userId
 
@@ -159,7 +160,7 @@ class DefaultArticleWriteServiceTest {
 
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleWriteService.updateArticle(originalSlug, newTitle, newDescription, newBody)
+        val result = articleWriteService.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(originalSlug) }
@@ -170,7 +171,7 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `updateArticle should keep existing values when null provided`() {
         val userId = UserId(1L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -187,7 +188,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleWriteService.updateArticle(slug, null, null, null)
+        val result = articleWriteService.updateArticle(slug.value, null, null, null)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(slug) }
@@ -198,13 +199,13 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `updateArticle should throw NotFoundException when article not found`() {
         val userId = UserId(1L)
-        val slug = "non-existent"
+        val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.updateArticle(slug, "New Title", null, null)
+            articleWriteService.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
@@ -212,7 +213,7 @@ class DefaultArticleWriteServiceTest {
     fun `updateArticle should throw ForbiddenException when user is not author`() {
         val userId = UserId(1L)
         val differentUserId = UserId(2L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -229,14 +230,14 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
 
         assertThrows<ForbiddenException> {
-            articleWriteService.updateArticle(slug, "New Title", null, null)
+            articleWriteService.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
     @Test
     fun `deleteArticle should delete when user is author`() {
         val userId = UserId(1L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -253,7 +254,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.deleteById(ArticleId(1L)) } returns Unit
 
-        articleWriteService.deleteArticle(slug)
+        articleWriteService.deleteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.deleteById(ArticleId(1L)) }
@@ -262,13 +263,13 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `deleteArticle should throw NotFoundException when article not found`() {
         val userId = UserId(1L)
-        val slug = "non-existent"
+        val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.deleteArticle(slug)
+            articleWriteService.deleteArticle(slug.value)
         }
     }
 
@@ -276,7 +277,7 @@ class DefaultArticleWriteServiceTest {
     fun `deleteArticle should throw ForbiddenException when user is not author`() {
         val userId = UserId(1L)
         val differentUserId = UserId(2L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -293,14 +294,14 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
 
         assertThrows<ForbiddenException> {
-            articleWriteService.deleteArticle(slug)
+            articleWriteService.deleteArticle(slug.value)
         }
     }
 
     @Test
     fun `favoriteArticle should call repository favorite`() {
         val userId = UserId(1L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -317,7 +318,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.favorite(ArticleId(1L), userId) } returns Unit
 
-        articleWriteService.favoriteArticle(slug)
+        articleWriteService.favoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.favorite(ArticleId(1L), userId) }
@@ -326,20 +327,20 @@ class DefaultArticleWriteServiceTest {
     @Test
     fun `favoriteArticle should throw NotFoundException when article not found`() {
         val userId = UserId(1L)
-        val slug = "non-existent"
+        val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleWriteService.favoriteArticle(slug)
+            articleWriteService.favoriteArticle(slug.value)
         }
     }
 
     @Test
     fun `unfavoriteArticle should call repository unfavorite`() {
         val userId = UserId(1L)
-        val slug = "test-slug"
+        val slug = Slug("test-slug")
 
         every { currentUser.require() } returns userId
 
@@ -356,7 +357,7 @@ class DefaultArticleWriteServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
-        articleWriteService.unfavoriteArticle(slug)
+        articleWriteService.unfavoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.unfavorite(ArticleId(1L), userId) }

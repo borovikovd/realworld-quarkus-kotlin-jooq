@@ -3,6 +3,7 @@ package com.example.infrastructure.persistence.jooq.article
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleId
 import com.example.domain.article.ArticleRepository
+import com.example.domain.article.Slug
 import com.example.domain.user.UserId
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
@@ -28,7 +29,7 @@ class JooqArticleRepository(
         dsl
             .insertInto(ARTICLES)
             .set(ARTICLES.ID, entity.id.value)
-            .set(ARTICLES.SLUG, entity.slug)
+            .set(ARTICLES.SLUG, entity.slug.value)
             .set(ARTICLES.TITLE, entity.title)
             .set(ARTICLES.DESCRIPTION, entity.description)
             .set(ARTICLES.BODY, entity.body)
@@ -45,7 +46,7 @@ class JooqArticleRepository(
     override fun update(entity: Article): Article {
         dsl
             .update(ARTICLES)
-            .set(ARTICLES.SLUG, entity.slug)
+            .set(ARTICLES.SLUG, entity.slug.value)
             .set(ARTICLES.TITLE, entity.title)
             .set(ARTICLES.DESCRIPTION, entity.description)
             .set(ARTICLES.BODY, entity.body)
@@ -126,7 +127,7 @@ class JooqArticleRepository(
         return toArticle(result)
     }
 
-    override fun findBySlug(slug: String): Article? {
+    override fun findBySlug(slug: Slug): Article? {
         val result =
             dsl
                 .select(
@@ -142,7 +143,7 @@ class JooqArticleRepository(
                         ).`as`("tags")
                         .convertFrom { it.map { r -> r.value1() } },
                 ).from(ARTICLES)
-                .where(ARTICLES.SLUG.eq(slug))
+                .where(ARTICLES.SLUG.eq(slug.value))
                 .fetchOne() ?: return null
 
         return toArticle(result)
@@ -156,7 +157,7 @@ class JooqArticleRepository(
 
         return Article(
             id = ArticleId(record.id!!),
-            slug = record.slug!!,
+            slug = Slug(record.slug!!),
             title = record.title!!,
             description = record.description!!,
             body = record.body!!,

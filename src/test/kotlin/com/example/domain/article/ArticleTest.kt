@@ -14,7 +14,7 @@ class ArticleTest {
         val article =
             Article(
                 id = ArticleId(1L),
-                slug = "test-article",
+                slug = Slug("test-article"),
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
@@ -22,7 +22,7 @@ class ArticleTest {
                 tags = setOf("tag1", "tag2"),
             )
 
-        assertEquals("test-article", article.slug)
+        assertEquals("test-article", article.slug.value)
         assertEquals("Test Article", article.title)
         assertEquals("Test description", article.description)
         assertEquals("Test body", article.body)
@@ -36,7 +36,7 @@ class ArticleTest {
             assertThrows<IllegalArgumentException> {
                 Article(
                     id = ArticleId(1L),
-                    slug = "test-article",
+                    slug = Slug("test-article"),
                     title = "",
                     description = "Test description",
                     body = "Test body",
@@ -53,7 +53,7 @@ class ArticleTest {
             assertThrows<IllegalArgumentException> {
                 Article(
                     id = ArticleId(1L),
-                    slug = "test-article",
+                    slug = Slug("test-article"),
                     title = "Test Article",
                     description = "",
                     body = "Test body",
@@ -70,7 +70,7 @@ class ArticleTest {
             assertThrows<IllegalArgumentException> {
                 Article(
                     id = ArticleId(1L),
-                    slug = "test-article",
+                    slug = Slug("test-article"),
                     title = "Test Article",
                     description = "Test description",
                     body = "",
@@ -86,7 +86,7 @@ class ArticleTest {
         val originalArticle =
             Article(
                 id = ArticleId(1L),
-                slug = "original-slug",
+                slug = Slug("original-slug"),
                 title = "Original Title",
                 description = "Original description",
                 body = "Original body",
@@ -97,14 +97,14 @@ class ArticleTest {
 
         val updatedArticle =
             originalArticle.update(
-                slug = "updated-slug",
+                slug = Slug("updated-slug"),
                 title = "Updated Title",
                 description = "Updated description",
                 body = "Updated body",
                 updatedAt = OffsetDateTime.now(),
             )
 
-        assertEquals("updated-slug", updatedArticle.slug)
+        assertEquals("updated-slug", updatedArticle.slug.value)
         assertEquals("Updated Title", updatedArticle.title)
         assertEquals("Updated description", updatedArticle.description)
         assertEquals("Updated body", updatedArticle.body)
@@ -116,7 +116,7 @@ class ArticleTest {
         val article =
             Article(
                 id = ArticleId(1L),
-                slug = "test-article",
+                slug = Slug("test-article"),
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
@@ -131,7 +131,7 @@ class ArticleTest {
         val article =
             Article(
                 id = ArticleId(1L),
-                slug = "test-article",
+                slug = Slug("test-article"),
                 title = "Test Article",
                 description = "Test description",
                 body = "Test body",
@@ -146,7 +146,7 @@ class ArticleTest {
         val article1 =
             Article(
                 id = ArticleId(1L),
-                slug = "slug-1",
+                slug = Slug("slug-1"),
                 title = "Title 1",
                 description = "Desc 1",
                 body = "Body 1",
@@ -156,7 +156,7 @@ class ArticleTest {
         val article2 =
             Article(
                 id = ArticleId(1L),
-                slug = "slug-2",
+                slug = Slug("slug-2"),
                 title = "Title 2",
                 description = "Desc 2",
                 body = "Body 2",

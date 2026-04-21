@@ -2,6 +2,7 @@ package com.example.application.comment
 
 import com.example.application.CurrentUser
 import com.example.domain.article.ArticleRepository
+import com.example.domain.article.Slug
 import com.example.domain.comment.Comment
 import com.example.domain.comment.CommentId
 import com.example.domain.comment.CommentRepository
@@ -33,7 +34,7 @@ class DefaultCommentWriteService(
 
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(articleSlug)
+            articleRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
         val commentId = commentRepository.nextId()
@@ -55,7 +56,7 @@ class DefaultCommentWriteService(
     ) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(articleSlug)
+            articleRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
         val typedCommentId = CommentId(commentId)

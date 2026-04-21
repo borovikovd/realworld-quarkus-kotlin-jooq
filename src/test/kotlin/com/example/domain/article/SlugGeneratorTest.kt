@@ -16,7 +16,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world", slug)
+        assertEquals("hello-world", slug.value)
     }
 
     @Test
@@ -27,7 +27,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world-test", slug)
+        assertEquals("hello-world-test", slug.value)
     }
 
     @Test
@@ -38,7 +38,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("cafe-francais", slug)
+        assertEquals("cafe-francais", slug.value)
     }
 
     @Test
@@ -49,7 +49,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world-test", slug)
+        assertEquals("hello-world-test", slug.value)
     }
 
     @Test
@@ -60,7 +60,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world", slug)
+        assertEquals("hello-world", slug.value)
     }
 
     @Test
@@ -71,7 +71,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world", slug)
+        assertEquals("hello-world", slug.value)
     }
 
     @Test
@@ -81,10 +81,10 @@ class SlugGeneratorTest {
         val slug =
             SlugGenerator.generateUniqueSlug(
                 title = "Hello World",
-                existingSlugChecker = { it in existingSlugs },
+                existingSlugChecker = { it.value in existingSlugs },
             )
 
-        assertEquals("hello-world-2", slug)
+        assertEquals("hello-world-2", slug.value)
     }
 
     @Test
@@ -94,10 +94,10 @@ class SlugGeneratorTest {
         val slug =
             SlugGenerator.generateUniqueSlug(
                 title = "Hello World",
-                existingSlugChecker = { it in existingSlugs },
+                existingSlugChecker = { it.value in existingSlugs },
             )
 
-        assertEquals("hello-world-4", slug)
+        assertEquals("hello-world-4", slug.value)
     }
 
     @Test
@@ -108,7 +108,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("kotlin-20-release", slug)
+        assertEquals("kotlin-20-release", slug.value)
     }
 
     @Test
@@ -119,7 +119,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("mixed-case-title", slug)
+        assertEquals("mixed-case-title", slug.value)
     }
 
     @Test
@@ -130,7 +130,7 @@ class SlugGeneratorTest {
                 existingSlugChecker = { false },
             )
 
-        assertEquals("hello-world", slug)
+        assertEquals("hello-world", slug.value)
     }
 
     @Test

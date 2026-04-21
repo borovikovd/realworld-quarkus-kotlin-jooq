@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 @AggregateRoot
 class Article(
     override val id: ArticleId,
-    val slug: String,
+    val slug: Slug,
     val title: String,
     val description: String,
     val body: String,
@@ -24,7 +24,7 @@ class Article(
     }
 
     fun update(
-        slug: String,
+        slug: Slug,
         title: String,
         description: String,
         body: String,

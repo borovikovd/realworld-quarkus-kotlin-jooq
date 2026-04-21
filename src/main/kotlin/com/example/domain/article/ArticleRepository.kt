@@ -4,7 +4,7 @@ import com.example.domain.shared.Repository
 import com.example.domain.user.UserId
 
 interface ArticleRepository : Repository<Article, ArticleId> {
-    fun findBySlug(slug: String): Article?
+    fun findBySlug(slug: Slug): Article?
 
     fun deleteById(id: ArticleId)
 
