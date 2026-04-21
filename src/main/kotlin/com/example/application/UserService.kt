@@ -1,4 +1,4 @@
-package com.example.application.user
+package com.example.application
 
 import com.example.domain.auth.PasswordHashing
 import com.example.domain.shared.Clock

@@ -5,8 +5,8 @@ import com.example.api.model.CreateArticleComment200Response
 import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
+import com.example.application.CommentService
 import com.example.application.CurrentUser
-import com.example.application.comment.CommentService
 import com.example.domain.comment.CommentViewReader
 import com.example.domain.comment.readmodel.CommentView
 import com.example.domain.profile.readmodel.ProfileView

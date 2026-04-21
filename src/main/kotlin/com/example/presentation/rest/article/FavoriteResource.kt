@@ -3,8 +3,8 @@ package com.example.presentation.rest.article
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
+import com.example.application.ArticleService
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleService
 import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
 import com.example.domain.profile.readmodel.ProfileView

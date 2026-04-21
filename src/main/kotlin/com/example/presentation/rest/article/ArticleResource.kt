@@ -6,8 +6,8 @@ import com.example.api.model.CreateArticleRequest
 import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
+import com.example.application.ArticleService
 import com.example.application.CurrentUser
-import com.example.application.article.ArticleService
 import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
 import com.example.domain.profile.readmodel.ProfileView

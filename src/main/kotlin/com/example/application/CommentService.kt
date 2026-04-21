@@ -1,4 +1,4 @@
-package com.example.application.comment
+package com.example.application
 
 import com.example.application.CurrentUser
 import com.example.domain.article.ArticleRepository

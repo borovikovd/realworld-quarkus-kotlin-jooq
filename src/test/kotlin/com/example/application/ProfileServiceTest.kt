@@ -1,4 +1,4 @@
-package com.example.application.profile
+package com.example.application
 
 import com.example.domain.profile.FollowRepository
 import com.example.domain.shared.BadRequestException
