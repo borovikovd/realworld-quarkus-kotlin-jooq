@@ -7,8 +7,8 @@ import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.CommentService
 import com.example.application.CurrentUser
-import com.example.domain.comment.CommentViewReader
 import com.example.domain.comment.readmodel.CommentView
+import com.example.domain.comment.readmodel.CommentViewReader
 import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

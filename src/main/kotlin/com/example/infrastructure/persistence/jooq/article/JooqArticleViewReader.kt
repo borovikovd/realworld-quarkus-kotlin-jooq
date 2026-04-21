@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
+import com.example.domain.article.readmodel.ArticleViewReader
 import com.example.domain.profile.readmodel.ProfileView
 import com.example.domain.shared.NotFoundException
 import com.example.jooq.public.tables.references.ARTICLES

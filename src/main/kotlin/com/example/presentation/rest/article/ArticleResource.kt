@@ -8,8 +8,8 @@ import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.ArticleService
 import com.example.application.CurrentUser
-import com.example.domain.article.ArticleViewReader
 import com.example.domain.article.readmodel.ArticleView
+import com.example.domain.article.readmodel.ArticleViewReader
 import com.example.domain.profile.readmodel.ProfileView
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

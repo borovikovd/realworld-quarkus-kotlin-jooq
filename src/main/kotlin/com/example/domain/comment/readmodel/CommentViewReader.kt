@@ -1,6 +1,4 @@
-package com.example.domain.comment
-
-import com.example.domain.comment.readmodel.CommentView
+package com.example.domain.comment.readmodel
 
 interface CommentViewReader {
     fun getCommentById(

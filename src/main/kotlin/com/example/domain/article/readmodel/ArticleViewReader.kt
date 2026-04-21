@@ -1,6 +1,4 @@
-package com.example.domain.article
-
-import com.example.domain.article.readmodel.ArticleView
+package com.example.domain.article.readmodel
 
 interface ArticleViewReader {
     fun getArticleById(

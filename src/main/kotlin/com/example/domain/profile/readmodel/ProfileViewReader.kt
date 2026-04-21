@@ -1,6 +1,4 @@
-package com.example.domain.profile
-
-import com.example.domain.profile.readmodel.ProfileView
+package com.example.domain.profile.readmodel
 
 interface ProfileViewReader {
     fun getProfileByUsername(

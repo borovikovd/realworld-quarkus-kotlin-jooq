@@ -4,9 +4,9 @@ import com.example.domain.auth.TokenIssuer
 import com.example.domain.shared.NotFoundException
 import com.example.domain.user.Email
 import com.example.domain.user.UserId
-import com.example.domain.user.UserViewReader
 import com.example.domain.user.Username
 import com.example.domain.user.readmodel.UserView
+import com.example.domain.user.readmodel.UserViewReader
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
