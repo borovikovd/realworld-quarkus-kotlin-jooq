@@ -4,7 +4,7 @@
 
 ### [Demo](https://demo.realworld.build/)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
 
-This codebase was created to demonstrate a fully fledged backend application built with **Quarkus + Kotlin + jOOQ** including CRUD operations, authentication, routing, pagination, and more.
+This codebase demonstrates a fully fledged backend built with **Quarkus + Kotlin + jOOQ**, organized in a hexagonal / ports-and-adapters layout with a CQRS-lite command/query split.
 
 For more information on how this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
 
@@ -12,45 +12,77 @@ For more information on how this works with other frontends/backends, head over 
 
 **Stack:** Quarkus, Kotlin, jOOQ, PostgreSQL, Atlas (migrations), SmallRye JWT, Argon2id
 
-**Architecture:** DDD-lite with CQRS read/write separation, organized by aggregate:
+**Architecture:** hexagonal (ports & adapters), layer-first packaging, CQRS-lite split between command and query sides.
 
 ```
 com.example/
-├── article/        # Article aggregate (tags, favorites)
-├── comment/        # Comment aggregate
-├── user/           # User aggregate (registration, auth)
-├── profile/        # Follow relationships
-└── shared/         # Security, exceptions, domain base classes
+├── domain/                          # pure business model — no framework code
+│   ├── <aggregate>/                 # Article, Comment, Profile, User
+│   │   ├── Article.kt               # aggregate root (domain entity)
+│   │   ├── ArticleRepository.kt     # command-side port
+│   │   ├── ArticleId.kt             # typed ID (value object)
+│   │   └── ... VOs (Slug, Email, Title, …)
+│   ├── auth/                        # PasswordHashing, TokenIssuer, TokenVerifier ports
+│   └── shared/                      # Entity/Repository base, Clock, exceptions
+│
+├── application/                     # use cases + read projections
+│   ├── CurrentUser.kt               # cross-cutting port (who's calling)
+│   ├── command/                     # write side
+│   │   └── ArticleCommands.kt       # @Transactional mutations
+│   └── query/                       # read side
+│       ├── ArticleQueries.kt        # port for queries
+│       └── readmodel/
+│           └── ArticleReadModel.kt  # denormalized projection
+│
+├── infrastructure/                  # adapters
+│   ├── persistence/jooq/<agg>/
+│   │   ├── JooqArticleRepository.kt # implements ArticleRepository
+│   │   └── JooqArticleQueries.kt    # implements ArticleQueries with jOOQ multiset
+│   ├── security/                    # JWT adapters, rate limiter, logging MDC
+│   ├── web/                         # JAX-RS exception mappers + filters
+│   └── time/SystemClock.kt
+│
+├── presentation/rest/<agg>/
+│   └── ArticleResource.kt           # JAX-RS, implements generated OpenAPI interface
+│
+├── api/                             # OpenAPI-generated interfaces + DTOs (build/)
+└── jooq/                            # jOOQ-generated schema classes       (build/)
 ```
 
-Each aggregate contains:
-- `*WriteService.kt` — commands, `@Transactional`, returns typed domain IDs
-- `*ReadService.kt` — queries, jOOQ multiset, returns read-side data classes (e.g., `ArticleSummary`)
-- `*Repository.kt` — interface, implemented by `Jooq*Repository.kt`
-- `*Resource.kt` — JAX-RS endpoint, delegates to WriteService + ReadService, maps to API DTOs
-- Domain entity — class with behavior methods, `@AggregateRoot` annotated
+**Dependency direction (enforced by ArchUnit):**
 
-**Code generation:** OpenAPI spec generates API interfaces and DTOs (`gradle generateApi`). DB schema generates jOOQ classes (`gradle generateJooq`). Application code implements/uses the generated code, never the reverse.
+```
+presentation → application → domain
+infrastructure → domain (adapters implement domain ports)
+```
+
+No layer depends inward-to-outward. `domain` has zero framework imports.
+
+**Code generation:** OpenAPI spec generates API interfaces + DTOs (`./gradlew generateApi`). DB schema generates jOOQ classes (`./gradlew generateJooq`). Application code consumes the generated code, never the reverse.
 
 **Schema management:** Atlas HCL (`db/schema.hcl`) is the source of truth. `atlas migrate diff` generates SQL migrations. No hand-written DDL.
 
 # Design decisions
 
-**jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1 surprises, no lazy loading, no entity graphs. Trade-off: more verbose for simple CRUD, but every query is visible and optimizable.
+**CQRS-lite: commands vs queries.** The application layer is split into `command/` (mutations via aggregates + repository) and `query/` (reads via direct jOOQ projections). Resources inject both and call whichever they need — no service mediates reads just to forward them. Command-side protects invariants through the aggregate; query-side projects exactly what the UI needs, bypassing the write model entirely.
 
-**Typed domain IDs.** `ArticleId`, `UserId`, `CommentId` as `@JvmInline value class`. Services return these after commands instead of full entities. This prevents leaking domain internals (e.g., `User.passwordHash`) through the service layer and makes the command/query boundary explicit: write returns ID, read hydrates it.
+**jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1, no lazy loading, no entity graphs. The query side returns `*ReadModel` data classes built straight from result sets.
 
-**WriteService for commands.** WriteServices own domain logic orchestration: validation, entity creation/mutation, and persistence. They're `@Transactional`, work with domain entities and repositories, and return typed IDs — never DTOs or entities. No direct jOOQ access; that's the repository's job.
+**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/query/readmodel/`. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against presentation churn.
 
-**ReadService for queries.** ReadServices run optimized jOOQ queries and return plain Kotlin data classes (`ArticleSummary`, `UserSummary`, etc.). Only Resources are allowed to import OpenAPI generated models — enforced by ArchUnit.
+**Value objects for domain primitives.** `Email`, `Username`, `Slug`, `Title`, `ArticleId`, `UserId`, `CommentId`, `PasswordHash` — all `@JvmInline value class` with `init { require(...) }` invariants. Construction validates; domain code never sees unvalidated strings.
 
-**ArchUnit enforcement.** Architecture rules are tested, not documented. Aggregate boundaries, layer dependencies, technology boundaries, naming conventions, and scope/transaction rules are all compile-time verified. Rules catch violations like a service importing an API DTO or a repository managing transactions.
+**Ports & adapters.** Domain defines what it needs (`UserRepository`, `PasswordHashing`, `TokenIssuer`, `TokenVerifier`, `Clock`, `ArticleQueries`). Infrastructure provides concrete implementations. Nothing in `domain/` imports Jakarta, Quarkus, JWT libraries, or jOOQ.
 
-**OpenAPI-first.** The spec defines the contract. Generated models have protected constructors and fluent setters — this is intentional, prevents construction with missing fields. Resources implement generated API interfaces, so breaking changes are caught at compile time.
+**Nullable returns over thrown exceptions in queries.** `ArticleQueries.getArticleBySlug(...)` returns `ArticleReadModel?`. The resource decides when a missing result is a 404. Adapters don't guess at error semantics.
 
-**Offset pagination, not cursor.** The RealWorld spec uses offset/limit. Cursor-based would be better for production at scale, but deviating from the spec wasn't worth it here.
+**ArchUnit enforcement.** Layer direction, aggregate boundaries, DSL-context scoping, naming conventions, and transaction scoping are all compile-time tests — not conventions. The build fails if a query service becomes transactional, if a domain class imports jOOQ, or if a command crosses the layer boundary.
 
-**No domain events.** Commands are synchronous. For a CRUD app with 4 aggregates this is fine. At scale, you'd introduce an event bus for cross-aggregate reactions (e.g., "article favorited" triggering feed updates).
+**OpenAPI-first.** The spec defines the contract. Generated models have protected constructors and fluent setters — this is intentional, forces explicit field-by-field construction. Resources implement the generated API interfaces, so breaking changes surface at compile time.
+
+**Offset pagination.** The RealWorld spec uses offset/limit. Cursor-based would be better at scale, but deviating from the spec wasn't worth it here.
+
+**No domain events.** Commands are synchronous. For 4 aggregates this is fine. At scale you'd introduce an event bus for cross-aggregate reactions.
 
 # Getting started
 
@@ -72,11 +104,12 @@ Swagger UI: http://localhost:8080/swagger-ui/
 ## Tests
 
 ```bash
-./gradlew build              # compilation + tests + linting
-./gradlew test --tests ArticleServiceTest  # single test class
+./gradlew build                                              # compile + tests + linting + spotbugs
+./gradlew test --tests com.example.application.command.*    # unit tests only
+./gradlew test --tests com.example.archunit.*               # architecture tests only
 ```
 
-Tests use Testcontainers (real PostgreSQL), no mocked DB layer.
+Integration tests use Testcontainers (real PostgreSQL). No mocked DB layer.
 
 ## Docker
 
