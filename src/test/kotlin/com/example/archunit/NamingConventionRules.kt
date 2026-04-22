@@ -29,15 +29,13 @@ class NamingConventionRules {
             .because("REST resource classes should be @ApplicationScoped CDI beans")
 
     @ArchTest
-    val `services should end with Service` =
+    val `application commands should end with Commands` =
         classes()
-            .that().haveSimpleNameContaining("Service")
-            .and().resideOutsideOfPackage("..shared..")
-            .and().resideOutsideOfPackage("..api..")
-            .and().resideOutsideOfPackage("..jooq..")
-            .and().resideOutsideOfPackage("..exceptions..")
-            .should().haveSimpleNameEndingWith("Service")
-            .because("Service classes should be named *Service")
+            .that().resideInAPackage("..application.command..")
+            .and().areNotInterfaces()
+            .and().areTopLevelClasses()
+            .should().haveSimpleNameEndingWith("Commands")
+            .because("Command-side application classes should be named *Commands")
 
     @ArchTest
     val `exceptions should end with Exception` =
@@ -57,10 +55,10 @@ class NamingConventionRules {
             .because("JAX-RS exception mappers should be named *ExceptionMapper")
 
     @ArchTest
-    val `view readers should end with ViewReader` =
+    val `queries should end with Queries` =
         classes()
-            .that().haveSimpleNameContaining("ViewReader")
+            .that().haveSimpleNameContaining("Queries")
             .and().resideOutsideOfPackage("..shared..")
-            .should().haveSimpleNameEndingWith("ViewReader")
-            .because("View reader classes should be named *ViewReader")
+            .should().haveSimpleNameEndingWith("Queries")
+            .because("Query classes should be named *Queries")
 }

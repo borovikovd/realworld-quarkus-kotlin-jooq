@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleId
@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class CommentServiceTest {
-    private lateinit var commentService: CommentService
+class CommentCommandsTest {
+    private lateinit var commentCommands: CommentCommands
     private lateinit var commentRepository: CommentRepository
     private lateinit var articleRepository: ArticleRepository
     private lateinit var currentUser: CurrentUser
@@ -43,7 +43,7 @@ class CommentServiceTest {
         commentRepository = mockk()
         articleRepository = mockk()
         currentUser = mockk()
-        commentService = CommentService(
+        commentCommands = CommentCommands(
             commentRepository = commentRepository,
             articleRepository = articleRepository,
             currentUser = currentUser,
@@ -54,7 +54,7 @@ class CommentServiceTest {
     fun `addComment should throw ValidationException when body is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                commentService.addComment(slug.value, "")
+                commentCommands.addComment(slug.value, "")
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["body"])
@@ -70,7 +70,7 @@ class CommentServiceTest {
         every { commentRepository.nextId() } returns commentId
         every { commentRepository.create(any()) } answers { firstArg() }
 
-        val result = commentService.addComment(slug.value, body)
+        val result = commentCommands.addComment(slug.value, body)
 
         assertEquals(commentId.value, result)
         verify { commentRepository.nextId() }
@@ -83,7 +83,7 @@ class CommentServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentService.addComment(slug.value, "comment body")
+            commentCommands.addComment(slug.value, "comment body")
         }
     }
 
@@ -97,7 +97,7 @@ class CommentServiceTest {
         every { commentRepository.findById(commentId) } returns comment
         every { commentRepository.deleteById(commentId) } returns Unit
 
-        commentService.deleteComment(slug.value, 5L)
+        commentCommands.deleteComment(slug.value, 5L)
 
         verify { commentRepository.deleteById(commentId) }
     }
@@ -108,7 +108,7 @@ class CommentServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentService.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -119,7 +119,7 @@ class CommentServiceTest {
         every { commentRepository.findById(CommentId(5L)) } returns null
 
         assertThrows<NotFoundException> {
-            commentService.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -133,7 +133,7 @@ class CommentServiceTest {
         every { commentRepository.findById(commentId) } returns comment
 
         assertThrows<NotFoundException> {
-            commentService.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -148,7 +148,7 @@ class CommentServiceTest {
         every { commentRepository.findById(commentId) } returns comment
 
         assertThrows<ForbiddenException> {
-            commentService.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 }

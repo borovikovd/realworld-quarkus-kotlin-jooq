@@ -1,10 +1,10 @@
-package com.example.domain.user.readmodel
+package com.example.application.query.readmodel
 
 import com.example.domain.user.Email
 import com.example.domain.user.UserId
 import com.example.domain.user.Username
 
-data class UserView(
+data class UserReadModel(
     val id: UserId,
     val email: Email,
     val username: Username,

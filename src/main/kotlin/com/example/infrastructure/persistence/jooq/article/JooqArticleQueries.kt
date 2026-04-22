@@ -1,9 +1,8 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.domain.article.readmodel.ArticleView
-import com.example.domain.article.readmodel.ArticleViewReader
-import com.example.domain.profile.readmodel.ProfileView
-import com.example.domain.shared.NotFoundException
+import com.example.application.query.ArticleQueries
+import com.example.application.query.readmodel.ArticleReadModel
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -20,40 +19,34 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqArticleViewReader(
+class JooqArticleQueries(
     private val dsl: DSLContext,
-) : ArticleViewReader {
+) : ArticleQueries {
     override fun getArticleById(
         id: Long,
         viewerId: Long?,
-    ): ArticleView {
-        val record =
-            dsl
-                .select(articleFields(viewerId))
-                .from(ARTICLES)
-                .join(USERS)
-                .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-                .where(ARTICLES.ID.eq(id))
-                .fetchOne() ?: throw NotFoundException("Article not found")
-
-        return record.toArticleView()
-    }
+    ): ArticleReadModel? =
+        dsl
+            .select(articleFields(viewerId))
+            .from(ARTICLES)
+            .join(USERS)
+            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .where(ARTICLES.ID.eq(id))
+            .fetchOne()
+            ?.toArticleReadModel()
 
     override fun getArticleBySlug(
         slug: String,
         viewerId: Long?,
-    ): ArticleView {
-        val record =
-            dsl
-                .select(articleFields(viewerId))
-                .from(ARTICLES)
-                .join(USERS)
-                .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-                .where(ARTICLES.SLUG.eq(slug))
-                .fetchOne() ?: throw NotFoundException("Article not found")
-
-        return record.toArticleView()
-    }
+    ): ArticleReadModel? =
+        dsl
+            .select(articleFields(viewerId))
+            .from(ARTICLES)
+            .join(USERS)
+            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .where(ARTICLES.SLUG.eq(slug))
+            .fetchOne()
+            ?.toArticleReadModel()
 
     override fun getArticles(
         tag: String?,
@@ -62,7 +55,7 @@ class JooqArticleViewReader(
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ArticleView> =
+    ): List<ArticleReadModel> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -73,7 +66,7 @@ class JooqArticleViewReader(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toArticleView() }
+            .map { it.toArticleReadModel() }
 
     private fun buildConditions(
         tag: String?,
@@ -123,7 +116,7 @@ class JooqArticleViewReader(
         limit: Int,
         offset: Int,
         viewerId: Long,
-    ): List<ArticleView> =
+    ): List<ArticleReadModel> =
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
@@ -139,7 +132,7 @@ class JooqArticleViewReader(
             .limit(limit)
             .offset(offset)
             .fetch()
-            .map { it.toArticleView() }
+            .map { it.toArticleReadModel() }
 
     override fun countArticles(
         tag: String?,
@@ -219,8 +212,16 @@ class JooqArticleViewReader(
         )
     }
 
-    private fun Record.toArticleView(): ArticleView =
-        ArticleView(
+    override fun getAllTags(): List<String> =
+        dsl
+            .select(TAGS.NAME)
+            .from(TAGS)
+            .orderBy(TAGS.NAME)
+            .fetch()
+            .mapNotNull { it.value1() }
+
+    private fun Record.toArticleReadModel(): ArticleReadModel =
+        ArticleReadModel(
             slug = get(ARTICLES.SLUG)!!,
             title = get(ARTICLES.TITLE)!!,
             description = get(ARTICLES.DESCRIPTION)!!,
@@ -233,7 +234,7 @@ class JooqArticleViewReader(
             favorited = get("favorited", Int::class.java) > 0,
             favoritesCount = get("favoritesCount", Int::class.java),
             author =
-                ProfileView(
+                ProfileReadModel(
                     username = get(USERS.USERNAME)!!,
                     bio = get(USERS.BIO),
                     image = get(USERS.IMAGE),

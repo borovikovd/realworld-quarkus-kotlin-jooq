@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.domain.auth.PasswordHashing
 import com.example.domain.shared.Clock
@@ -16,14 +16,14 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class UserService(
+class UserCommands(
     private val userRepository: UserRepository,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
 ) {
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private val logger = LoggerFactory.getLogger(UserService::class.java)
+        private val logger = LoggerFactory.getLogger(UserCommands::class.java)
     }
 
     @Timed("user.registration")

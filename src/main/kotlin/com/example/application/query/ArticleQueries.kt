@@ -1,15 +1,17 @@
-package com.example.domain.article.readmodel
+package com.example.application.query
 
-interface ArticleViewReader {
+import com.example.application.query.readmodel.ArticleReadModel
+
+interface ArticleQueries {
     fun getArticleById(
         id: Long,
         viewerId: Long?,
-    ): ArticleView
+    ): ArticleReadModel?
 
     fun getArticleBySlug(
         slug: String,
         viewerId: Long?,
-    ): ArticleView
+    ): ArticleReadModel?
 
     fun getArticles(
         tag: String?,
@@ -18,13 +20,13 @@ interface ArticleViewReader {
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ArticleView>
+    ): List<ArticleReadModel>
 
     fun getArticlesFeed(
         limit: Int,
         offset: Int,
         viewerId: Long,
-    ): List<ArticleView>
+    ): List<ArticleReadModel>
 
     fun countArticles(
         tag: String?,
@@ -33,4 +35,6 @@ interface ArticleViewReader {
     ): Int
 
     fun countArticlesFeed(viewerId: Long): Int
+
+    fun getAllTags(): List<String>
 }

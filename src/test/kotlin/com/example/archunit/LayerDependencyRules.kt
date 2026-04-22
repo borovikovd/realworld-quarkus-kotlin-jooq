@@ -6,9 +6,9 @@ import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
-import com.tngtech.archunit.library.Architectures.layeredArchitecture
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.library.Architectures.layeredArchitecture
 
 @AnalyzeClasses(
     packages = ["com.example"],
@@ -30,11 +30,11 @@ class LayerDependencyRules {
             .because("Dependencies flow inward: presentation -> application -> domain; infrastructure adapts domain ports")
 
     @ArchTest
-    val `services should not use OpenAPI DTOs` =
+    val `application classes should not use OpenAPI DTOs` =
         noClasses()
-            .that().haveSimpleNameEndingWith("Service")
+            .that().resideInAPackage("com.example.application..")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
-            .because("Services work with domain entities, not API DTOs - only Resources handle DTO mapping")
+            .because("Application layer works with domain types - only Resources handle API DTO mapping")
 
     @ArchTest
     val `domain entities should not use jOOQ or JAX-RS` =
@@ -45,10 +45,9 @@ class LayerDependencyRules {
                     override fun test(input: JavaClass): Boolean {
                         val name = input.simpleName
                         return !name.contains("Repository") &&
-                            !name.contains("Service") &&
                             !name.contains("Resource") &&
                             !name.contains("Queries") &&
-                            !name.contains("ViewReader") &&
+                            !name.contains("Commands") &&
                             !name.startsWith("Jooq") &&
                             !input.fullName.contains("Jooq") &&
                             !input.packageName.contains(".jooq")
@@ -64,11 +63,10 @@ class LayerDependencyRules {
     val `only jooq classes can import jooq generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not Jooq/Queries/ViewReader classes and not in jooq package") {
+                object : DescribedPredicate<JavaClass>("not Jooq/Queries classes and not in jooq package") {
                     override fun test(input: JavaClass): Boolean =
                         !input.fullName.contains("Jooq") &&
                             !input.fullName.contains("Queries") &&
-                            !input.fullName.contains("ViewReader") &&
                             !input.packageName.contains(".jooq") &&
                             !input.simpleName.contains("Test") &&
                             !input.simpleName.contains("Base") &&
@@ -76,5 +74,5 @@ class LayerDependencyRules {
                 },
             )
             .should().dependOnClassesThat().resideInAPackage("com.example.jooq..")
-            .because("Only Jooq*Repository and *ViewReader should access jOOQ generated code")
+            .because("Only Jooq*Repository and *Queries should access jOOQ generated code")
 }

@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.domain.shared.Clock
 import com.example.domain.shared.UnauthorizedException
@@ -20,8 +20,8 @@ import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class UserServiceTest {
-    private lateinit var userService: UserService
+class UserCommandsTest {
+    private lateinit var userCommands: UserCommands
     private lateinit var userRepository: UserRepository
     private lateinit var passwordHashing: PasswordHashing
     private lateinit var clock: Clock
@@ -32,7 +32,7 @@ class UserServiceTest {
         passwordHashing = mockk()
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
-        userService = UserService(
+        userCommands = UserCommands(
             userRepository = userRepository,
             passwordHashing = passwordHashing,
             clock = clock,
@@ -53,7 +53,7 @@ class UserServiceTest {
         every { userRepository.nextId() } returns userId
         every { userRepository.create(any()) } answers { firstArg() }
 
-        val result = userService.register(email, username, password)
+        val result = userCommands.register(email, username, password)
 
         assertEquals(userId.value, result)
         verify { userRepository.existsByEmail(Email(email)) }
@@ -69,7 +69,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register("", "testuser", "password123")
+                userCommands.register("", "testuser", "password123")
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["email"])
@@ -81,7 +81,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register("not-an-email", "testuser", "password123")
+                userCommands.register("not-an-email", "testuser", "password123")
             }
 
         assertEquals(listOf("must be a valid email address"), exception.errors["email"])
@@ -93,7 +93,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register("test@example.com", "", "password123")
+                userCommands.register("test@example.com", "", "password123")
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["username"])
@@ -105,7 +105,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register("test@example.com", "ab", "password123")
+                userCommands.register("test@example.com", "ab", "password123")
             }
 
         assertTrue(exception.errors["username"]!![0].contains("between"))
@@ -117,7 +117,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register("test@example.com", "a".repeat(51), "password123")
+                userCommands.register("test@example.com", "a".repeat(51), "password123")
             }
 
         assertTrue(exception.errors["username"]!![0].contains("between"))
@@ -134,7 +134,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register(email, username, password)
+                userCommands.register(email, username, password)
             }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -152,7 +152,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register(email, username, password)
+                userCommands.register(email, username, password)
             }
 
         assertTrue(exception.errors.containsKey("username"))
@@ -170,7 +170,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register(email, username, password)
+                userCommands.register(email, username, password)
             }
 
         assertTrue(exception.errors.containsKey("password"))
@@ -188,7 +188,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.register(email, username, password)
+                userCommands.register(email, username, password)
             }
 
         assertEquals(3, exception.errors.size)
@@ -213,7 +213,7 @@ class UserServiceTest {
         every { userRepository.findByEmail(Email(email)) } returns user
         every { passwordHashing.verify(user.passwordHash, password) } returns true
 
-        val result = userService.login(email, password)
+        val result = userCommands.login(email, password)
 
         assertEquals(1L, result)
         verify { userRepository.findByEmail(Email(email)) }
@@ -229,7 +229,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<UnauthorizedException> {
-                userService.login(email, password)
+                userCommands.login(email, password)
             }
 
         assertEquals("Invalid email or password", exception.message)
@@ -253,7 +253,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<UnauthorizedException> {
-                userService.login(email, password)
+                userCommands.login(email, password)
             }
 
         assertEquals("Invalid email or password", exception.message)
@@ -283,7 +283,7 @@ class UserServiceTest {
         every { passwordHashing.hash(newPassword) } returns PasswordHash(newPasswordHash)
         every { userRepository.update(any()) } answers { firstArg() }
 
-        val result = userService.updateUser(userId.value, newEmail, newUsername, newPassword, newBio, newImage)
+        val result = userCommands.updateUser(userId.value, newEmail, newUsername, newPassword, newBio, newImage)
 
         assertEquals(userId.value, result)
         verify { userRepository.findById(userId) }
@@ -308,7 +308,7 @@ class UserServiceTest {
         every { userRepository.findById(userId) } returns existingUser
         every { userRepository.update(any()) } answers { firstArg() }
 
-        val result = userService.updateUser(userId.value, null, null, null, null, null)
+        val result = userCommands.updateUser(userId.value, null, null, null, null, null)
 
         assertEquals(userId.value, result)
         verify { userRepository.findById(userId) }
@@ -331,7 +331,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, "", null, null, null, null)
+                userCommands.updateUser(userId.value, "", null, null, null, null)
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["email"])
@@ -352,7 +352,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, "not-an-email", null, null, null, null)
+                userCommands.updateUser(userId.value, "not-an-email", null, null, null, null)
             }
 
         assertEquals(listOf("must be a valid email address"), exception.errors["email"])
@@ -373,7 +373,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, null, "ab", null, null, null)
+                userCommands.updateUser(userId.value, null, "ab", null, null, null)
             }
 
         assertTrue(exception.errors["username"]!![0].contains("between"))
@@ -397,7 +397,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, newEmail, null, null, null, null)
+                userCommands.updateUser(userId.value, newEmail, null, null, null, null)
             }
 
         assertTrue(exception.errors.containsKey("email"))
@@ -421,7 +421,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, null, newUsername, null, null, null)
+                userCommands.updateUser(userId.value, null, newUsername, null, null, null)
             }
 
         assertTrue(exception.errors.containsKey("username"))
@@ -444,7 +444,7 @@ class UserServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                userService.updateUser(userId.value, null, null, newPassword, null, null)
+                userCommands.updateUser(userId.value, null, null, newPassword, null, null)
             }
 
         assertTrue(exception.errors.containsKey("password"))
@@ -467,7 +467,7 @@ class UserServiceTest {
         every { userRepository.findById(userId) } returns existingUser
         every { userRepository.update(any()) } answers { firstArg() }
 
-        val result = userService.updateUser(userId.value, email, username, null, null, null)
+        val result = userCommands.updateUser(userId.value, email, username, null, null, null)
 
         assertEquals(userId.value, result)
     }

@@ -22,6 +22,4 @@ interface ArticleRepository : Repository<Article, ArticleId> {
         articleId: ArticleId,
         userId: UserId,
     ): Boolean
-
-    fun getAllTags(): List<String>
 }

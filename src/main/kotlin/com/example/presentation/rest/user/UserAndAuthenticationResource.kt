@@ -6,10 +6,11 @@ import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.CurrentUser
-import com.example.application.UserService
+import com.example.application.command.UserCommands
+import com.example.application.query.UserQueries
+import com.example.application.query.readmodel.UserReadModel
 import com.example.domain.auth.TokenIssuer
-import com.example.domain.user.readmodel.UserView
-import com.example.domain.user.readmodel.UserViewReader
+import com.example.domain.shared.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -17,8 +18,8 @@ import com.example.api.model.User as ApiUser
 
 @ApplicationScoped
 class UserAndAuthenticationResource(
-    private val userService: UserService,
-    private val userViewReader: UserViewReader,
+    private val userCommands: UserCommands,
+    private val userQueries: UserQueries,
     private val tokenIssuer: TokenIssuer,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
@@ -26,48 +27,47 @@ class UserAndAuthenticationResource(
     override fun createUser(body: CreateUserRequest): Login200Response {
         val newUser = body.user
         val userId =
-            userService.register(
+            userCommands.register(
                 email = newUser.email,
                 username = newUser.username,
                 password = newUser.password,
             )
-        return Login200Response().user(userViewReader.getUserById(userId).toDto())
+        return Login200Response().user(loadUser(userId))
     }
 
     override fun login(body: LoginRequest): Login200Response {
         val loginUser = body.user
         val userId =
-            userService.login(
+            userCommands.login(
                 email = loginUser.email,
                 password = loginUser.password,
             )
-        return Login200Response().user(userViewReader.getUserById(userId).toDto())
+        return Login200Response().user(loadUser(userId))
     }
 
     @RolesAllowed("user")
-    override fun getCurrentUser(): Login200Response {
-        val userId = currentUser.require().value
-        return Login200Response().user(userViewReader.getUserById(userId).toDto())
-    }
+    override fun getCurrentUser(): Login200Response = Login200Response().user(loadUser(currentUser.require().value))
 
     @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Login200Response {
-        val currentUserId = currentUser.require().value
         val updateUser = body.user
-
         val userId =
-            userService.updateUser(
-                userId = currentUserId,
+            userCommands.updateUser(
+                userId = currentUser.require().value,
                 email = updateUser.email,
                 username = updateUser.username,
                 password = updateUser.password,
                 bio = updateUser.bio,
                 image = updateUser.image,
             )
-        return Login200Response().user(userViewReader.getUserById(userId).toDto())
+        return Login200Response().user(loadUser(userId))
     }
 
-    private fun UserView.toDto(): ApiUser =
+    private fun loadUser(userId: Long): ApiUser =
+        (userQueries.getUserById(userId) ?: throw NotFoundException("User not found"))
+            .toDto()
+
+    private fun UserReadModel.toDto(): ApiUser =
         ApiUser()
             .email(email.value)
             .token(tokenIssuer.issue(id, email, username))

@@ -48,19 +48,17 @@ class TechnologyBoundaryRules {
             ).because("JWT token handling belongs to the infrastructure.security adapters only")
 
     @ArchTest
-    val `only Jooq repositories and ViewReaders can inject DSLContext` =
+    val `only Jooq repositories and Queries can inject DSLContext` =
         fields()
             .that().haveRawType(DSLContext::class.java)
             .should().beDeclaredInClassesThat().haveSimpleNameStartingWith("Jooq")
-            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("Queries")
-            .orShould().beDeclaredInClassesThat().haveSimpleNameEndingWith("ViewReader")
             .orShould().beDeclaredInClassesThat().haveSimpleNameContaining("Test")
-            .because("Only Jooq*Repository and *ViewReader should have direct access to jOOQ DSLContext")
+            .because("Only Jooq*Repository and Jooq*Queries should have direct access to jOOQ DSLContext")
 
     @ArchTest
-    val `services should not use JAX-RS Response` =
+    val `application classes should not use JAX-RS Response` =
         noClasses()
-            .that().haveSimpleNameEndingWith("Service")
+            .that().resideInAPackage("com.example.application..")
             .should().dependOnClassesThat().haveSimpleName("Response")
-            .because("Services should not construct JAX-RS Response objects - that's the Resource layer's job")
+            .because("Application layer should not construct JAX-RS Response objects - that's the Resource layer's job")
 }

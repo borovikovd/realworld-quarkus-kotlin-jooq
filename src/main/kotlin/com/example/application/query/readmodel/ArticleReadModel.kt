@@ -1,9 +1,8 @@
-package com.example.domain.article.readmodel
+package com.example.application.query.readmodel
 
-import com.example.domain.profile.readmodel.ProfileView
 import java.time.OffsetDateTime
 
-data class ArticleView(
+data class ArticleReadModel(
     val slug: String,
     val title: String,
     val description: String,
@@ -13,5 +12,5 @@ data class ArticleView(
     val updatedAt: OffsetDateTime,
     val favorited: Boolean,
     val favoritesCount: Int,
-    val author: ProfileView,
+    val author: ProfileReadModel,
 )

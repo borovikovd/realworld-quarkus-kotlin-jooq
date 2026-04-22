@@ -24,11 +24,11 @@ class ScopeAndTransactionRules {
             )
 
     @ArchTest
-    val `transactional methods belong in the application layer` =
+    val `transactional methods belong on the command side` =
         methods()
             .that().areAnnotatedWith(Transactional::class.java)
-            .should().beDeclaredInClassesThat().resideInAPackage("..application..")
-            .because("@Transactional is a command-side concern and belongs to application services only")
+            .should().beDeclaredInClassesThat().resideInAPackage("..application.command..")
+            .because("@Transactional belongs to command-side application classes only")
 
     @ArchTest
     val `repositories should not be transactional` =
@@ -36,13 +36,13 @@ class ScopeAndTransactionRules {
             .that().haveSimpleNameEndingWith("Repository")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("Repositories should not manage transactions - application services do that")
+            .because("Repositories should not manage transactions - commands do that")
 
     @ArchTest
-    val `view readers should not be transactional` =
+    val `queries should not be transactional` =
         classes()
-            .that().haveSimpleNameEndingWith("ViewReader")
+            .that().haveSimpleNameEndingWith("Queries")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("View readers are read-only and should not manage transactions")
+            .because("Queries are read-only and should not manage transactions")
 }

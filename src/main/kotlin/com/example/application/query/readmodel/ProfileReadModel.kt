@@ -1,6 +1,6 @@
-package com.example.domain.profile.readmodel
+package com.example.application.query.readmodel
 
-data class ProfileView(
+data class ProfileReadModel(
     val username: String,
     val bio: String?,
     val image: String?,

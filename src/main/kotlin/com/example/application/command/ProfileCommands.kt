@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.application.CurrentUser
 import com.example.domain.profile.FollowRepository
@@ -10,7 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class ProfileService(
+class ProfileCommands(
     private val userRepository: UserRepository,
     private val followRepository: FollowRepository,
     private val currentUser: CurrentUser,

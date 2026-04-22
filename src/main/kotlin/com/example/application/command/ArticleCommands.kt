@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.application.CurrentUser
 import com.example.domain.article.Article
@@ -15,13 +15,13 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class ArticleService(
+class ArticleCommands(
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(ArticleService::class.java)
+        private val logger = LoggerFactory.getLogger(ArticleCommands::class.java)
     }
 
     @Counted("article.creation.count")
@@ -129,8 +129,6 @@ class ArticleService(
 
         articleRepository.unfavorite(article.id, userId)
     }
-
-    fun getAllTags(): List<String> = articleRepository.getAllTags()
 
     private fun validateArticleFields(
         title: String?,

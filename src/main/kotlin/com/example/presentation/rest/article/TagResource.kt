@@ -2,16 +2,12 @@ package com.example.presentation.rest.article
 
 import com.example.api.TagsApi
 import com.example.api.model.GetTags200Response
-import com.example.application.ArticleService
+import com.example.application.query.ArticleQueries
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class TagResource(
-    private val articleService: ArticleService,
+    private val articleQueries: ArticleQueries,
 ) : TagsApi {
-    override fun getTags(): GetTags200Response {
-        val tags = articleService.getAllTags()
-
-        return GetTags200Response().tags(tags)
-    }
+    override fun getTags(): GetTags200Response = GetTags200Response().tags(articleQueries.getAllTags())
 }

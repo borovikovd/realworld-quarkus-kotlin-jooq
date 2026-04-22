@@ -205,12 +205,4 @@ class JooqArticleRepository(
                 .where(FAVORITES.ARTICLE_ID.eq(articleId.value))
                 .and(FAVORITES.USER_ID.eq(userId.value)),
         )
-
-    override fun getAllTags(): List<String> =
-        dsl
-            .select(TAGS.NAME)
-            .from(TAGS)
-            .orderBy(TAGS.NAME)
-            .fetch()
-            .mapNotNull { it.value1() }
 }

@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleId
@@ -24,8 +24,8 @@ import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class ArticleServiceTest {
-    private lateinit var articleService: ArticleService
+class ArticleCommandsTest {
+    private lateinit var articleCommands: ArticleCommands
     private lateinit var articleRepository: ArticleRepository
     private lateinit var currentUser: CurrentUser
     private lateinit var clock: Clock
@@ -37,7 +37,7 @@ class ArticleServiceTest {
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
         mockkObject(SlugGenerator)
-        articleService = ArticleService(
+        articleCommands = ArticleCommands(
             articleRepository = articleRepository,
             currentUser = currentUser,
             clock = clock,
@@ -53,7 +53,7 @@ class ArticleServiceTest {
     fun `createArticle should throw ValidationException when title is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                articleService.createArticle("", "Test description", "Test body", emptyList())
+                articleCommands.createArticle("", "Test description", "Test body", emptyList())
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -63,7 +63,7 @@ class ArticleServiceTest {
     fun `createArticle should throw ValidationException with multiple blank fields`() {
         val exception =
             assertThrows<ValidationException> {
-                articleService.createArticle("", "", "", emptyList())
+                articleCommands.createArticle("", "", "", emptyList())
             }
 
         assertEquals(3, exception.errors.size)
@@ -93,7 +93,7 @@ class ArticleServiceTest {
 
         val exception =
             assertThrows<ValidationException> {
-                articleService.updateArticle(slug.value, " ", null, null)
+                articleCommands.updateArticle(slug.value, " ", null, null)
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -121,7 +121,7 @@ class ArticleServiceTest {
 
         every { articleRepository.create(any()) } answers { firstArg() }
 
-        val result = articleService.createArticle(title, description, body, tags)
+        val result = articleCommands.createArticle(title, description, body, tags)
 
         assertEquals(articleId.value, result)
         verify { articleRepository.nextId() }
@@ -160,7 +160,7 @@ class ArticleServiceTest {
 
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleService.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
+        val result = articleCommands.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(originalSlug) }
@@ -188,7 +188,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
         every { articleRepository.update(any()) } answers { firstArg() }
 
-        val result = articleService.updateArticle(slug.value, null, null, null)
+        val result = articleCommands.updateArticle(slug.value, null, null, null)
 
         assertEquals(1L, result)
         verify { articleRepository.findBySlug(slug) }
@@ -205,7 +205,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleService.updateArticle(slug.value, "New Title", null, null)
+            articleCommands.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
@@ -230,7 +230,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns existingArticle
 
         assertThrows<ForbiddenException> {
-            articleService.updateArticle(slug.value, "New Title", null, null)
+            articleCommands.updateArticle(slug.value, "New Title", null, null)
         }
     }
 
@@ -254,7 +254,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.deleteById(ArticleId(1L)) } returns Unit
 
-        articleService.deleteArticle(slug.value)
+        articleCommands.deleteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.deleteById(ArticleId(1L)) }
@@ -269,7 +269,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleService.deleteArticle(slug.value)
+            articleCommands.deleteArticle(slug.value)
         }
     }
 
@@ -294,7 +294,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
 
         assertThrows<ForbiddenException> {
-            articleService.deleteArticle(slug.value)
+            articleCommands.deleteArticle(slug.value)
         }
     }
 
@@ -318,7 +318,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.favorite(ArticleId(1L), userId) } returns Unit
 
-        articleService.favoriteArticle(slug.value)
+        articleCommands.favoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.favorite(ArticleId(1L), userId) }
@@ -333,7 +333,7 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleService.favoriteArticle(slug.value)
+            articleCommands.favoriteArticle(slug.value)
         }
     }
 
@@ -357,21 +357,10 @@ class ArticleServiceTest {
         every { articleRepository.findBySlug(slug) } returns article
         every { articleRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
-        articleService.unfavoriteArticle(slug.value)
+        articleCommands.unfavoriteArticle(slug.value)
 
         verify { articleRepository.findBySlug(slug) }
         verify { articleRepository.unfavorite(ArticleId(1L), userId) }
     }
 
-    @Test
-    fun `getAllTags should return tags from repository`() {
-        val tags = listOf("tag1", "tag2", "tag3")
-
-        every { articleRepository.getAllTags() } returns tags
-
-        val result = articleService.getAllTags()
-
-        assertEquals(tags, result)
-        verify { articleRepository.getAllTags() }
-    }
 }

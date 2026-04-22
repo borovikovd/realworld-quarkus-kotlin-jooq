@@ -3,43 +3,48 @@ package com.example.presentation.rest.article
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
-import com.example.application.ArticleService
 import com.example.application.CurrentUser
-import com.example.domain.article.readmodel.ArticleView
-import com.example.domain.article.readmodel.ArticleViewReader
-import com.example.domain.profile.readmodel.ProfileView
+import com.example.application.command.ArticleCommands
+import com.example.application.query.ArticleQueries
+import com.example.application.query.readmodel.ArticleReadModel
+import com.example.application.query.readmodel.ProfileReadModel
+import com.example.domain.shared.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import com.example.api.model.Article as ApiArticle
 
 @ApplicationScoped
 class FavoriteResource(
-    private val articleService: ArticleService,
-    private val articleViewReader: ArticleViewReader,
+    private val articleCommands: ArticleCommands,
+    private val articleQueries: ArticleQueries,
     private val currentUser: CurrentUser,
 ) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): CreateArticle201Response {
-        articleService.favoriteArticle(slug)
+        articleCommands.favoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
+        val articleDto =
+            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 
     @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
-        articleService.unfavoriteArticle(slug)
+        articleCommands.unfavoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
-        val articleDto = articleViewReader.getArticleBySlug(slug, viewerId).toDto()
+        val articleDto =
+            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 }
 
-private fun ArticleView.toDto(): ApiArticle =
+private fun ArticleReadModel.toDto(): ApiArticle =
     ApiArticle()
         .slug(slug)
         .title(title)
@@ -52,7 +57,7 @@ private fun ArticleView.toDto(): ApiArticle =
         .favoritesCount(favoritesCount)
         .author(author.toDto())
 
-private fun ProfileView.toDto(): Profile =
+private fun ProfileReadModel.toDto(): Profile =
     Profile()
         .username(username)
         .bio(bio)

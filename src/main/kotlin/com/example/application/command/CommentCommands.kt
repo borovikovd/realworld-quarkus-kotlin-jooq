@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.command
 
 import com.example.application.CurrentUser
 import com.example.domain.article.ArticleRepository
@@ -14,13 +14,13 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class CommentService(
+class CommentCommands(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(CommentService::class.java)
+        private val logger = LoggerFactory.getLogger(CommentCommands::class.java)
     }
 
     @Transactional
