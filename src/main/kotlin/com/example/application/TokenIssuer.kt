@@ -1,4 +1,4 @@
-package com.example.domain.auth
+package com.example.application
 
 import com.example.domain.user.Email
 import com.example.domain.user.UserId

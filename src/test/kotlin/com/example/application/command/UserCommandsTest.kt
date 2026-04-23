@@ -1,9 +1,9 @@
 package com.example.application.command
 
-import com.example.domain.shared.Clock
+import com.example.application.Clock
 import com.example.domain.shared.UnauthorizedException
 import com.example.domain.shared.ValidationException
-import com.example.domain.auth.PasswordHashing
+import com.example.application.PasswordHashing
 import com.example.domain.user.Email
 import com.example.domain.user.PasswordHash
 import com.example.domain.user.User

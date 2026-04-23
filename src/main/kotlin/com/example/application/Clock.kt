@@ -1,4 +1,4 @@
-package com.example.domain.shared
+package com.example.application
 
 import java.time.OffsetDateTime
 

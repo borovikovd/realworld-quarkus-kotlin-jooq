@@ -1,11 +1,11 @@
 package com.example.application.command
 
+import com.example.application.Clock
 import com.example.application.CurrentUser
 import com.example.domain.article.Article
 import com.example.domain.article.ArticleRepository
 import com.example.domain.article.Slug
 import com.example.domain.article.SlugGenerator
-import com.example.domain.shared.Clock
 import com.example.domain.shared.ForbiddenException
 import com.example.domain.shared.NotFoundException
 import com.example.domain.shared.ValidationException

@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.domain.auth.TokenIssuer
+import com.example.application.TokenIssuer
 import com.example.domain.user.Email
 import com.example.domain.user.UserId
 import com.example.domain.user.Username

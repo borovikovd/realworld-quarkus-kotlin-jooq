@@ -9,7 +9,7 @@ import com.example.domain.shared.ValidationException
 import com.example.application.CurrentUser
 import com.example.domain.article.Slug
 import com.example.domain.article.SlugGenerator
-import com.example.domain.shared.Clock
+import com.example.application.Clock
 import com.example.domain.user.UserId
 import io.mockk.every
 import io.mockk.mockk
