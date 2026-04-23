@@ -1,4 +1,4 @@
-package com.example.application.port.outbound
+package com.example.application.query.readmodel
 
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.UserId

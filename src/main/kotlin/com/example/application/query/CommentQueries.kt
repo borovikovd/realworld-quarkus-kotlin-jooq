@@ -1,11 +1,20 @@
 package com.example.application.query
 
-import com.example.application.port.inbound.query.GetCommentByIdQuery
-import com.example.application.port.inbound.query.GetCommentsBySlugQuery
-import com.example.application.port.outbound.CommentReadModel
+import com.example.application.port.outbound.CommentReadRepository
+import com.example.application.query.readmodel.CommentReadModel
+import jakarta.enterprise.context.ApplicationScoped
 
-interface CommentQueries {
-    fun getCommentById(query: GetCommentByIdQuery): CommentReadModel?
+@ApplicationScoped
+class CommentQueries(
+    private val commentReadRepository: CommentReadRepository,
+) {
+    fun getCommentById(
+        id: Long,
+        viewerId: Long?,
+    ): CommentReadModel? = commentReadRepository.findById(id, viewerId)
 
-    fun getCommentsBySlug(query: GetCommentsBySlugQuery): List<CommentReadModel>
+    fun getCommentsBySlug(
+        slug: String,
+        viewerId: Long?,
+    ): List<CommentReadModel> = commentReadRepository.findByArticleSlug(slug, viewerId)
 }

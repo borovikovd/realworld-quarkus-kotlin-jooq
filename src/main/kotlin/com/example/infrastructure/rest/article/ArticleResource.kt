@@ -7,19 +7,10 @@ import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.command.ArticleCommands
-import com.example.application.port.inbound.command.CreateArticleCommand
-import com.example.application.port.inbound.command.DeleteArticleCommand
-import com.example.application.port.inbound.command.UpdateArticleCommand
-import com.example.application.port.inbound.query.CountArticlesFeedQuery
-import com.example.application.port.inbound.query.CountArticlesQuery
-import com.example.application.port.inbound.query.GetArticleByIdQuery
-import com.example.application.port.inbound.query.GetArticleBySlugQuery
-import com.example.application.port.inbound.query.GetArticlesFeedQuery
-import com.example.application.port.inbound.query.ListArticlesQuery
-import com.example.application.port.outbound.ArticleReadModel
 import com.example.application.port.outbound.CurrentUser
-import com.example.application.port.outbound.ProfileReadModel
 import com.example.application.query.ArticleQueries
+import com.example.application.query.readmodel.ArticleReadModel
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -39,20 +30,16 @@ class ArticleResource(
 
         val articleId =
             articleCommands.createArticle(
-                CreateArticleCommand(
-                    title = newArticle.title,
-                    description = newArticle.description,
-                    body = newArticle.body,
-                    tags = newArticle.tagList ?: emptyList(),
-                ),
+                title = newArticle.title,
+                description = newArticle.description,
+                body = newArticle.body,
+                tags = newArticle.tagList ?: emptyList(),
             )
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (
-                articleQueries.getArticleById(GetArticleByIdQuery(articleId, viewerId))
-                    ?: throw NotFoundException("Article not found")
-            ).toDto()
+            (articleQueries.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -60,16 +47,14 @@ class ArticleResource(
     @ResponseStatus(204)
     @RolesAllowed("user")
     override fun deleteArticle(slug: String) {
-        articleCommands.deleteArticle(DeleteArticleCommand(slug))
+        articleCommands.deleteArticle(slug)
     }
 
     override fun getArticle(slug: String): CreateArticle201Response {
         val viewerId = currentUser.id?.value
         val articleDto =
-            (
-                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
-                    ?: throw NotFoundException("Article not found")
-            ).toDto()
+            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -86,19 +71,17 @@ class ArticleResource(
         val articles =
             articleQueries
                 .getArticles(
-                    ListArticlesQuery(
-                        tag = tag,
-                        author = author,
-                        favorited = favorited,
-                        limit = limit ?: 20,
-                        offset = offset ?: 0,
-                        viewerId = viewerId,
-                    ),
+                    tag = tag,
+                    author = author,
+                    favorited = favorited,
+                    limit = limit ?: 20,
+                    offset = offset ?: 0,
+                    viewerId = viewerId,
                 ).map { it.toDto() }
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleQueries.countArticles(CountArticlesQuery(tag, author, favorited)))
+            .articlesCount(articleQueries.countArticles(tag, author, favorited))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -110,17 +93,12 @@ class ArticleResource(
         val viewerId = currentUser.require().value
         val articles =
             articleQueries
-                .getArticlesFeed(
-                    GetArticlesFeedQuery(
-                        viewerId = viewerId,
-                        limit = limit ?: 20,
-                        offset = offset ?: 0,
-                    ),
-                ).map { it.toDto() }
+                .getArticlesFeed(viewerId = viewerId, limit = limit ?: 20, offset = offset ?: 0)
+                .map { it.toDto() }
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleQueries.countArticlesFeed(CountArticlesFeedQuery(viewerId)))
+            .articlesCount(articleQueries.countArticlesFeed(viewerId))
     }
 
     @RolesAllowed("user")
@@ -132,20 +110,16 @@ class ArticleResource(
 
         val articleId =
             articleCommands.updateArticle(
-                UpdateArticleCommand(
-                    slug = slug,
-                    title = updateData.title,
-                    description = updateData.description,
-                    body = updateData.body,
-                ),
+                slug = slug,
+                title = updateData.title,
+                description = updateData.description,
+                body = updateData.body,
             )
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (
-                articleQueries.getArticleById(GetArticleByIdQuery(articleId, viewerId))
-                    ?: throw NotFoundException("Article not found")
-            ).toDto()
+            (articleQueries.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }

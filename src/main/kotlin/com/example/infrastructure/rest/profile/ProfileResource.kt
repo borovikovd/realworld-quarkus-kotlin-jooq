@@ -4,12 +4,9 @@ import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
 import com.example.application.command.ProfileCommands
-import com.example.application.port.inbound.command.FollowUserCommand
-import com.example.application.port.inbound.command.UnfollowUserCommand
-import com.example.application.port.inbound.query.GetProfileByUsernameQuery
 import com.example.application.port.outbound.CurrentUser
-import com.example.application.port.outbound.ProfileReadModel
 import com.example.application.query.ProfileQueries
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -25,13 +22,13 @@ class ProfileResource(
 
     @RolesAllowed("user")
     override fun followUserByUsername(username: String): GetProfileByUsername200Response {
-        profileCommands.followUser(FollowUserCommand(username))
+        profileCommands.followUser(username)
         return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require().value))
     }
 
     @RolesAllowed("user")
     override fun unfollowUserByUsername(username: String): GetProfileByUsername200Response {
-        profileCommands.unfollowUser(UnfollowUserCommand(username))
+        profileCommands.unfollowUser(username)
         return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require().value))
     }
 
@@ -39,10 +36,8 @@ class ProfileResource(
         username: String,
         viewerId: Long?,
     ): Profile =
-        (
-            profileQueries.getProfileByUsername(GetProfileByUsernameQuery(username, viewerId))
-                ?: throw NotFoundException("Profile not found")
-        ).toDto()
+        (profileQueries.getProfileByUsername(username, viewerId) ?: throw NotFoundException("Profile not found"))
+            .toDto()
 }
 
 private fun ProfileReadModel.toDto(): Profile =

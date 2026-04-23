@@ -1,8 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.port.inbound.query.GetProfileByUsernameQuery
-import com.example.application.port.outbound.ProfileReadModel
-import com.example.application.query.ProfileQueries
+import com.example.application.port.outbound.ProfileReadRepository
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
@@ -11,16 +10,19 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqProfileQueries(
+class JooqProfileReadRepository(
     private val dsl: DSLContext,
-) : ProfileQueries {
-    override fun getProfileByUsername(query: GetProfileByUsernameQuery): ProfileReadModel? =
+) : ProfileReadRepository {
+    override fun findByUsername(
+        username: String,
+        viewerId: Long?,
+    ): ProfileReadModel? =
         dsl
             .select(
                 USERS.USERNAME,
                 USERS.BIO,
                 USERS.IMAGE,
-                query.viewerId?.let {
+                viewerId?.let {
                     select(count())
                         .from(FOLLOWERS)
                         .where(FOLLOWERS.FOLLOWEE_ID.eq(USERS.ID))
@@ -30,7 +32,7 @@ class JooqProfileQueries(
                     .`val`(0)
                     .`as`("following"),
             ).from(USERS)
-            .where(USERS.USERNAME.eq(query.username))
+            .where(USERS.USERNAME.eq(username))
             .fetchOne()
             ?.let { record ->
                 ProfileReadModel(

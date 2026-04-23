@@ -55,10 +55,18 @@ class NamingConventionRules {
             .because("JAX-RS exception mappers should be named *ExceptionMapper")
 
     @ArchTest
-    val `query ports should end with Queries` =
+    val `query services should end with Queries` =
         classes()
-            .that().resideInAPackage("..application.query..")
-            .and().areInterfaces()
+            .that().resideInAPackage("..application.query")
+            .and().areTopLevelClasses()
             .should().haveSimpleNameEndingWith("Queries")
-            .because("Read-side application ports should be named *Queries")
+            .because("Read-side application services should be named *Queries")
+
+    @ArchTest
+    val `outbound read repositories should be interfaces` =
+        classes()
+            .that().resideInAPackage("..application.port.outbound..")
+            .and().haveSimpleNameEndingWith("ReadRepository")
+            .should().beInterfaces()
+            .because("Outbound read repository ports are contracts implemented by infrastructure adapters")
 }

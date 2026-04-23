@@ -1,26 +1,45 @@
 package com.example.application.query
 
-import com.example.application.port.inbound.query.CountArticlesFeedQuery
-import com.example.application.port.inbound.query.CountArticlesQuery
-import com.example.application.port.inbound.query.GetAllTagsQuery
-import com.example.application.port.inbound.query.GetArticleByIdQuery
-import com.example.application.port.inbound.query.GetArticleBySlugQuery
-import com.example.application.port.inbound.query.GetArticlesFeedQuery
-import com.example.application.port.inbound.query.ListArticlesQuery
-import com.example.application.port.outbound.ArticleReadModel
+import com.example.application.port.outbound.ArticleReadRepository
+import com.example.application.query.readmodel.ArticleReadModel
+import jakarta.enterprise.context.ApplicationScoped
 
-interface ArticleQueries {
-    fun getArticleById(query: GetArticleByIdQuery): ArticleReadModel?
+@ApplicationScoped
+class ArticleQueries(
+    private val articleReadRepository: ArticleReadRepository,
+) {
+    fun getArticleById(
+        id: Long,
+        viewerId: Long?,
+    ): ArticleReadModel? = articleReadRepository.findById(id, viewerId)
 
-    fun getArticleBySlug(query: GetArticleBySlugQuery): ArticleReadModel?
+    fun getArticleBySlug(
+        slug: String,
+        viewerId: Long?,
+    ): ArticleReadModel? = articleReadRepository.findBySlug(slug, viewerId)
 
-    fun getArticles(query: ListArticlesQuery): List<ArticleReadModel>
+    fun getArticles(
+        tag: String?,
+        author: String?,
+        favorited: String?,
+        limit: Int,
+        offset: Int,
+        viewerId: Long?,
+    ): List<ArticleReadModel> = articleReadRepository.list(tag, author, favorited, limit, offset, viewerId)
 
-    fun getArticlesFeed(query: GetArticlesFeedQuery): List<ArticleReadModel>
+    fun getArticlesFeed(
+        viewerId: Long,
+        limit: Int,
+        offset: Int,
+    ): List<ArticleReadModel> = articleReadRepository.listFeed(viewerId, limit, offset)
 
-    fun countArticles(query: CountArticlesQuery): Int
+    fun countArticles(
+        tag: String?,
+        author: String?,
+        favorited: String?,
+    ): Int = articleReadRepository.count(tag, author, favorited)
 
-    fun countArticlesFeed(query: CountArticlesFeedQuery): Int
+    fun countArticlesFeed(viewerId: Long): Int = articleReadRepository.countFeed(viewerId)
 
-    fun getAllTags(query: GetAllTagsQuery): List<String>
+    fun getAllTags(): List<String> = articleReadRepository.allTags()
 }

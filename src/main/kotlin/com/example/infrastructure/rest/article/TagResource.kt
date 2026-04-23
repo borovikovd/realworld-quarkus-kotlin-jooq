@@ -2,7 +2,6 @@ package com.example.infrastructure.rest.article
 
 import com.example.api.TagsApi
 import com.example.api.model.GetTags200Response
-import com.example.application.port.inbound.query.GetAllTagsQuery
 import com.example.application.query.ArticleQueries
 import jakarta.enterprise.context.ApplicationScoped
 
@@ -10,5 +9,5 @@ import jakarta.enterprise.context.ApplicationScoped
 class TagResource(
     private val articleQueries: ArticleQueries,
 ) : TagsApi {
-    override fun getTags(): GetTags200Response = GetTags200Response().tags(articleQueries.getAllTags(GetAllTagsQuery()))
+    override fun getTags(): GetTags200Response = GetTags200Response().tags(articleQueries.getAllTags())
 }

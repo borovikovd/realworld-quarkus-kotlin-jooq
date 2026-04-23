@@ -1,7 +1,5 @@
 package com.example.application.command
 
-import com.example.application.port.inbound.command.FollowUserCommand
-import com.example.application.port.inbound.command.UnfollowUserCommand
 import com.example.application.port.outbound.CurrentUser
 import com.example.application.port.outbound.FollowRepository
 import com.example.application.port.outbound.UserWriteRepository
@@ -18,10 +16,10 @@ class ProfileCommands(
     private val currentUser: CurrentUser,
 ) {
     @Transactional
-    fun followUser(command: FollowUserCommand) {
+    fun followUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userWriteRepository.findByUsername(Username(command.username))
+            userWriteRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         if (followee.id == followerId) {
@@ -32,10 +30,10 @@ class ProfileCommands(
     }
 
     @Transactional
-    fun unfollowUser(command: UnfollowUserCommand) {
+    fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userWriteRepository.findByUsername(Username(command.username))
+            userWriteRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         followRepository.unfollow(followerId, followee.id)

@@ -1,7 +1,5 @@
 package com.example.application.command
 
-import com.example.application.port.inbound.command.AddCommentCommand
-import com.example.application.port.inbound.command.DeleteCommentCommand
 import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.application.port.outbound.CommentWriteRepository
 import com.example.application.port.outbound.CurrentUser
@@ -22,14 +20,17 @@ class CommentCommands(
     private val currentUser: CurrentUser,
 ) {
     @Transactional
-    fun addComment(command: AddCommentCommand): Long {
-        if (command.body.isBlank()) {
+    fun addComment(
+        articleSlug: String,
+        body: String,
+    ): Long {
+        if (body.isBlank()) {
             throw ValidationException(mapOf("body" to listOf("must not be blank")))
         }
 
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(command.articleSlug))
+            articleWriteRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
         val commentId = commentWriteRepository.nextId()
@@ -38,20 +39,23 @@ class CommentCommands(
                 id = commentId,
                 articleId = article.id,
                 authorId = userId,
-                body = command.body,
+                body = body,
             )
         commentWriteRepository.create(comment)
         return commentId.value
     }
 
     @Transactional
-    fun deleteComment(command: DeleteCommentCommand) {
+    fun deleteComment(
+        articleSlug: String,
+        commentId: Long,
+    ) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(command.articleSlug))
+            articleWriteRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
-        val typedCommentId = CommentId(command.commentId)
+        val typedCommentId = CommentId(commentId)
         val comment =
             commentWriteRepository.findById(typedCommentId)
                 ?: throw NotFoundException("Comment not found")
@@ -64,7 +68,7 @@ class CommentCommands(
             throw ForbiddenException("You can only delete your own comments")
         }
         commentWriteRepository.deleteById(typedCommentId)
-        logger.info("Comment deleted: commentId={}", command.commentId)
+        logger.info("Comment deleted: commentId={}", commentId)
     }
 
     companion object {

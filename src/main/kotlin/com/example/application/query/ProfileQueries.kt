@@ -1,8 +1,15 @@
 package com.example.application.query
 
-import com.example.application.port.inbound.query.GetProfileByUsernameQuery
-import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.port.outbound.ProfileReadRepository
+import com.example.application.query.readmodel.ProfileReadModel
+import jakarta.enterprise.context.ApplicationScoped
 
-interface ProfileQueries {
-    fun getProfileByUsername(query: GetProfileByUsernameQuery): ProfileReadModel?
+@ApplicationScoped
+class ProfileQueries(
+    private val profileReadRepository: ProfileReadRepository,
+) {
+    fun getProfileByUsername(
+        username: String,
+        viewerId: Long?,
+    ): ProfileReadModel? = profileReadRepository.findByUsername(username, viewerId)
 }

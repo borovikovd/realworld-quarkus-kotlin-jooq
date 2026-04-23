@@ -1,10 +1,8 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.port.inbound.query.GetCommentByIdQuery
-import com.example.application.port.inbound.query.GetCommentsBySlugQuery
-import com.example.application.port.outbound.CommentReadModel
-import com.example.application.port.outbound.ProfileReadModel
-import com.example.application.query.CommentQueries
+import com.example.application.port.outbound.CommentReadRepository
+import com.example.application.query.readmodel.CommentReadModel
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
@@ -16,9 +14,56 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqCommentQueries(
+class JooqCommentReadRepository(
     private val dsl: DSLContext,
-) : CommentQueries {
+) : CommentReadRepository {
+    override fun findByArticleSlug(
+        slug: String,
+        viewerId: Long?,
+    ): List<CommentReadModel> =
+        dsl
+            .select(
+                COMMENTS.ID,
+                COMMENTS.BODY,
+                COMMENTS.CREATED_AT,
+                COMMENTS.UPDATED_AT,
+                COMMENTS.AUTHOR_ID,
+                USERS.USERNAME,
+                USERS.BIO,
+                USERS.IMAGE,
+                followingField(viewerId),
+            ).from(COMMENTS)
+            .join(USERS)
+            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+            .join(ARTICLES)
+            .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
+            .where(ARTICLES.SLUG.eq(slug))
+            .orderBy(COMMENTS.CREATED_AT.desc())
+            .fetch()
+            .map { it.toCommentReadModel() }
+
+    override fun findById(
+        id: Long,
+        viewerId: Long?,
+    ): CommentReadModel? =
+        dsl
+            .select(
+                COMMENTS.ID,
+                COMMENTS.BODY,
+                COMMENTS.CREATED_AT,
+                COMMENTS.UPDATED_AT,
+                COMMENTS.AUTHOR_ID,
+                USERS.USERNAME,
+                USERS.BIO,
+                USERS.IMAGE,
+                followingField(viewerId),
+            ).from(COMMENTS)
+            .join(USERS)
+            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+            .where(COMMENTS.ID.eq(id))
+            .fetchOne()
+            ?.toCommentReadModel()
+
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
             select(count())
@@ -31,47 +76,6 @@ class JooqCommentQueries(
                 .`val`(0)
                 .`as`("following")
         }
-
-    override fun getCommentsBySlug(query: GetCommentsBySlugQuery): List<CommentReadModel> =
-        dsl
-            .select(
-                COMMENTS.ID,
-                COMMENTS.BODY,
-                COMMENTS.CREATED_AT,
-                COMMENTS.UPDATED_AT,
-                COMMENTS.AUTHOR_ID,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                followingField(query.viewerId),
-            ).from(COMMENTS)
-            .join(USERS)
-            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-            .join(ARTICLES)
-            .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
-            .where(ARTICLES.SLUG.eq(query.slug))
-            .orderBy(COMMENTS.CREATED_AT.desc())
-            .fetch()
-            .map { it.toCommentReadModel() }
-
-    override fun getCommentById(query: GetCommentByIdQuery): CommentReadModel? =
-        dsl
-            .select(
-                COMMENTS.ID,
-                COMMENTS.BODY,
-                COMMENTS.CREATED_AT,
-                COMMENTS.UPDATED_AT,
-                COMMENTS.AUTHOR_ID,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                followingField(query.viewerId),
-            ).from(COMMENTS)
-            .join(USERS)
-            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-            .where(COMMENTS.ID.eq(query.id))
-            .fetchOne()
-            ?.toCommentReadModel()
 
     private fun Record.toCommentReadModel(): CommentReadModel =
         CommentReadModel(

@@ -4,13 +4,10 @@ import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
 import com.example.application.command.ArticleCommands
-import com.example.application.port.inbound.command.FavoriteArticleCommand
-import com.example.application.port.inbound.command.UnfavoriteArticleCommand
-import com.example.application.port.inbound.query.GetArticleBySlugQuery
-import com.example.application.port.outbound.ArticleReadModel
 import com.example.application.port.outbound.CurrentUser
-import com.example.application.port.outbound.ProfileReadModel
 import com.example.application.query.ArticleQueries
+import com.example.application.query.readmodel.ArticleReadModel
+import com.example.application.query.readmodel.ProfileReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -24,28 +21,24 @@ class FavoriteResource(
 ) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): CreateArticle201Response {
-        articleCommands.favoriteArticle(FavoriteArticleCommand(slug))
+        articleCommands.favoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (
-                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
-                    ?: throw NotFoundException("Article not found")
-            ).toDto()
+            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 
     @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
-        articleCommands.unfavoriteArticle(UnfavoriteArticleCommand(slug))
+        articleCommands.unfavoriteArticle(slug)
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (
-                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
-                    ?: throw NotFoundException("Article not found")
-            ).toDto()
+            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+                .toDto()
 
         return CreateArticle201Response().article(articleDto)
     }

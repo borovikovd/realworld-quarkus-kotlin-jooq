@@ -1,19 +1,17 @@
 package com.example.application.command
 
+import com.example.application.port.outbound.ArticleWriteRepository
+import com.example.application.port.outbound.CommentWriteRepository
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
-import com.example.application.port.inbound.command.AddCommentCommand
-import com.example.application.port.inbound.command.DeleteCommentCommand
-import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
-import com.example.application.port.outbound.CommentWriteRepository
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
-import com.example.application.port.outbound.CurrentUser
-import com.example.domain.aggregate.user.UserId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -56,7 +54,7 @@ class CommentCommandsTest {
     fun `addComment should throw ValidationException when body is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                commentCommands.addComment(AddCommentCommand(slug.value, ""))
+                commentCommands.addComment(slug.value, "")
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["body"])
@@ -72,7 +70,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.nextId() } returns commentId
         every { commentWriteRepository.create(any()) } answers { firstArg() }
 
-        val result = commentCommands.addComment(AddCommentCommand(slug.value, body))
+        val result = commentCommands.addComment(slug.value, body)
 
         assertEquals(commentId.value, result)
         verify { commentWriteRepository.nextId() }
@@ -85,7 +83,7 @@ class CommentCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.addComment(AddCommentCommand(slug.value, "comment body"))
+            commentCommands.addComment(slug.value, "comment body")
         }
     }
 
@@ -99,7 +97,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
         every { commentWriteRepository.deleteById(commentId) } returns Unit
 
-        commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
+        commentCommands.deleteComment(slug.value, 5L)
 
         verify { commentWriteRepository.deleteById(commentId) }
     }
@@ -110,7 +108,7 @@ class CommentCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -121,7 +119,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(CommentId(5L)) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -135,7 +133,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 
@@ -150,7 +148,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<ForbiddenException> {
-            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
+            commentCommands.deleteComment(slug.value, 5L)
         }
     }
 }

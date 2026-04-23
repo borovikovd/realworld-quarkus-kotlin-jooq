@@ -1,8 +1,5 @@
 package com.example.application.command
 
-import com.example.application.port.inbound.command.LoginUserCommand
-import com.example.application.port.inbound.command.RegisterUserCommand
-import com.example.application.port.inbound.command.UpdateUserCommand
 import com.example.application.port.outbound.Clock
 import com.example.application.port.outbound.PasswordHashing
 import com.example.application.port.outbound.UserWriteRepository
@@ -27,20 +24,24 @@ class UserCommands(
     @Timed("user.registration")
     @Counted("user.registration.count")
     @Transactional
-    fun register(command: RegisterUserCommand): Long {
+    fun register(
+        email: String,
+        username: String,
+        password: String,
+    ): Long {
         val errors = mutableMapOf<String, List<String>>()
 
-        val emailVo = parseEmail(command.email, errors)
+        val emailVo = parseEmail(email, errors)
         if (emailVo != null && userWriteRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
-        val usernameVo = parseUsername(command.username, errors)
+        val usernameVo = parseUsername(username, errors)
         if (usernameVo != null && userWriteRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
-        if (command.password.length < MIN_PASSWORD_LENGTH) {
+        if (password.length < MIN_PASSWORD_LENGTH) {
             errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
         }
 
@@ -54,17 +55,20 @@ class UserCommands(
                 id = userId,
                 email = emailVo!!,
                 username = usernameVo!!,
-                passwordHash = passwordHashing.hash(command.password),
+                passwordHash = passwordHashing.hash(password),
             )
         userWriteRepository.create(user)
-        logger.info("User registered: userId={}, username={}", userId.value, command.username)
+        logger.info("User registered: userId={}, username={}", userId.value, username)
         return userId.value
     }
 
     @Timed("user.login")
-    fun login(command: LoginUserCommand): Long {
+    fun login(
+        email: String,
+        password: String,
+    ): Long {
         val emailVo =
-            runCatching { Email(command.email) }
+            runCatching { Email(email) }
                 .getOrElse { throw UnauthorizedException("Invalid email or password") }
 
         val user = userWriteRepository.findByEmail(emailVo)
@@ -73,7 +77,7 @@ class UserCommands(
             throw UnauthorizedException("Invalid email or password")
         }
 
-        if (!passwordHashing.verify(user.passwordHash, command.password)) {
+        if (!passwordHashing.verify(user.passwordHash, password)) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
@@ -82,25 +86,32 @@ class UserCommands(
     }
 
     @Transactional
-    fun updateUser(command: UpdateUserCommand): Long {
-        val typedUserId = UserId(command.userId)
+    fun updateUser(
+        userId: Long,
+        email: String?,
+        username: String?,
+        password: String?,
+        bio: String?,
+        image: String?,
+    ): Long {
+        val typedUserId = UserId(userId)
         val user =
             userWriteRepository.findById(typedUserId)
                 ?: throw UnauthorizedException("User not found")
 
         val errors = mutableMapOf<String, List<String>>()
 
-        val emailVo = command.email?.let { parseEmail(it, errors) }
+        val emailVo = email?.let { parseEmail(it, errors) }
         if (emailVo != null && emailVo != user.email && userWriteRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
-        val usernameVo = command.username?.let { parseUsername(it, errors) }
+        val usernameVo = username?.let { parseUsername(it, errors) }
         if (usernameVo != null && usernameVo != user.username && userWriteRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
-        command.password?.let {
+        password?.let {
             if (it.length < MIN_PASSWORD_LENGTH) {
                 errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
             }
@@ -111,9 +122,9 @@ class UserCommands(
         }
 
         val now = clock.now()
-        var updatedUser = user.updateProfile(now, emailVo, usernameVo, command.bio, command.image)
+        var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
 
-        command.password?.let {
+        password?.let {
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 

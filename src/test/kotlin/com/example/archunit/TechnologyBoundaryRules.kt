@@ -19,12 +19,11 @@ class TechnologyBoundaryRules {
     val `only Resources can import OpenAPI generated code` =
         noClasses()
             .that(
-                object : DescribedPredicate<JavaClass>("not in api package, not Resource, and not Queries") {
+                object : DescribedPredicate<JavaClass>("not in api package and not Resource") {
                     override fun test(input: JavaClass): Boolean {
                         if (input.packageName.contains(".api")) return false
                         if (input.simpleName.endsWith("Resource")) return false
                         if (input.simpleName.endsWith("ResourceKt")) return false
-                        if (input.fullName.contains("Queries")) return false
                         return true
                     }
                 },
@@ -47,12 +46,12 @@ class TechnologyBoundaryRules {
             ).because("JWT token handling belongs to the infrastructure.security adapters only")
 
     @ArchTest
-    val `only Jooq repositories and Queries can inject DSLContext` =
+    val `only Jooq adapters can inject DSLContext` =
         fields()
             .that().haveRawType(DSLContext::class.java)
             .should().beDeclaredInClassesThat().haveSimpleNameStartingWith("Jooq")
             .orShould().beDeclaredInClassesThat().haveSimpleNameContaining("Test")
-            .because("Only Jooq*Repository and Jooq*Queries should have direct access to jOOQ DSLContext")
+            .because("Only Jooq* adapters should have direct access to jOOQ DSLContext")
 
     @ArchTest
     val `application classes should not use JAX-RS Response` =
