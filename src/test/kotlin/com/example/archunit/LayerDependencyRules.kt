@@ -1,6 +1,6 @@
 package com.example.archunit
 
-import com.example.domain.shared.Entity
+import com.example.domain.Entity
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.importer.ImportOption

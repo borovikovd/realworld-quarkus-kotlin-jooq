@@ -11,7 +11,7 @@ import com.example.application.command.ArticleCommands
 import com.example.application.query.ArticleQueries
 import com.example.application.query.readmodel.ArticleReadModel
 import com.example.application.query.readmodel.ProfileReadModel
-import com.example.domain.shared.NotFoundException
+import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

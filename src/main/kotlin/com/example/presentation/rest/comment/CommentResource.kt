@@ -10,7 +10,7 @@ import com.example.application.command.CommentCommands
 import com.example.application.query.CommentQueries
 import com.example.application.query.readmodel.CommentReadModel
 import com.example.application.query.readmodel.ProfileReadModel
-import com.example.domain.shared.NotFoundException
+import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

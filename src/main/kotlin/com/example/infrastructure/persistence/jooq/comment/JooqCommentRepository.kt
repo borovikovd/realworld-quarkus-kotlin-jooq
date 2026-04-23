@@ -1,10 +1,10 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.domain.article.ArticleId
-import com.example.domain.comment.Comment
-import com.example.domain.comment.CommentId
+import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.comment.Comment
+import com.example.domain.aggregate.comment.CommentId
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.comment.CommentRepository
-import com.example.domain.user.UserId
 import com.example.jooq.public.tables.references.COMMENTS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

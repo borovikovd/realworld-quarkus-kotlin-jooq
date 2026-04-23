@@ -2,9 +2,9 @@ package com.example.infrastructure.persistence.jooq.user
 
 import com.example.application.query.UserQueries
 import com.example.application.query.readmodel.UserReadModel
-import com.example.domain.user.Email
-import com.example.domain.user.UserId
-import com.example.domain.user.Username
+import com.example.domain.aggregate.user.Email
+import com.example.domain.aggregate.user.UserId
+import com.example.domain.aggregate.user.Username
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

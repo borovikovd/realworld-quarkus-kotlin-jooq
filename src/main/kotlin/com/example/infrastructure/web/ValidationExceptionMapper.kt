@@ -1,6 +1,6 @@
 package com.example.infrastructure.web
 
-import com.example.domain.shared.ValidationException
+import com.example.domain.exception.ValidationException
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.ExceptionMapper
 import jakarta.ws.rs.ext.Provider

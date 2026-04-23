@@ -1,11 +1,11 @@
 package com.example.infrastructure.persistence.jooq.user
 
-import com.example.domain.user.Email
-import com.example.domain.user.PasswordHash
-import com.example.domain.user.User
-import com.example.domain.user.UserId
+import com.example.domain.aggregate.user.Email
+import com.example.domain.aggregate.user.PasswordHash
+import com.example.domain.aggregate.user.User
+import com.example.domain.aggregate.user.UserId
+import com.example.domain.aggregate.user.Username
 import com.example.domain.user.UserRepository
-import com.example.domain.user.Username
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

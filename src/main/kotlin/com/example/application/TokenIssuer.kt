@@ -1,8 +1,8 @@
 package com.example.application
 
-import com.example.domain.user.Email
-import com.example.domain.user.UserId
-import com.example.domain.user.Username
+import com.example.domain.aggregate.user.Email
+import com.example.domain.aggregate.user.UserId
+import com.example.domain.aggregate.user.Username
 
 interface TokenIssuer {
     fun issue(

@@ -7,7 +7,7 @@ import com.example.application.CurrentUser
 import com.example.application.command.ProfileCommands
 import com.example.application.query.ProfileQueries
 import com.example.application.query.readmodel.ProfileReadModel
-import com.example.domain.shared.NotFoundException
+import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 

@@ -10,7 +10,7 @@ import com.example.application.TokenIssuer
 import com.example.application.command.UserCommands
 import com.example.application.query.UserQueries
 import com.example.application.query.readmodel.UserReadModel
-import com.example.domain.shared.NotFoundException
+import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import org.jboss.resteasy.reactive.ResponseStatus

@@ -1,15 +1,15 @@
 package com.example.application.command
 
 import com.example.application.Clock
-import com.example.domain.shared.UnauthorizedException
-import com.example.domain.shared.ValidationException
+import com.example.domain.exception.UnauthorizedException
+import com.example.domain.exception.ValidationException
 import com.example.application.PasswordHashing
-import com.example.domain.user.Email
-import com.example.domain.user.PasswordHash
-import com.example.domain.user.User
-import com.example.domain.user.UserId
+import com.example.domain.aggregate.user.Email
+import com.example.domain.aggregate.user.PasswordHash
+import com.example.domain.aggregate.user.User
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.user.UserRepository
-import com.example.domain.user.Username
+import com.example.domain.aggregate.user.Username
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

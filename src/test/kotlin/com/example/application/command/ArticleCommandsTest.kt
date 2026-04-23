@@ -1,16 +1,16 @@
 package com.example.application.command
 
-import com.example.domain.article.Article
-import com.example.domain.article.ArticleId
+import com.example.domain.aggregate.article.Article
+import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.article.ArticleRepository
-import com.example.domain.shared.ForbiddenException
-import com.example.domain.shared.NotFoundException
-import com.example.domain.shared.ValidationException
+import com.example.domain.exception.ForbiddenException
+import com.example.domain.exception.NotFoundException
+import com.example.domain.exception.ValidationException
 import com.example.application.CurrentUser
-import com.example.domain.article.Slug
-import com.example.domain.article.SlugGenerator
+import com.example.domain.aggregate.article.Slug
+import com.example.domain.service.SlugGenerator
 import com.example.application.Clock
-import com.example.domain.user.UserId
+import com.example.domain.aggregate.user.UserId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject

@@ -1,14 +1,14 @@
 package com.example.application.command
 
 import com.example.application.CurrentUser
+import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.comment.Comment
+import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.article.ArticleRepository
-import com.example.domain.article.Slug
-import com.example.domain.comment.Comment
-import com.example.domain.comment.CommentId
 import com.example.domain.comment.CommentRepository
-import com.example.domain.shared.ForbiddenException
-import com.example.domain.shared.NotFoundException
-import com.example.domain.shared.ValidationException
+import com.example.domain.exception.ForbiddenException
+import com.example.domain.exception.NotFoundException
+import com.example.domain.exception.ValidationException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory

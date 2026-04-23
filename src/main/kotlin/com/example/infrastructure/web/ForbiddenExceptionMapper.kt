@@ -1,6 +1,6 @@
 package com.example.infrastructure.web
 
-import com.example.domain.shared.ForbiddenException
+import com.example.domain.exception.ForbiddenException
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.ExceptionMapper
 import jakarta.ws.rs.ext.Provider

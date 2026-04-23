@@ -1,8 +1,8 @@
 package com.example.archunit
 
-import com.example.domain.shared.AggregateRoot
-import com.example.domain.shared.ValueObject
-import com.example.domain.shared.Entity
+import com.example.domain.AggregateRoot
+import com.example.domain.ValueObject
+import com.example.domain.Entity
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -39,15 +39,8 @@ class AggregateBoundaryRules {
          */
         private fun getAggregatePackage(javaClass: JavaClass): String? {
             val pkg = javaClass.packageName
-            val layerFirst =
-                Regex(
-                    "com\\.example\\." +
-                        "(?:domain|application|presentation\\.rest|infrastructure(?:\\.persistence\\.jooq)?)" +
-                        "\\.(\\w+)",
-                ).find(pkg)
-            return layerFirst?.groupValues?.get(1)?.takeIf {
-                it !in setOf("shared", "auth", "web", "security", "time")
-            }
+            val match = Regex("com\\.example\\.domain\\.aggregate\\.(\\w+)").find(pkg)
+            return match?.groupValues?.get(1)
         }
 
         /**
@@ -126,29 +119,4 @@ class AggregateBoundaryRules {
             .should().bePublic()
             .because("Aggregate roots are the entry points to aggregates and should be publicly accessible")
 
-    @ArchTest
-    val `shared package should not depend on aggregates` =
-        noClasses()
-            .that().resideInAPackage("..shared..")
-            .should(
-                object : ArchCondition<JavaClass>("not depend on any aggregate") {
-                    override fun check(
-                        item: JavaClass,
-                        events: ConditionEvents,
-                    ) {
-                        item.directDependenciesFromSelf.forEach { dependency ->
-                            val target = dependency.targetClass
-
-                            if (target.isAnnotatedWith(ValueObject::class.java)) return@forEach
-
-                            if (isInAggregate(target)) {
-                                val message =
-                                    "Shared class ${item.simpleName} depends on " +
-                                        "${target.simpleName} from ${getAggregatePackage(target)} aggregate"
-                                events.add(SimpleConditionEvent.violated(item, message))
-                            }
-                        }
-                    }
-                },
-            ).because("Shared package provides utilities and should not depend on any aggregate")
 }

@@ -1,7 +1,10 @@
 package com.example.domain.article
 
-import com.example.domain.shared.Repository
-import com.example.domain.user.UserId
+import com.example.domain.Repository
+import com.example.domain.aggregate.article.Article
+import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.user.UserId
 
 interface ArticleRepository : Repository<Article, ArticleId> {
     fun findBySlug(slug: Slug): Article?

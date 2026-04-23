@@ -1,7 +1,7 @@
 package com.example.infrastructure.security
 
 import com.example.application.PasswordHashing
-import com.example.domain.user.PasswordHash
+import com.example.domain.aggregate.user.PasswordHash
 import jakarta.enterprise.context.ApplicationScoped
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters

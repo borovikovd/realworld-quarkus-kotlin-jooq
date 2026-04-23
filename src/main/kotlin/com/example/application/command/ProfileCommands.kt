@@ -1,11 +1,11 @@
 package com.example.application.command
 
 import com.example.application.CurrentUser
+import com.example.domain.aggregate.user.Username
+import com.example.domain.exception.BadRequestException
+import com.example.domain.exception.NotFoundException
 import com.example.domain.profile.FollowRepository
-import com.example.domain.shared.BadRequestException
-import com.example.domain.shared.NotFoundException
 import com.example.domain.user.UserRepository
-import com.example.domain.user.Username
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
