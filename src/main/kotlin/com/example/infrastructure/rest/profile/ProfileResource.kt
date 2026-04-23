@@ -1,4 +1,4 @@
-package com.example.presentation.rest.profile
+package com.example.infrastructure.rest.profile
 
 import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response

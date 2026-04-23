@@ -34,7 +34,7 @@ class AggregateBoundaryRules {
     companion object {
         /**
          * Returns the aggregate identifier for a given class (e.g., "user", "article").
-         * Layer-first layout: com.example.{domain|application|infrastructure(.persistence.jooq)?|presentation.rest}.{aggregate}..
+         * Layer-first layout: com.example.{domain.aggregate|infrastructure.(persistence.jooq|rest)}.{aggregate}..
          * Returns null if the class is not in an aggregate package.
          */
         private fun getAggregatePackage(javaClass: JavaClass): String? {

@@ -1,4 +1,4 @@
-package com.example.presentation.rest.user
+package com.example.infrastructure.rest.user
 
 import com.example.testsupport.ApiTestFixtures
 import com.example.testsupport.BaseApiTest

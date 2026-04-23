@@ -22,12 +22,10 @@ class LayerDependencyRules {
             .layer("domain").definedBy("com.example.domain..")
             .layer("application").definedBy("com.example.application..")
             .layer("infrastructure").definedBy("com.example.infrastructure..")
-            .layer("presentation").definedBy("com.example.presentation..")
-            .whereLayer("presentation").mayNotBeAccessedByAnyLayer()
             .whereLayer("infrastructure").mayNotBeAccessedByAnyLayer()
-            .whereLayer("application").mayOnlyBeAccessedByLayers("infrastructure", "presentation")
-            .whereLayer("domain").mayOnlyBeAccessedByLayers("application", "infrastructure", "presentation")
-            .because("Dependencies flow inward: presentation -> application -> domain; infrastructure adapts domain ports")
+            .whereLayer("application").mayOnlyBeAccessedByLayers("infrastructure")
+            .whereLayer("domain").mayOnlyBeAccessedByLayers("application", "infrastructure")
+            .because("Dependencies flow inward: infrastructure -> application -> domain")
 
     @ArchTest
     val `application classes should not use OpenAPI DTOs` =

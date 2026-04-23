@@ -36,15 +36,14 @@ com.example/
 │                                    # PasswordHashing, TokenIssuer
 │
 ├── infrastructure/                  # adapters
+│   ├── rest/<agg>/
+│   │   └── ArticleResource.kt       # JAX-RS, implements generated OpenAPI interface
 │   ├── persistence/jooq/<agg>/
 │   │   ├── JooqArticleWriteRepository.kt  # implements ArticleWriteRepository
 │   │   └── JooqArticleQueries.kt          # implements ArticleQueries w/ multiset
 │   ├── security/                    # JWT, Argon2id, rate limiter, logging MDC
 │   ├── web/                         # JAX-RS exception mappers + filters
 │   └── time/SystemClock.kt
-│
-├── presentation/rest/<agg>/
-│   └── ArticleResource.kt           # JAX-RS, implements generated OpenAPI interface
 │
 ├── api/                             # OpenAPI-generated interfaces + DTOs (build/)
 └── jooq/                            # jOOQ-generated schema classes       (build/)
@@ -53,8 +52,8 @@ com.example/
 **Dependency direction (enforced by ArchUnit):**
 
 ```
-presentation → application → domain
-infrastructure → domain (adapters implement domain ports)
+infrastructure → application → domain
+(REST adapters, persistence adapters, and security live in infrastructure)
 ```
 
 No layer depends inward-to-outward. `domain` has zero framework imports.
@@ -71,7 +70,7 @@ No layer depends inward-to-outward. `domain` has zero framework imports.
 
 **jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1, no lazy loading, no entity graphs. The query side returns `*ReadModel` data classes built straight from result sets.
 
-**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/port/outbound/` alongside the query ports that produce them. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against presentation churn.
+**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/port/outbound/` alongside the query ports that produce them. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against REST-layer churn.
 
 **Value objects for domain primitives.** `Email`, `Username`, `Slug`, `Title`, `ArticleId`, `UserId`, `CommentId`, `PasswordHash` — all `@JvmInline value class` with `init { require(...) }` invariants. Construction validates; domain code never sees unvalidated strings.
 
