@@ -33,7 +33,7 @@ jobs:
         run: docker build -t realworld-api:scan .
 
       - name: Trivy scan (SARIF)
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "realworld-api:scan"
           format: "sarif"
@@ -51,7 +51,7 @@ jobs:
 
       - name: Trivy scan (table)
         if: always()
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "realworld-api:scan"
           format: "table"
