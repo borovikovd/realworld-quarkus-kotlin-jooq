@@ -17,28 +17,29 @@ For more information on how this works with other frontends/backends, head over 
 ```
 com.example/
 ├── domain/                          # pure business model — no framework code
-│   ├── <aggregate>/                 # Article, Comment, Profile, User
-│   │   ├── Article.kt               # aggregate root (domain entity)
-│   │   ├── ArticleRepository.kt     # command-side port
-│   │   ├── ArticleId.kt             # typed ID (value object)
-│   │   └── ... VOs (Slug, Email, Title, …)
-│   ├── auth/                        # PasswordHashing, TokenIssuer, TokenVerifier ports
-│   └── shared/                      # Entity/Repository base, Clock, exceptions
+│   ├── Entity.kt, AggregateRoot.kt, ValueObject.kt, Repository.kt
+│   ├── aggregate/<agg>/             # article, comment, user
+│   │   ├── Article.kt               # aggregate root
+│   │   ├── ArticleId.kt, Slug.kt, Title.kt, …   # value objects
+│   ├── exception/                   # NotFound, Forbidden, Validation, …
+│   └── service/SlugGenerator.kt     # stateless domain service
 │
-├── application/                     # use cases + read projections
-│   ├── CurrentUser.kt               # cross-cutting port (who's calling)
-│   ├── command/                     # write side
-│   │   └── ArticleCommands.kt       # @Transactional mutations
-│   └── query/                       # read side
-│       ├── ArticleQueries.kt        # port for queries
-│       └── readmodel/
-│           └── ArticleReadModel.kt  # denormalized projection
+├── application/                     # use cases, ports, read projections
+│   ├── command/XCommands.kt         # @Transactional write-side containers
+│   ├── query/XQueries.kt            # read-side port interfaces
+│   └── port/
+│       ├── inbound/
+│       │   ├── command/             # 12 Command DTOs (RegisterUserCommand, …)
+│       │   └── query/               # 11 Query DTOs   (GetArticleBySlugQuery, …)
+│       └── outbound/                # XWriteRepository, FollowRepository,
+│                                    # XReadModel, Clock, CurrentUser,
+│                                    # PasswordHashing, TokenIssuer
 │
 ├── infrastructure/                  # adapters
 │   ├── persistence/jooq/<agg>/
-│   │   ├── JooqArticleRepository.kt # implements ArticleRepository
-│   │   └── JooqArticleQueries.kt    # implements ArticleQueries with jOOQ multiset
-│   ├── security/                    # JWT adapters, rate limiter, logging MDC
+│   │   ├── JooqArticleWriteRepository.kt  # implements ArticleWriteRepository
+│   │   └── JooqArticleQueries.kt          # implements ArticleQueries w/ multiset
+│   ├── security/                    # JWT, Argon2id, rate limiter, logging MDC
 │   ├── web/                         # JAX-RS exception mappers + filters
 │   └── time/SystemClock.kt
 │
@@ -64,17 +65,19 @@ No layer depends inward-to-outward. `domain` has zero framework imports.
 
 # Design decisions
 
-**CQRS-lite: commands vs queries.** The application layer is split into `command/` (mutations via aggregates + repository) and `query/` (reads via direct jOOQ projections). Resources inject both and call whichever they need — no service mediates reads just to forward them. Command-side protects invariants through the aggregate; query-side projects exactly what the UI needs, bypassing the write model entirely.
+**CQRS-lite: commands vs queries.** The application layer is split into `command/` (mutations via aggregates + write repository) and `query/` (reads via direct jOOQ projections). Resources inject both and call whichever they need — no service mediates reads just to forward them. Command-side protects invariants through the aggregate; query-side projects exactly what the UI needs, bypassing the write model entirely.
+
+**Inbound ports as parameter DTOs.** Every method on `XCommands` and `XQueries` takes a single Command/Query data class from `application/port/inbound/` (e.g., `RegisterUserCommand`, `GetArticleBySlugQuery`) rather than a loose argument list. Resources construct the DTO; the container unpacks it. This makes the inbound API self-documenting, keeps call sites stable as fields evolve, and puts use-case inputs in one place instead of scattered across method signatures.
 
 **jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1, no lazy loading, no entity graphs. The query side returns `*ReadModel` data classes built straight from result sets.
 
-**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/query/readmodel/`. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against presentation churn.
+**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/port/outbound/` alongside the query ports that produce them. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against presentation churn.
 
 **Value objects for domain primitives.** `Email`, `Username`, `Slug`, `Title`, `ArticleId`, `UserId`, `CommentId`, `PasswordHash` — all `@JvmInline value class` with `init { require(...) }` invariants. Construction validates; domain code never sees unvalidated strings.
 
-**Ports & adapters.** Domain defines what it needs (`UserRepository`, `PasswordHashing`, `TokenIssuer`, `TokenVerifier`, `Clock`, `ArticleQueries`). Infrastructure provides concrete implementations. Nothing in `domain/` imports Jakarta, Quarkus, JWT libraries, or jOOQ.
+**Ports & adapters.** The application layer declares what it needs as outbound ports in `application/port/outbound/` — write repositories (`UserWriteRepository`, `ArticleWriteRepository`, `CommentWriteRepository`, `FollowRepository`), query ports (`ArticleQueries`, `CommentQueries`, `ProfileQueries`, `UserQueries`), and collaborators (`PasswordHashing`, `TokenIssuer`, `TokenVerifier`, `Clock`, `CurrentUser`). Infrastructure provides concrete implementations. Nothing in `domain/` imports Jakarta, Quarkus, JWT libraries, or jOOQ.
 
-**Nullable returns over thrown exceptions in queries.** `ArticleQueries.getArticleBySlug(...)` returns `ArticleReadModel?`. The resource decides when a missing result is a 404. Adapters don't guess at error semantics.
+**Nullable returns over thrown exceptions in queries.** `ArticleQueries.getArticleBySlug(query: GetArticleBySlugQuery): ArticleReadModel?` returns null for a miss. The resource decides when a missing result is a 404. Adapters don't guess at error semantics.
 
 **ArchUnit enforcement.** Layer direction, aggregate boundaries, DSL-context scoping, naming conventions, and transaction scoping are all compile-time tests — not conventions. The build fails if a query service becomes transactional, if a domain class imports jOOQ, or if a command crosses the layer boundary.
 
