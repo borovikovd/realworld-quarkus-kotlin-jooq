@@ -58,6 +58,41 @@ class LayerDependencyRules {
             ).because("Domain entities should not depend on jOOQ or JAX-RS")
 
     @ArchTest
+    val `domain should only depend on standard library and itself` =
+        classes()
+            .that().resideInAPackage("com.example.domain..")
+            .should().onlyDependOnClassesThat().resideInAnyPackage(
+                "java..",
+                "kotlin..",
+                "kotlinx..",
+                "org.jetbrains..",
+                "com.example.domain..",
+            )
+            .because("Domain is pure business model — no framework or third-party dependencies")
+
+    @ArchTest
+    val `application should only depend on domain, itself, stdlib, and cross-cutting annotations` =
+        classes()
+            .that().resideInAPackage("com.example.application..")
+            .should().onlyDependOnClassesThat().resideInAnyPackage(
+                "java..",
+                "kotlin..",
+                "kotlinx..",
+                "org.jetbrains..",
+                "jakarta.enterprise..",
+                "jakarta.transaction..",
+                "jakarta.inject..",
+                "org.slf4j..",
+                "io.micrometer.core.annotation..",
+                "com.example.domain..",
+                "com.example.application..",
+            )
+            .because(
+                "Application depends only on domain, stdlib, and declarative cross-cutting annotations " +
+                    "(CDI, transactions, logging, observability) — third-party business libraries live in infrastructure",
+            )
+
+    @ArchTest
     val `only jooq classes can import jooq generated code` =
         noClasses()
             .that(
