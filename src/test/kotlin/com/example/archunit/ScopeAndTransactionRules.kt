@@ -39,10 +39,10 @@ class ScopeAndTransactionRules {
             .because("Repositories should not manage transactions - commands do that")
 
     @ArchTest
-    val `read repositories should not be transactional` =
+    val `query implementations should not be transactional` =
         classes()
-            .that().haveSimpleNameEndingWith("ReadRepository")
+            .that().haveSimpleNameEndingWith("Queries")
             .and().areNotInterfaces()
             .should().notBeAnnotatedWith(Transactional::class.java)
-            .because("Read repositories are read-only and should not manage transactions")
+            .because("Query-side adapters are read-only and should not manage transactions")
 }

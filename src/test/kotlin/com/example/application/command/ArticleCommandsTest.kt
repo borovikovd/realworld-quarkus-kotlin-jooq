@@ -2,6 +2,11 @@ package com.example.application.command
 
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
+import com.example.application.port.inbound.command.CreateArticleCommand
+import com.example.application.port.inbound.command.DeleteArticleCommand
+import com.example.application.port.inbound.command.FavoriteArticleCommand
+import com.example.application.port.inbound.command.UnfavoriteArticleCommand
+import com.example.application.port.inbound.command.UpdateArticleCommand
 import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
@@ -53,7 +58,7 @@ class ArticleCommandsTest {
     fun `createArticle should throw ValidationException when title is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                articleCommands.createArticle("", "Test description", "Test body", emptyList())
+                articleCommands.createArticle(CreateArticleCommand("", "Test description", "Test body", emptyList()))
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -63,7 +68,7 @@ class ArticleCommandsTest {
     fun `createArticle should throw ValidationException with multiple blank fields`() {
         val exception =
             assertThrows<ValidationException> {
-                articleCommands.createArticle("", "", "", emptyList())
+                articleCommands.createArticle(CreateArticleCommand("", "", "", emptyList()))
             }
 
         assertEquals(3, exception.errors.size)
@@ -93,7 +98,7 @@ class ArticleCommandsTest {
 
         val exception =
             assertThrows<ValidationException> {
-                articleCommands.updateArticle(slug.value, " ", null, null)
+                articleCommands.updateArticle(UpdateArticleCommand(slug.value, " ", null, null))
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["title"])
@@ -121,7 +126,7 @@ class ArticleCommandsTest {
 
         every { articleWriteRepository.create(any()) } answers { firstArg() }
 
-        val result = articleCommands.createArticle(title, description, body, tags)
+        val result = articleCommands.createArticle(CreateArticleCommand(title, description, body, tags))
 
         assertEquals(articleId.value, result)
         verify { articleWriteRepository.nextId() }
@@ -160,7 +165,8 @@ class ArticleCommandsTest {
 
         every { articleWriteRepository.update(any()) } answers { firstArg() }
 
-        val result = articleCommands.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
+        val result =
+            articleCommands.updateArticle(UpdateArticleCommand(originalSlug.value, newTitle, newDescription, newBody))
 
         assertEquals(1L, result)
         verify { articleWriteRepository.findBySlug(originalSlug) }
@@ -188,7 +194,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns existingArticle
         every { articleWriteRepository.update(any()) } answers { firstArg() }
 
-        val result = articleCommands.updateArticle(slug.value, null, null, null)
+        val result = articleCommands.updateArticle(UpdateArticleCommand(slug.value, null, null, null))
 
         assertEquals(1L, result)
         verify { articleWriteRepository.findBySlug(slug) }
@@ -205,7 +211,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleCommands.updateArticle(slug.value, "New Title", null, null)
+            articleCommands.updateArticle(UpdateArticleCommand(slug.value, "New Title", null, null))
         }
     }
 
@@ -230,7 +236,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns existingArticle
 
         assertThrows<ForbiddenException> {
-            articleCommands.updateArticle(slug.value, "New Title", null, null)
+            articleCommands.updateArticle(UpdateArticleCommand(slug.value, "New Title", null, null))
         }
     }
 
@@ -254,7 +260,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns article
         every { articleWriteRepository.deleteById(ArticleId(1L)) } returns Unit
 
-        articleCommands.deleteArticle(slug.value)
+        articleCommands.deleteArticle(DeleteArticleCommand(slug.value))
 
         verify { articleWriteRepository.findBySlug(slug) }
         verify { articleWriteRepository.deleteById(ArticleId(1L)) }
@@ -269,7 +275,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleCommands.deleteArticle(slug.value)
+            articleCommands.deleteArticle(DeleteArticleCommand(slug.value))
         }
     }
 
@@ -294,7 +300,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns article
 
         assertThrows<ForbiddenException> {
-            articleCommands.deleteArticle(slug.value)
+            articleCommands.deleteArticle(DeleteArticleCommand(slug.value))
         }
     }
 
@@ -318,7 +324,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns article
         every { articleWriteRepository.favorite(ArticleId(1L), userId) } returns Unit
 
-        articleCommands.favoriteArticle(slug.value)
+        articleCommands.favoriteArticle(FavoriteArticleCommand(slug.value))
 
         verify { articleWriteRepository.findBySlug(slug) }
         verify { articleWriteRepository.favorite(ArticleId(1L), userId) }
@@ -333,7 +339,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            articleCommands.favoriteArticle(slug.value)
+            articleCommands.favoriteArticle(FavoriteArticleCommand(slug.value))
         }
     }
 
@@ -357,7 +363,7 @@ class ArticleCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns article
         every { articleWriteRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
-        articleCommands.unfavoriteArticle(slug.value)
+        articleCommands.unfavoriteArticle(UnfavoriteArticleCommand(slug.value))
 
         verify { articleWriteRepository.findBySlug(slug) }
         verify { articleWriteRepository.unfavorite(ArticleId(1L), userId) }

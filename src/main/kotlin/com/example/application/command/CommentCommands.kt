@@ -1,5 +1,7 @@
 package com.example.application.command
 
+import com.example.application.port.inbound.command.AddCommentCommand
+import com.example.application.port.inbound.command.DeleteCommentCommand
 import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.application.port.outbound.CommentWriteRepository
 import com.example.application.port.outbound.CurrentUser
@@ -19,22 +21,15 @@ class CommentCommands(
     private val articleWriteRepository: ArticleWriteRepository,
     private val currentUser: CurrentUser,
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(CommentCommands::class.java)
-    }
-
     @Transactional
-    fun addComment(
-        articleSlug: String,
-        body: String,
-    ): Long {
-        if (body.isBlank()) {
+    fun addComment(command: AddCommentCommand): Long {
+        if (command.body.isBlank()) {
             throw ValidationException(mapOf("body" to listOf("must not be blank")))
         }
 
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(articleSlug))
+            articleWriteRepository.findBySlug(Slug(command.articleSlug))
                 ?: throw NotFoundException("Article not found")
 
         val commentId = commentWriteRepository.nextId()
@@ -43,23 +38,20 @@ class CommentCommands(
                 id = commentId,
                 articleId = article.id,
                 authorId = userId,
-                body = body,
+                body = command.body,
             )
         commentWriteRepository.create(comment)
         return commentId.value
     }
 
     @Transactional
-    fun deleteComment(
-        articleSlug: String,
-        commentId: Long,
-    ) {
+    fun deleteComment(command: DeleteCommentCommand) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(articleSlug))
+            articleWriteRepository.findBySlug(Slug(command.articleSlug))
                 ?: throw NotFoundException("Article not found")
 
-        val typedCommentId = CommentId(commentId)
+        val typedCommentId = CommentId(command.commentId)
         val comment =
             commentWriteRepository.findById(typedCommentId)
                 ?: throw NotFoundException("Comment not found")
@@ -72,6 +64,10 @@ class CommentCommands(
             throw ForbiddenException("You can only delete your own comments")
         }
         commentWriteRepository.deleteById(typedCommentId)
-        logger.info("Comment deleted: commentId={}", commentId)
+        logger.info("Comment deleted: commentId={}", command.commentId)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CommentCommands::class.java)
     }
 }

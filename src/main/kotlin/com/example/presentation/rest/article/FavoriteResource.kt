@@ -4,10 +4,13 @@ import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
 import com.example.application.command.ArticleCommands
+import com.example.application.port.inbound.command.FavoriteArticleCommand
+import com.example.application.port.inbound.command.UnfavoriteArticleCommand
+import com.example.application.port.inbound.query.GetArticleBySlugQuery
 import com.example.application.port.outbound.ArticleReadModel
-import com.example.application.port.outbound.ArticleReadRepository
 import com.example.application.port.outbound.CurrentUser
 import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.query.ArticleQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -16,29 +19,33 @@ import com.example.api.model.Article as ApiArticle
 @ApplicationScoped
 class FavoriteResource(
     private val articleCommands: ArticleCommands,
-    private val articleReadRepository: ArticleReadRepository,
+    private val articleQueries: ArticleQueries,
     private val currentUser: CurrentUser,
 ) : FavoritesApi {
     @RolesAllowed("user")
     override fun createArticleFavorite(slug: String): CreateArticle201Response {
-        articleCommands.favoriteArticle(slug)
+        articleCommands.favoriteArticle(FavoriteArticleCommand(slug))
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleReadRepository.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
-                .toDto()
+            (
+                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
+                    ?: throw NotFoundException("Article not found")
+            ).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
 
     @RolesAllowed("user")
     override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
-        articleCommands.unfavoriteArticle(slug)
+        articleCommands.unfavoriteArticle(UnfavoriteArticleCommand(slug))
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleReadRepository.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
-                .toDto()
+            (
+                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
+                    ?: throw NotFoundException("Article not found")
+            ).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }

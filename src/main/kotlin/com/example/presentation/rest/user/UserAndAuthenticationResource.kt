@@ -6,10 +6,14 @@ import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.command.UserCommands
+import com.example.application.port.inbound.command.LoginUserCommand
+import com.example.application.port.inbound.command.RegisterUserCommand
+import com.example.application.port.inbound.command.UpdateUserCommand
+import com.example.application.port.inbound.query.GetUserByIdQuery
 import com.example.application.port.outbound.CurrentUser
 import com.example.application.port.outbound.TokenIssuer
 import com.example.application.port.outbound.UserReadModel
-import com.example.application.port.outbound.UserReadRepository
+import com.example.application.query.UserQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -19,7 +23,7 @@ import com.example.api.model.User as ApiUser
 @ApplicationScoped
 class UserAndAuthenticationResource(
     private val userCommands: UserCommands,
-    private val userReadRepository: UserReadRepository,
+    private val userQueries: UserQueries,
     private val tokenIssuer: TokenIssuer,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
@@ -28,9 +32,11 @@ class UserAndAuthenticationResource(
         val newUser = body.user
         val userId =
             userCommands.register(
-                email = newUser.email,
-                username = newUser.username,
-                password = newUser.password,
+                RegisterUserCommand(
+                    email = newUser.email,
+                    username = newUser.username,
+                    password = newUser.password,
+                ),
             )
         return Login200Response().user(loadUser(userId))
     }
@@ -39,8 +45,10 @@ class UserAndAuthenticationResource(
         val loginUser = body.user
         val userId =
             userCommands.login(
-                email = loginUser.email,
-                password = loginUser.password,
+                LoginUserCommand(
+                    email = loginUser.email,
+                    password = loginUser.password,
+                ),
             )
         return Login200Response().user(loadUser(userId))
     }
@@ -53,18 +61,20 @@ class UserAndAuthenticationResource(
         val updateUser = body.user
         val userId =
             userCommands.updateUser(
-                userId = currentUser.require().value,
-                email = updateUser.email,
-                username = updateUser.username,
-                password = updateUser.password,
-                bio = updateUser.bio,
-                image = updateUser.image,
+                UpdateUserCommand(
+                    userId = currentUser.require().value,
+                    email = updateUser.email,
+                    username = updateUser.username,
+                    password = updateUser.password,
+                    bio = updateUser.bio,
+                    image = updateUser.image,
+                ),
             )
         return Login200Response().user(loadUser(userId))
     }
 
     private fun loadUser(userId: Long): ApiUser =
-        (userReadRepository.getUserById(userId) ?: throw NotFoundException("User not found"))
+        (userQueries.getUserById(GetUserByIdQuery(userId)) ?: throw NotFoundException("User not found"))
             .toDto()
 
     private fun UserReadModel.toDto(): ApiUser =

@@ -1,5 +1,7 @@
 package com.example.application.command
 
+import com.example.application.port.inbound.command.FollowUserCommand
+import com.example.application.port.inbound.command.UnfollowUserCommand
 import com.example.application.port.outbound.FollowRepository
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
@@ -53,7 +55,7 @@ class ProfileCommandsTest {
         every { userWriteRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.follow(followerId, followee.id) } returns Unit
 
-        profileCommands.followUser(username)
+        profileCommands.followUser(FollowUserCommand(username))
 
         verify { currentUser.require() }
         verify { userWriteRepository.findByUsername(Username(username)) }
@@ -70,7 +72,7 @@ class ProfileCommandsTest {
 
         val exception =
             assertThrows<NotFoundException> {
-                profileCommands.followUser(username)
+                profileCommands.followUser(FollowUserCommand(username))
             }
 
         assertEquals("User not found", exception.message)
@@ -97,7 +99,7 @@ class ProfileCommandsTest {
 
         val exception =
             assertThrows<BadRequestException> {
-                profileCommands.followUser(username)
+                profileCommands.followUser(FollowUserCommand(username))
             }
 
         assertEquals("Cannot follow yourself", exception.message)
@@ -123,7 +125,7 @@ class ProfileCommandsTest {
         every { userWriteRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
-        profileCommands.unfollowUser(username)
+        profileCommands.unfollowUser(UnfollowUserCommand(username))
 
         verify { currentUser.require() }
         verify { userWriteRepository.findByUsername(Username(username)) }
@@ -140,7 +142,7 @@ class ProfileCommandsTest {
 
         val exception =
             assertThrows<NotFoundException> {
-                profileCommands.unfollowUser(username)
+                profileCommands.unfollowUser(UnfollowUserCommand(username))
             }
 
         assertEquals("User not found", exception.message)

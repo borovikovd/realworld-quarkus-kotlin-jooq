@@ -1,8 +1,15 @@
 package com.example.infrastructure.persistence.jooq.article
 
+import com.example.application.port.inbound.query.CountArticlesFeedQuery
+import com.example.application.port.inbound.query.CountArticlesQuery
+import com.example.application.port.inbound.query.GetAllTagsQuery
+import com.example.application.port.inbound.query.GetArticleByIdQuery
+import com.example.application.port.inbound.query.GetArticleBySlugQuery
+import com.example.application.port.inbound.query.GetArticlesFeedQuery
+import com.example.application.port.inbound.query.ListArticlesQuery
 import com.example.application.port.outbound.ArticleReadModel
-import com.example.application.port.outbound.ArticleReadRepository
 import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.query.ArticleQueries
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -19,52 +26,39 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqArticleReadRepository(
+class JooqArticleQueries(
     private val dsl: DSLContext,
-) : ArticleReadRepository {
-    override fun getArticleById(
-        id: Long,
-        viewerId: Long?,
-    ): ArticleReadModel? =
+) : ArticleQueries {
+    override fun getArticleById(query: GetArticleByIdQuery): ArticleReadModel? =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(query.viewerId))
             .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-            .where(ARTICLES.ID.eq(id))
+            .where(ARTICLES.ID.eq(query.id))
             .fetchOne()
             ?.toArticleReadModel()
 
-    override fun getArticleBySlug(
-        slug: String,
-        viewerId: Long?,
-    ): ArticleReadModel? =
+    override fun getArticleBySlug(query: GetArticleBySlugQuery): ArticleReadModel? =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(query.viewerId))
             .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-            .where(ARTICLES.SLUG.eq(slug))
+            .where(ARTICLES.SLUG.eq(query.slug))
             .fetchOne()
             ?.toArticleReadModel()
 
-    override fun getArticles(
-        tag: String?,
-        author: String?,
-        favorited: String?,
-        limit: Int,
-        offset: Int,
-        viewerId: Long?,
-    ): List<ArticleReadModel> =
+    override fun getArticles(query: ListArticlesQuery): List<ArticleReadModel> =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(query.viewerId))
             .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
-            .where(buildConditions(tag, author, favorited))
+            .where(buildConditions(query.tag, query.author, query.favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
-            .limit(limit)
-            .offset(offset)
+            .limit(query.limit)
+            .offset(query.offset)
             .fetch()
             .map { it.toArticleReadModel() }
 
@@ -112,13 +106,9 @@ class JooqArticleReadRepository(
         return conditions
     }
 
-    override fun getArticlesFeed(
-        limit: Int,
-        offset: Int,
-        viewerId: Long,
-    ): List<ArticleReadModel> =
+    override fun getArticlesFeed(query: GetArticlesFeedQuery): List<ArticleReadModel> =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(query.viewerId))
             .from(ARTICLES)
             .join(USERS)
             .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
@@ -126,26 +116,22 @@ class JooqArticleReadRepository(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(query.viewerId)),
                 ),
             ).orderBy(ARTICLES.CREATED_AT.desc())
-            .limit(limit)
-            .offset(offset)
+            .limit(query.limit)
+            .offset(query.offset)
             .fetch()
             .map { it.toArticleReadModel() }
 
-    override fun countArticles(
-        tag: String?,
-        author: String?,
-        favorited: String?,
-    ): Int =
+    override fun countArticles(query: CountArticlesQuery): Int =
         dsl
             .selectCount()
             .from(ARTICLES)
-            .where(buildConditions(tag, author, favorited))
+            .where(buildConditions(query.tag, query.author, query.favorited))
             .fetchOne(0, Int::class.java) ?: 0
 
-    override fun countArticlesFeed(viewerId: Long): Int =
+    override fun countArticlesFeed(query: CountArticlesFeedQuery): Int =
         dsl
             .selectCount()
             .from(ARTICLES)
@@ -153,7 +139,7 @@ class JooqArticleReadRepository(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(query.viewerId)),
                 ),
             ).fetchOne(0, Int::class.java) ?: 0
 
@@ -212,7 +198,7 @@ class JooqArticleReadRepository(
         )
     }
 
-    override fun getAllTags(): List<String> =
+    override fun getAllTags(query: GetAllTagsQuery): List<String> =
         dsl
             .select(TAGS.NAME)
             .from(TAGS)

@@ -1,8 +1,10 @@
 package com.example.infrastructure.persistence.jooq.comment
 
+import com.example.application.port.inbound.query.GetCommentByIdQuery
+import com.example.application.port.inbound.query.GetCommentsBySlugQuery
 import com.example.application.port.outbound.CommentReadModel
-import com.example.application.port.outbound.CommentReadRepository
 import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.query.CommentQueries
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
@@ -14,9 +16,9 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqCommentReadRepository(
+class JooqCommentQueries(
     private val dsl: DSLContext,
-) : CommentReadRepository {
+) : CommentQueries {
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
             select(count())
@@ -30,10 +32,7 @@ class JooqCommentReadRepository(
                 .`as`("following")
         }
 
-    override fun getCommentsBySlug(
-        slug: String,
-        viewerId: Long?,
-    ): List<CommentReadModel> =
+    override fun getCommentsBySlug(query: GetCommentsBySlugQuery): List<CommentReadModel> =
         dsl
             .select(
                 COMMENTS.ID,
@@ -44,21 +43,18 @@ class JooqCommentReadRepository(
                 USERS.USERNAME,
                 USERS.BIO,
                 USERS.IMAGE,
-                followingField(viewerId),
+                followingField(query.viewerId),
             ).from(COMMENTS)
             .join(USERS)
             .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
             .join(ARTICLES)
             .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
-            .where(ARTICLES.SLUG.eq(slug))
+            .where(ARTICLES.SLUG.eq(query.slug))
             .orderBy(COMMENTS.CREATED_AT.desc())
             .fetch()
             .map { it.toCommentReadModel() }
 
-    override fun getCommentById(
-        id: Long,
-        viewerId: Long?,
-    ): CommentReadModel? =
+    override fun getCommentById(query: GetCommentByIdQuery): CommentReadModel? =
         dsl
             .select(
                 COMMENTS.ID,
@@ -69,11 +65,11 @@ class JooqCommentReadRepository(
                 USERS.USERNAME,
                 USERS.BIO,
                 USERS.IMAGE,
-                followingField(viewerId),
+                followingField(query.viewerId),
             ).from(COMMENTS)
             .join(USERS)
             .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-            .where(COMMENTS.ID.eq(id))
+            .where(COMMENTS.ID.eq(query.id))
             .fetchOne()
             ?.toCommentReadModel()
 

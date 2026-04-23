@@ -6,10 +6,14 @@ import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.command.CommentCommands
+import com.example.application.port.inbound.command.AddCommentCommand
+import com.example.application.port.inbound.command.DeleteCommentCommand
+import com.example.application.port.inbound.query.GetCommentByIdQuery
+import com.example.application.port.inbound.query.GetCommentsBySlugQuery
 import com.example.application.port.outbound.CommentReadModel
-import com.example.application.port.outbound.CommentReadRepository
 import com.example.application.port.outbound.CurrentUser
 import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.query.CommentQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -19,7 +23,7 @@ import com.example.api.model.Comment as ApiComment
 @ApplicationScoped
 class CommentResource(
     private val commentCommands: CommentCommands,
-    private val commentReadRepository: CommentReadRepository,
+    private val commentQueries: CommentQueries,
     private val currentUser: CurrentUser,
 ) : CommentsApi {
     @ResponseStatus(201)
@@ -30,11 +34,13 @@ class CommentResource(
     ): CreateArticleComment200Response {
         val viewerId = currentUser.id?.value
         val newComment = comment.comment
-        val commentId = commentCommands.addComment(slug, newComment.body)
+        val commentId = commentCommands.addComment(AddCommentCommand(slug, newComment.body))
 
         val commentDto =
-            (commentReadRepository.getCommentById(commentId, viewerId) ?: throw NotFoundException("Comment not found"))
-                .toDto()
+            (
+                commentQueries.getCommentById(GetCommentByIdQuery(commentId, viewerId))
+                    ?: throw NotFoundException("Comment not found")
+            ).toDto()
 
         return CreateArticleComment200Response().comment(commentDto)
     }
@@ -45,12 +51,12 @@ class CommentResource(
         slug: String,
         id: Int,
     ) {
-        commentCommands.deleteComment(slug, id.toLong())
+        commentCommands.deleteComment(DeleteCommentCommand(slug, id.toLong()))
     }
 
     override fun getArticleComments(slug: String): GetArticleComments200Response {
         val viewerId = currentUser.id?.value
-        val comments = commentReadRepository.getCommentsBySlug(slug, viewerId).map { it.toDto() }
+        val comments = commentQueries.getCommentsBySlug(GetCommentsBySlugQuery(slug, viewerId)).map { it.toDto() }
 
         return GetArticleComments200Response().comments(comments)
     }

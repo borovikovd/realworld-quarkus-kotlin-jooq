@@ -2,6 +2,8 @@ package com.example.application.command
 
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
+import com.example.application.port.inbound.command.AddCommentCommand
+import com.example.application.port.inbound.command.DeleteCommentCommand
 import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
@@ -54,7 +56,7 @@ class CommentCommandsTest {
     fun `addComment should throw ValidationException when body is blank`() {
         val exception =
             assertThrows<ValidationException> {
-                commentCommands.addComment(slug.value, "")
+                commentCommands.addComment(AddCommentCommand(slug.value, ""))
             }
 
         assertEquals(listOf("must not be blank"), exception.errors["body"])
@@ -70,7 +72,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.nextId() } returns commentId
         every { commentWriteRepository.create(any()) } answers { firstArg() }
 
-        val result = commentCommands.addComment(slug.value, body)
+        val result = commentCommands.addComment(AddCommentCommand(slug.value, body))
 
         assertEquals(commentId.value, result)
         verify { commentWriteRepository.nextId() }
@@ -83,7 +85,7 @@ class CommentCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.addComment(slug.value, "comment body")
+            commentCommands.addComment(AddCommentCommand(slug.value, "comment body"))
         }
     }
 
@@ -97,7 +99,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
         every { commentWriteRepository.deleteById(commentId) } returns Unit
 
-        commentCommands.deleteComment(slug.value, 5L)
+        commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
 
         verify { commentWriteRepository.deleteById(commentId) }
     }
@@ -108,7 +110,7 @@ class CommentCommandsTest {
         every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
         }
     }
 
@@ -119,7 +121,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(CommentId(5L)) } returns null
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
         }
     }
 
@@ -133,7 +135,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<NotFoundException> {
-            commentCommands.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
         }
     }
 
@@ -148,7 +150,7 @@ class CommentCommandsTest {
         every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<ForbiddenException> {
-            commentCommands.deleteComment(slug.value, 5L)
+            commentCommands.deleteComment(DeleteCommentCommand(slug.value, 5L))
         }
     }
 }

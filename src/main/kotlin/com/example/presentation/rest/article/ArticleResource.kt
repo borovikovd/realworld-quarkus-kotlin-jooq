@@ -7,10 +7,19 @@ import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
 import com.example.application.command.ArticleCommands
+import com.example.application.port.inbound.command.CreateArticleCommand
+import com.example.application.port.inbound.command.DeleteArticleCommand
+import com.example.application.port.inbound.command.UpdateArticleCommand
+import com.example.application.port.inbound.query.CountArticlesFeedQuery
+import com.example.application.port.inbound.query.CountArticlesQuery
+import com.example.application.port.inbound.query.GetArticleByIdQuery
+import com.example.application.port.inbound.query.GetArticleBySlugQuery
+import com.example.application.port.inbound.query.GetArticlesFeedQuery
+import com.example.application.port.inbound.query.ListArticlesQuery
 import com.example.application.port.outbound.ArticleReadModel
-import com.example.application.port.outbound.ArticleReadRepository
 import com.example.application.port.outbound.CurrentUser
 import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.query.ArticleQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -20,7 +29,7 @@ import com.example.api.model.Article as ApiArticle
 @ApplicationScoped
 class ArticleResource(
     private val articleCommands: ArticleCommands,
-    private val articleReadRepository: ArticleReadRepository,
+    private val articleQueries: ArticleQueries,
     private val currentUser: CurrentUser,
 ) : ArticlesApi {
     @ResponseStatus(201)
@@ -30,16 +39,20 @@ class ArticleResource(
 
         val articleId =
             articleCommands.createArticle(
-                title = newArticle.title,
-                description = newArticle.description,
-                body = newArticle.body,
-                tags = newArticle.tagList ?: emptyList(),
+                CreateArticleCommand(
+                    title = newArticle.title,
+                    description = newArticle.description,
+                    body = newArticle.body,
+                    tags = newArticle.tagList ?: emptyList(),
+                ),
             )
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleReadRepository.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
-                .toDto()
+            (
+                articleQueries.getArticleById(GetArticleByIdQuery(articleId, viewerId))
+                    ?: throw NotFoundException("Article not found")
+            ).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -47,14 +60,16 @@ class ArticleResource(
     @ResponseStatus(204)
     @RolesAllowed("user")
     override fun deleteArticle(slug: String) {
-        articleCommands.deleteArticle(slug)
+        articleCommands.deleteArticle(DeleteArticleCommand(slug))
     }
 
     override fun getArticle(slug: String): CreateArticle201Response {
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleReadRepository.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
-                .toDto()
+            (
+                articleQueries.getArticleBySlug(GetArticleBySlugQuery(slug, viewerId))
+                    ?: throw NotFoundException("Article not found")
+            ).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }
@@ -69,19 +84,21 @@ class ArticleResource(
     ): GetArticlesFeed200Response {
         val viewerId = currentUser.id?.value
         val articles =
-            articleReadRepository
+            articleQueries
                 .getArticles(
-                    tag = tag,
-                    author = author,
-                    favorited = favorited,
-                    limit = limit ?: 20,
-                    offset = offset ?: 0,
-                    viewerId = viewerId,
+                    ListArticlesQuery(
+                        tag = tag,
+                        author = author,
+                        favorited = favorited,
+                        limit = limit ?: 20,
+                        offset = offset ?: 0,
+                        viewerId = viewerId,
+                    ),
                 ).map { it.toDto() }
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleReadRepository.countArticles(tag, author, favorited))
+            .articlesCount(articleQueries.countArticles(CountArticlesQuery(tag, author, favorited)))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -92,16 +109,18 @@ class ArticleResource(
     ): GetArticlesFeed200Response {
         val viewerId = currentUser.require().value
         val articles =
-            articleReadRepository
+            articleQueries
                 .getArticlesFeed(
-                    limit = limit ?: 20,
-                    offset = offset ?: 0,
-                    viewerId = viewerId,
+                    GetArticlesFeedQuery(
+                        viewerId = viewerId,
+                        limit = limit ?: 20,
+                        offset = offset ?: 0,
+                    ),
                 ).map { it.toDto() }
 
         return GetArticlesFeed200Response()
             .articles(articles as List<com.example.api.model.GetArticlesFeed200ResponseArticlesInner>)
-            .articlesCount(articleReadRepository.countArticlesFeed(viewerId))
+            .articlesCount(articleQueries.countArticlesFeed(CountArticlesFeedQuery(viewerId)))
     }
 
     @RolesAllowed("user")
@@ -113,16 +132,20 @@ class ArticleResource(
 
         val articleId =
             articleCommands.updateArticle(
-                slug = slug,
-                title = updateData.title,
-                description = updateData.description,
-                body = updateData.body,
+                UpdateArticleCommand(
+                    slug = slug,
+                    title = updateData.title,
+                    description = updateData.description,
+                    body = updateData.body,
+                ),
             )
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleReadRepository.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
-                .toDto()
+            (
+                articleQueries.getArticleById(GetArticleByIdQuery(articleId, viewerId))
+                    ?: throw NotFoundException("Article not found")
+            ).toDto()
 
         return CreateArticle201Response().article(articleDto)
     }

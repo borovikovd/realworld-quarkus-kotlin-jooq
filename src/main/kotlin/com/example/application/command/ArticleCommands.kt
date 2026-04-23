@@ -1,5 +1,10 @@
 package com.example.application.command
 
+import com.example.application.port.inbound.command.CreateArticleCommand
+import com.example.application.port.inbound.command.DeleteArticleCommand
+import com.example.application.port.inbound.command.FavoriteArticleCommand
+import com.example.application.port.inbound.command.UnfavoriteArticleCommand
+import com.example.application.port.inbound.command.UpdateArticleCommand
 import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.application.port.outbound.Clock
 import com.example.application.port.outbound.CurrentUser
@@ -20,67 +25,54 @@ class ArticleCommands(
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(ArticleCommands::class.java)
-    }
-
     @Counted("article.creation.count")
     @Transactional
-    fun createArticle(
-        title: String,
-        description: String,
-        body: String,
-        tags: List<String>,
-    ): Long {
-        validateArticleFields(title, description, body)
+    fun createArticle(command: CreateArticleCommand): Long {
+        validateArticleFields(command.title, command.description, command.body)
 
         val userId = currentUser.require()
         val articleId = articleWriteRepository.nextId()
         val slug =
             SlugGenerator.generateUniqueSlug(
-                title = title,
+                title = command.title,
                 existingSlugChecker = { candidate -> articleWriteRepository.findBySlug(candidate) != null },
             )
         val article =
             Article(
                 id = articleId,
                 slug = slug,
-                title = title,
-                description = description,
-                body = body,
+                title = command.title,
+                description = command.description,
+                body = command.body,
                 authorId = userId,
-                tags = tags.toSet(),
+                tags = command.tags.toSet(),
             )
         articleWriteRepository.create(article)
         return articleId.value
     }
 
     @Transactional
-    fun updateArticle(
-        slug: String,
-        title: String?,
-        description: String?,
-        body: String?,
-    ): Long {
+    fun updateArticle(command: UpdateArticleCommand): Long {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(command.slug))
                 ?: throw NotFoundException("Article not found")
 
         if (userId != article.authorId) {
             throw ForbiddenException("You can only update your own articles")
         }
 
-        validateArticleFields(title, description, body)
+        validateArticleFields(command.title, command.description, command.body)
 
-        val updatedTitle = title ?: article.title
-        val updatedDescription = description ?: article.description
-        val updatedBody = body ?: article.body
+        val updatedTitle = command.title ?: article.title
+        val updatedDescription = command.description ?: article.description
+        val updatedBody = command.body ?: article.body
 
+        val newTitle = command.title
         val updatedSlug =
-            if (title != null && title != article.title) {
+            if (newTitle != null && newTitle != article.title) {
                 SlugGenerator.generateUniqueSlug(
-                    title = title,
+                    title = newTitle,
                     existingSlugChecker = { candidate ->
                         val existing = articleWriteRepository.findBySlug(candidate)
                         existing != null && existing.id != article.id
@@ -96,10 +88,10 @@ class ArticleCommands(
     }
 
     @Transactional
-    fun deleteArticle(slug: String) {
+    fun deleteArticle(command: DeleteArticleCommand) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(command.slug))
                 ?: throw NotFoundException("Article not found")
 
         if (!article.canBeDeletedBy(userId)) {
@@ -107,24 +99,24 @@ class ArticleCommands(
         }
 
         articleWriteRepository.deleteById(article.id)
-        logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
+        logger.info("Article deleted: articleId={}, slug={}", article.id.value, command.slug)
     }
 
     @Transactional
-    fun favoriteArticle(slug: String) {
+    fun favoriteArticle(command: FavoriteArticleCommand) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(command.slug))
                 ?: throw NotFoundException("Article not found")
 
         articleWriteRepository.favorite(article.id, userId)
     }
 
     @Transactional
-    fun unfavoriteArticle(slug: String) {
+    fun unfavoriteArticle(command: UnfavoriteArticleCommand) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(command.slug))
                 ?: throw NotFoundException("Article not found")
 
         articleWriteRepository.unfavorite(article.id, userId)
@@ -140,5 +132,9 @@ class ArticleCommands(
         description?.let { if (it.isBlank()) errors["description"] = listOf("must not be blank") }
         body?.let { if (it.isBlank()) errors["body"] = listOf("must not be blank") }
         if (errors.isNotEmpty()) throw ValidationException(errors)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ArticleCommands::class.java)
     }
 }
