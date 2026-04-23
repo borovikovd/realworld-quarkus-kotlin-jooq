@@ -1,4 +1,4 @@
-package com.example.domain.profile
+package com.example.application.port.outbound
 
 import com.example.domain.aggregate.user.UserId
 

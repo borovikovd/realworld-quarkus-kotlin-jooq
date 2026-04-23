@@ -2,14 +2,14 @@ package com.example.application.command
 
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
-import com.example.domain.article.ArticleRepository
+import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.service.SlugGenerator
-import com.example.application.Clock
+import com.example.application.port.outbound.Clock
 import com.example.domain.aggregate.user.UserId
 import io.mockk.every
 import io.mockk.mockk
@@ -26,19 +26,19 @@ import kotlin.test.assertTrue
 
 class ArticleCommandsTest {
     private lateinit var articleCommands: ArticleCommands
-    private lateinit var articleRepository: ArticleRepository
+    private lateinit var articleWriteRepository: ArticleWriteRepository
     private lateinit var currentUser: CurrentUser
     private lateinit var clock: Clock
 
     @BeforeEach
     fun setup() {
-        articleRepository = mockk()
+        articleWriteRepository = mockk()
         currentUser = mockk()
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
         mockkObject(SlugGenerator)
         articleCommands = ArticleCommands(
-            articleRepository = articleRepository,
+            articleWriteRepository = articleWriteRepository,
             currentUser = currentUser,
             clock = clock,
         )
@@ -89,7 +89,7 @@ class ArticleCommandsTest {
                 authorId = userId,
             )
 
-        every { articleRepository.findBySlug(slug) } returns existingArticle
+        every { articleWriteRepository.findBySlug(slug) } returns existingArticle
 
         val exception =
             assertThrows<ValidationException> {
@@ -110,7 +110,7 @@ class ArticleCommandsTest {
         val generatedSlug = Slug("test-article")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.nextId() } returns articleId
+        every { articleWriteRepository.nextId() } returns articleId
 
         every {
             SlugGenerator.generateUniqueSlug(
@@ -119,14 +119,14 @@ class ArticleCommandsTest {
             )
         } returns generatedSlug
 
-        every { articleRepository.create(any()) } answers { firstArg() }
+        every { articleWriteRepository.create(any()) } answers { firstArg() }
 
         val result = articleCommands.createArticle(title, description, body, tags)
 
         assertEquals(articleId.value, result)
-        verify { articleRepository.nextId() }
+        verify { articleWriteRepository.nextId() }
         verify { SlugGenerator.generateUniqueSlug(title = title, existingSlugChecker = any()) }
-        verify { articleRepository.create(any()) }
+        verify { articleWriteRepository.create(any()) }
     }
 
     @Test
@@ -150,7 +150,7 @@ class ArticleCommandsTest {
                 authorId = userId,
             )
 
-        every { articleRepository.findBySlug(originalSlug) } returns existingArticle
+        every { articleWriteRepository.findBySlug(originalSlug) } returns existingArticle
         every {
             SlugGenerator.generateUniqueSlug(
                 title = newTitle,
@@ -158,14 +158,14 @@ class ArticleCommandsTest {
             )
         } returns newSlug
 
-        every { articleRepository.update(any()) } answers { firstArg() }
+        every { articleWriteRepository.update(any()) } answers { firstArg() }
 
         val result = articleCommands.updateArticle(originalSlug.value, newTitle, newDescription, newBody)
 
         assertEquals(1L, result)
-        verify { articleRepository.findBySlug(originalSlug) }
+        verify { articleWriteRepository.findBySlug(originalSlug) }
         verify { SlugGenerator.generateUniqueSlug(title = newTitle, existingSlugChecker = any()) }
-        verify { articleRepository.update(any()) }
+        verify { articleWriteRepository.update(any()) }
     }
 
     @Test
@@ -185,15 +185,15 @@ class ArticleCommandsTest {
                 authorId = userId,
             )
 
-        every { articleRepository.findBySlug(slug) } returns existingArticle
-        every { articleRepository.update(any()) } answers { firstArg() }
+        every { articleWriteRepository.findBySlug(slug) } returns existingArticle
+        every { articleWriteRepository.update(any()) } answers { firstArg() }
 
         val result = articleCommands.updateArticle(slug.value, null, null, null)
 
         assertEquals(1L, result)
-        verify { articleRepository.findBySlug(slug) }
+        verify { articleWriteRepository.findBySlug(slug) }
         verify(exactly = 0) { SlugGenerator.generateUniqueSlug(any(), any()) }
-        verify { articleRepository.update(any()) }
+        verify { articleWriteRepository.update(any()) }
     }
 
     @Test
@@ -202,7 +202,7 @@ class ArticleCommandsTest {
         val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
             articleCommands.updateArticle(slug.value, "New Title", null, null)
@@ -227,7 +227,7 @@ class ArticleCommandsTest {
                 authorId = differentUserId,
             )
 
-        every { articleRepository.findBySlug(slug) } returns existingArticle
+        every { articleWriteRepository.findBySlug(slug) } returns existingArticle
 
         assertThrows<ForbiddenException> {
             articleCommands.updateArticle(slug.value, "New Title", null, null)
@@ -251,13 +251,13 @@ class ArticleCommandsTest {
                 authorId = userId,
             )
 
-        every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.deleteById(ArticleId(1L)) } returns Unit
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { articleWriteRepository.deleteById(ArticleId(1L)) } returns Unit
 
         articleCommands.deleteArticle(slug.value)
 
-        verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.deleteById(ArticleId(1L)) }
+        verify { articleWriteRepository.findBySlug(slug) }
+        verify { articleWriteRepository.deleteById(ArticleId(1L)) }
     }
 
     @Test
@@ -266,7 +266,7 @@ class ArticleCommandsTest {
         val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
             articleCommands.deleteArticle(slug.value)
@@ -291,7 +291,7 @@ class ArticleCommandsTest {
                 authorId = differentUserId,
             )
 
-        every { articleRepository.findBySlug(slug) } returns article
+        every { articleWriteRepository.findBySlug(slug) } returns article
 
         assertThrows<ForbiddenException> {
             articleCommands.deleteArticle(slug.value)
@@ -315,13 +315,13 @@ class ArticleCommandsTest {
                 authorId = UserId(2L),
             )
 
-        every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.favorite(ArticleId(1L), userId) } returns Unit
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { articleWriteRepository.favorite(ArticleId(1L), userId) } returns Unit
 
         articleCommands.favoriteArticle(slug.value)
 
-        verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.favorite(ArticleId(1L), userId) }
+        verify { articleWriteRepository.findBySlug(slug) }
+        verify { articleWriteRepository.favorite(ArticleId(1L), userId) }
     }
 
     @Test
@@ -330,7 +330,7 @@ class ArticleCommandsTest {
         val slug = Slug("non-existent")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
             articleCommands.favoriteArticle(slug.value)
@@ -354,13 +354,13 @@ class ArticleCommandsTest {
                 authorId = UserId(2L),
             )
 
-        every { articleRepository.findBySlug(slug) } returns article
-        every { articleRepository.unfavorite(ArticleId(1L), userId) } returns Unit
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { articleWriteRepository.unfavorite(ArticleId(1L), userId) } returns Unit
 
         articleCommands.unfavoriteArticle(slug.value)
 
-        verify { articleRepository.findBySlug(slug) }
-        verify { articleRepository.unfavorite(ArticleId(1L), userId) }
+        verify { articleWriteRepository.findBySlug(slug) }
+        verify { articleWriteRepository.unfavorite(ArticleId(1L), userId) }
     }
 
 }

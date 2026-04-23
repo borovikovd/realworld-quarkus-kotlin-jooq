@@ -1,4 +1,4 @@
-package com.example.application.query.readmodel
+package com.example.application.port.outbound
 
 import java.time.OffsetDateTime
 

@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.query.CommentQueries
-import com.example.application.query.readmodel.CommentReadModel
-import com.example.application.query.readmodel.ProfileReadModel
+import com.example.application.port.outbound.CommentReadModel
+import com.example.application.port.outbound.CommentReadRepository
+import com.example.application.port.outbound.ProfileReadModel
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
@@ -14,9 +14,9 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqCommentQueries(
+class JooqCommentReadRepository(
     private val dsl: DSLContext,
-) : CommentQueries {
+) : CommentReadRepository {
     private fun followingField(viewerId: Long?): org.jooq.Field<*> =
         if (viewerId != null) {
             select(count())

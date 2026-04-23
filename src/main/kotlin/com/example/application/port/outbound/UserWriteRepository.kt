@@ -1,4 +1,4 @@
-package com.example.domain.user
+package com.example.application.port.outbound
 
 import com.example.domain.Repository
 import com.example.domain.aggregate.user.Email
@@ -6,7 +6,7 @@ import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 
-interface UserRepository : Repository<User, UserId> {
+interface UserWriteRepository : Repository<User, UserId> {
     fun findByEmail(email: Email): User?
 
     fun findByUsername(username: Username): User?

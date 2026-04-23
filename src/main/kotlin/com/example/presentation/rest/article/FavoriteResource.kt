@@ -3,11 +3,11 @@ package com.example.presentation.rest.article
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
-import com.example.application.CurrentUser
 import com.example.application.command.ArticleCommands
-import com.example.application.query.ArticleQueries
-import com.example.application.query.readmodel.ArticleReadModel
-import com.example.application.query.readmodel.ProfileReadModel
+import com.example.application.port.outbound.ArticleReadModel
+import com.example.application.port.outbound.ArticleReadRepository
+import com.example.application.port.outbound.CurrentUser
+import com.example.application.port.outbound.ProfileReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -16,7 +16,7 @@ import com.example.api.model.Article as ApiArticle
 @ApplicationScoped
 class FavoriteResource(
     private val articleCommands: ArticleCommands,
-    private val articleQueries: ArticleQueries,
+    private val articleReadRepository: ArticleReadRepository,
     private val currentUser: CurrentUser,
 ) : FavoritesApi {
     @RolesAllowed("user")
@@ -25,7 +25,7 @@ class FavoriteResource(
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+            (articleReadRepository.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()
 
         return CreateArticle201Response().article(articleDto)
@@ -37,7 +37,7 @@ class FavoriteResource(
 
         val viewerId = currentUser.id?.value
         val articleDto =
-            (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
+            (articleReadRepository.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()
 
         return CreateArticle201Response().article(articleDto)

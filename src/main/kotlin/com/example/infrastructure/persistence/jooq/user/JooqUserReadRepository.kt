@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.user
 
-import com.example.application.query.UserQueries
-import com.example.application.query.readmodel.UserReadModel
+import com.example.application.port.outbound.UserReadModel
+import com.example.application.port.outbound.UserReadRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
@@ -10,9 +10,9 @@ import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqUserQueries(
+class JooqUserReadRepository(
     private val dsl: DSLContext,
-) : UserQueries {
+) : UserReadRepository {
     override fun getUserById(id: Long): UserReadModel? =
         dsl
             .select(USERS.ID, USERS.EMAIL, USERS.USERNAME, USERS.BIO, USERS.IMAGE)

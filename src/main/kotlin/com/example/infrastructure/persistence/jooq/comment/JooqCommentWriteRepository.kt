@@ -1,19 +1,19 @@
 package com.example.infrastructure.persistence.jooq.comment
 
+import com.example.application.port.outbound.CommentWriteRepository
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
-import com.example.domain.comment.CommentRepository
 import com.example.jooq.public.tables.references.COMMENTS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 
 @ApplicationScoped
-class JooqCommentRepository(
+class JooqCommentWriteRepository(
     private val dsl: DSLContext,
-) : CommentRepository {
+) : CommentWriteRepository {
     override fun nextId(): CommentId =
         CommentId(
             dsl

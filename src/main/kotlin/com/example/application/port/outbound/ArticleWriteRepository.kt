@@ -1,4 +1,4 @@
-package com.example.domain.article
+package com.example.application.port.outbound
 
 import com.example.domain.Repository
 import com.example.domain.aggregate.article.Article
@@ -6,7 +6,7 @@ import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.user.UserId
 
-interface ArticleRepository : Repository<Article, ArticleId> {
+interface ArticleWriteRepository : Repository<Article, ArticleId> {
     fun findBySlug(slug: Slug): Article?
 
     fun deleteById(id: ArticleId)

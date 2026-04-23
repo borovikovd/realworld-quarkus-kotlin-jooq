@@ -1,12 +1,12 @@
 package com.example.application.command
 
-import com.example.domain.profile.FollowRepository
+import com.example.application.port.outbound.FollowRepository
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
-import com.example.domain.user.UserRepository
+import com.example.application.port.outbound.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.Username
@@ -20,17 +20,17 @@ import kotlin.test.assertEquals
 
 class ProfileCommandsTest {
     private lateinit var profileCommands: ProfileCommands
-    private lateinit var userRepository: UserRepository
+    private lateinit var userWriteRepository: UserWriteRepository
     private lateinit var followRepository: FollowRepository
     private lateinit var currentUser: CurrentUser
 
     @BeforeEach
     fun setup() {
-        userRepository = mockk()
+        userWriteRepository = mockk()
         followRepository = mockk()
         currentUser = mockk()
         profileCommands = ProfileCommands(
-            userRepository = userRepository,
+            userWriteRepository = userWriteRepository,
             followRepository = followRepository,
             currentUser = currentUser,
         )
@@ -50,13 +50,13 @@ class ProfileCommandsTest {
             )
 
         every { currentUser.require() } returns followerId
-        every { userRepository.findByUsername(Username(username)) } returns followee
+        every { userWriteRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.follow(followerId, followee.id) } returns Unit
 
         profileCommands.followUser(username)
 
         verify { currentUser.require() }
-        verify { userRepository.findByUsername(Username(username)) }
+        verify { userWriteRepository.findByUsername(Username(username)) }
         verify { followRepository.follow(followerId, followee.id) }
     }
 
@@ -66,7 +66,7 @@ class ProfileCommandsTest {
         val username = "nonexistent"
 
         every { currentUser.require() } returns followerId
-        every { userRepository.findByUsername(Username(username)) } returns null
+        every { userWriteRepository.findByUsername(Username(username)) } returns null
 
         val exception =
             assertThrows<NotFoundException> {
@@ -75,7 +75,7 @@ class ProfileCommandsTest {
 
         assertEquals("User not found", exception.message)
         verify { currentUser.require() }
-        verify { userRepository.findByUsername(Username(username)) }
+        verify { userWriteRepository.findByUsername(Username(username)) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
 
@@ -93,7 +93,7 @@ class ProfileCommandsTest {
             )
 
         every { currentUser.require() } returns followerId
-        every { userRepository.findByUsername(Username(username)) } returns followee
+        every { userWriteRepository.findByUsername(Username(username)) } returns followee
 
         val exception =
             assertThrows<BadRequestException> {
@@ -102,7 +102,7 @@ class ProfileCommandsTest {
 
         assertEquals("Cannot follow yourself", exception.message)
         verify { currentUser.require() }
-        verify { userRepository.findByUsername(Username(username)) }
+        verify { userWriteRepository.findByUsername(Username(username)) }
         verify(exactly = 0) { followRepository.follow(any(), any()) }
     }
 
@@ -120,13 +120,13 @@ class ProfileCommandsTest {
             )
 
         every { currentUser.require() } returns followerId
-        every { userRepository.findByUsername(Username(username)) } returns followee
+        every { userWriteRepository.findByUsername(Username(username)) } returns followee
         every { followRepository.unfollow(followerId, followee.id) } returns Unit
 
         profileCommands.unfollowUser(username)
 
         verify { currentUser.require() }
-        verify { userRepository.findByUsername(Username(username)) }
+        verify { userWriteRepository.findByUsername(Username(username)) }
         verify { followRepository.unfollow(followerId, followee.id) }
     }
 
@@ -136,7 +136,7 @@ class ProfileCommandsTest {
         val username = "nonexistent"
 
         every { currentUser.require() } returns followerId
-        every { userRepository.findByUsername(Username(username)) } returns null
+        every { userWriteRepository.findByUsername(Username(username)) } returns null
 
         val exception =
             assertThrows<NotFoundException> {
@@ -145,7 +145,7 @@ class ProfileCommandsTest {
 
         assertEquals("User not found", exception.message)
         verify { currentUser.require() }
-        verify { userRepository.findByUsername(Username(username)) }
+        verify { userWriteRepository.findByUsername(Username(username)) }
         verify(exactly = 0) { followRepository.unfollow(any(), any()) }
     }
 }

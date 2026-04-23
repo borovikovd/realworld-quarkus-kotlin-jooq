@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
+import com.example.application.port.outbound.FollowRepository
 import com.example.domain.aggregate.user.UserId
-import com.example.domain.profile.FollowRepository
 import com.example.jooq.public.tables.references.FOLLOWERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

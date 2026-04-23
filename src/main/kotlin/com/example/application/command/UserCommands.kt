@@ -1,14 +1,14 @@
 package com.example.application.command
 
-import com.example.application.Clock
-import com.example.application.PasswordHashing
+import com.example.application.port.outbound.Clock
+import com.example.application.port.outbound.PasswordHashing
+import com.example.application.port.outbound.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.UnauthorizedException
 import com.example.domain.exception.ValidationException
-import com.example.domain.user.UserRepository
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class UserCommands(
-    private val userRepository: UserRepository,
+    private val userWriteRepository: UserWriteRepository,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
 ) {
@@ -37,12 +37,12 @@ class UserCommands(
         val errors = mutableMapOf<String, List<String>>()
 
         val emailVo = parseEmail(email, errors)
-        if (emailVo != null && userRepository.existsByEmail(emailVo)) {
+        if (emailVo != null && userWriteRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
         val usernameVo = parseUsername(username, errors)
-        if (usernameVo != null && userRepository.existsByUsername(usernameVo)) {
+        if (usernameVo != null && userWriteRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -54,7 +54,7 @@ class UserCommands(
             throw ValidationException(errors)
         }
 
-        val userId = userRepository.nextId()
+        val userId = userWriteRepository.nextId()
         val user =
             User(
                 id = userId,
@@ -62,7 +62,7 @@ class UserCommands(
                 username = usernameVo!!,
                 passwordHash = passwordHashing.hash(password),
             )
-        userRepository.create(user)
+        userWriteRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
         return userId.value
     }
@@ -76,7 +76,7 @@ class UserCommands(
             runCatching { Email(email) }
                 .getOrElse { throw UnauthorizedException("Invalid email or password") }
 
-        val user = userRepository.findByEmail(emailVo)
+        val user = userWriteRepository.findByEmail(emailVo)
         if (user == null) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
@@ -101,18 +101,18 @@ class UserCommands(
     ): Long {
         val typedUserId = UserId(userId)
         val user =
-            userRepository.findById(typedUserId)
+            userWriteRepository.findById(typedUserId)
                 ?: throw UnauthorizedException("User not found")
 
         val errors = mutableMapOf<String, List<String>>()
 
         val emailVo = email?.let { parseEmail(it, errors) }
-        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
+        if (emailVo != null && emailVo != user.email && userWriteRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
         val usernameVo = username?.let { parseUsername(it, errors) }
-        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
+        if (usernameVo != null && usernameVo != user.username && userWriteRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -133,7 +133,7 @@ class UserCommands(
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
-        val saved = userRepository.update(updatedUser)
+        val saved = userWriteRepository.update(updatedUser)
         return saved.id.value
     }
 

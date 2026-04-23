@@ -1,8 +1,8 @@
-package com.example.application.query
+package com.example.application.port.outbound
 
-import com.example.application.query.readmodel.CommentReadModel
+import com.example.application.port.outbound.CommentReadModel
 
-interface CommentQueries {
+interface CommentReadRepository {
     fun getCommentById(
         id: Long,
         viewerId: Long?,

@@ -5,11 +5,11 @@ import com.example.api.model.CreateArticleComment200Response
 import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
-import com.example.application.CurrentUser
 import com.example.application.command.CommentCommands
-import com.example.application.query.CommentQueries
-import com.example.application.query.readmodel.CommentReadModel
-import com.example.application.query.readmodel.ProfileReadModel
+import com.example.application.port.outbound.CommentReadModel
+import com.example.application.port.outbound.CommentReadRepository
+import com.example.application.port.outbound.CurrentUser
+import com.example.application.port.outbound.ProfileReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -19,7 +19,7 @@ import com.example.api.model.Comment as ApiComment
 @ApplicationScoped
 class CommentResource(
     private val commentCommands: CommentCommands,
-    private val commentQueries: CommentQueries,
+    private val commentReadRepository: CommentReadRepository,
     private val currentUser: CurrentUser,
 ) : CommentsApi {
     @ResponseStatus(201)
@@ -33,7 +33,7 @@ class CommentResource(
         val commentId = commentCommands.addComment(slug, newComment.body)
 
         val commentDto =
-            (commentQueries.getCommentById(commentId, viewerId) ?: throw NotFoundException("Comment not found"))
+            (commentReadRepository.getCommentById(commentId, viewerId) ?: throw NotFoundException("Comment not found"))
                 .toDto()
 
         return CreateArticleComment200Response().comment(commentDto)
@@ -50,7 +50,7 @@ class CommentResource(
 
     override fun getArticleComments(slug: String): GetArticleComments200Response {
         val viewerId = currentUser.id?.value
-        val comments = commentQueries.getCommentsBySlug(slug, viewerId).map { it.toDto() }
+        val comments = commentReadRepository.getCommentsBySlug(slug, viewerId).map { it.toDto() }
 
         return GetArticleComments200Response().comments(comments)
     }

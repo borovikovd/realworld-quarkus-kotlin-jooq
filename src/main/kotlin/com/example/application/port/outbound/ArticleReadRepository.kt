@@ -1,8 +1,8 @@
-package com.example.application.query
+package com.example.application.port.outbound
 
-import com.example.application.query.readmodel.ArticleReadModel
+import com.example.application.port.outbound.ArticleReadModel
 
-interface ArticleQueries {
+interface ArticleReadRepository {
     fun getArticleById(
         id: Long,
         viewerId: Long?,

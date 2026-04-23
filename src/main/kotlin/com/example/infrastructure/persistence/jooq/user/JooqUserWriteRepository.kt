@@ -1,20 +1,20 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.application.port.outbound.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
-import com.example.domain.user.UserRepository
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 
 @ApplicationScoped
-class JooqUserRepository(
+class JooqUserWriteRepository(
     private val dsl: DSLContext,
-) : UserRepository {
+) : UserWriteRepository {
     override fun nextId(): UserId =
         UserId(
             dsl

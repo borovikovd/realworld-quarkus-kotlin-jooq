@@ -1,10 +1,10 @@
 package com.example.application.command
 
-import com.example.application.Clock
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.ArticleWriteRepository
+import com.example.application.port.outbound.Clock
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.Slug
-import com.example.domain.article.ArticleRepository
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class ArticleCommands(
-    private val articleRepository: ArticleRepository,
+    private val articleWriteRepository: ArticleWriteRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) {
@@ -35,11 +35,11 @@ class ArticleCommands(
         validateArticleFields(title, description, body)
 
         val userId = currentUser.require()
-        val articleId = articleRepository.nextId()
+        val articleId = articleWriteRepository.nextId()
         val slug =
             SlugGenerator.generateUniqueSlug(
                 title = title,
-                existingSlugChecker = { candidate -> articleRepository.findBySlug(candidate) != null },
+                existingSlugChecker = { candidate -> articleWriteRepository.findBySlug(candidate) != null },
             )
         val article =
             Article(
@@ -51,7 +51,7 @@ class ArticleCommands(
                 authorId = userId,
                 tags = tags.toSet(),
             )
-        articleRepository.create(article)
+        articleWriteRepository.create(article)
         return articleId.value
     }
 
@@ -64,7 +64,7 @@ class ArticleCommands(
     ): Long {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (userId != article.authorId) {
@@ -82,7 +82,7 @@ class ArticleCommands(
                 SlugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidate ->
-                        val existing = articleRepository.findBySlug(candidate)
+                        val existing = articleWriteRepository.findBySlug(candidate)
                         existing != null && existing.id != article.id
                     },
                 )
@@ -91,7 +91,7 @@ class ArticleCommands(
             }
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody, clock.now())
-        articleRepository.update(updatedArticle)
+        articleWriteRepository.update(updatedArticle)
         return article.id.value
     }
 
@@ -99,14 +99,14 @@ class ArticleCommands(
     fun deleteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (!article.canBeDeletedBy(userId)) {
             throw ForbiddenException("You can only delete your own articles")
         }
 
-        articleRepository.deleteById(article.id)
+        articleWriteRepository.deleteById(article.id)
         logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
     }
 
@@ -114,20 +114,20 @@ class ArticleCommands(
     fun favoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.favorite(article.id, userId)
+        articleWriteRepository.favorite(article.id, userId)
     }
 
     @Transactional
     fun unfavoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(slug))
+            articleWriteRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
-        articleRepository.unfavorite(article.id, userId)
+        articleWriteRepository.unfavorite(article.id, userId)
     }
 
     private fun validateArticleFields(

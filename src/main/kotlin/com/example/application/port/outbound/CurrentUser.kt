@@ -1,4 +1,4 @@
-package com.example.application
+package com.example.application.port.outbound
 
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.UnauthorizedException

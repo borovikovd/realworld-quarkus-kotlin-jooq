@@ -1,17 +1,17 @@
 package com.example.application.command
 
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.CurrentUser
+import com.example.application.port.outbound.FollowRepository
+import com.example.application.port.outbound.UserWriteRepository
 import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
-import com.example.domain.profile.FollowRepository
-import com.example.domain.user.UserRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class ProfileCommands(
-    private val userRepository: UserRepository,
+    private val userWriteRepository: UserWriteRepository,
     private val followRepository: FollowRepository,
     private val currentUser: CurrentUser,
 ) {
@@ -19,7 +19,7 @@ class ProfileCommands(
     fun followUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userRepository.findByUsername(Username(username))
+            userWriteRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         if (followee.id == followerId) {
@@ -33,7 +33,7 @@ class ProfileCommands(
     fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followee =
-            userRepository.findByUsername(Username(username))
+            userWriteRepository.findByUsername(Username(username))
                 ?: throw NotFoundException("User not found")
 
         followRepository.unfollow(followerId, followee.id)

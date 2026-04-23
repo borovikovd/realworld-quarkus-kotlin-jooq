@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.query.ProfileQueries
-import com.example.application.query.readmodel.ProfileReadModel
+import com.example.application.port.outbound.ProfileReadModel
+import com.example.application.port.outbound.ProfileReadRepository
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS
 import jakarta.enterprise.context.ApplicationScoped
@@ -10,9 +10,9 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqProfileQueries(
+class JooqProfileReadRepository(
     private val dsl: DSLContext,
-) : ProfileQueries {
+) : ProfileReadRepository {
     override fun getProfileByUsername(
         username: String,
         viewerId: Long?,

@@ -2,15 +2,15 @@ package com.example.application.command
 
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
-import com.example.domain.article.ArticleRepository
+import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
-import com.example.domain.comment.CommentRepository
+import com.example.application.port.outbound.CommentWriteRepository
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.user.UserId
 import io.mockk.every
 import io.mockk.mockk
@@ -22,8 +22,8 @@ import kotlin.test.assertEquals
 
 class CommentCommandsTest {
     private lateinit var commentCommands: CommentCommands
-    private lateinit var commentRepository: CommentRepository
-    private lateinit var articleRepository: ArticleRepository
+    private lateinit var commentWriteRepository: CommentWriteRepository
+    private lateinit var articleWriteRepository: ArticleWriteRepository
     private lateinit var currentUser: CurrentUser
 
     private val userId = UserId(1L)
@@ -40,12 +40,12 @@ class CommentCommandsTest {
 
     @BeforeEach
     fun setup() {
-        commentRepository = mockk()
-        articleRepository = mockk()
+        commentWriteRepository = mockk()
+        articleWriteRepository = mockk()
         currentUser = mockk()
         commentCommands = CommentCommands(
-            commentRepository = commentRepository,
-            articleRepository = articleRepository,
+            commentWriteRepository = commentWriteRepository,
+            articleWriteRepository = articleWriteRepository,
             currentUser = currentUser,
         )
     }
@@ -66,21 +66,21 @@ class CommentCommandsTest {
         val commentId = CommentId(1L)
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.nextId() } returns commentId
-        every { commentRepository.create(any()) } answers { firstArg() }
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { commentWriteRepository.nextId() } returns commentId
+        every { commentWriteRepository.create(any()) } answers { firstArg() }
 
         val result = commentCommands.addComment(slug.value, body)
 
         assertEquals(commentId.value, result)
-        verify { commentRepository.nextId() }
-        verify { commentRepository.create(match { it.articleId == articleId && it.authorId == userId && it.body == body }) }
+        verify { commentWriteRepository.nextId() }
+        verify { commentWriteRepository.create(match { it.articleId == articleId && it.authorId == userId && it.body == body }) }
     }
 
     @Test
     fun `addComment should throw NotFoundException when article not found`() {
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
             commentCommands.addComment(slug.value, "comment body")
@@ -93,19 +93,19 @@ class CommentCommandsTest {
         val comment = Comment(id = commentId, articleId = articleId, authorId = userId, body = "My comment")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.findById(commentId) } returns comment
-        every { commentRepository.deleteById(commentId) } returns Unit
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { commentWriteRepository.findById(commentId) } returns comment
+        every { commentWriteRepository.deleteById(commentId) } returns Unit
 
         commentCommands.deleteComment(slug.value, 5L)
 
-        verify { commentRepository.deleteById(commentId) }
+        verify { commentWriteRepository.deleteById(commentId) }
     }
 
     @Test
     fun `deleteComment should throw NotFoundException when article not found`() {
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns null
 
         assertThrows<NotFoundException> {
             commentCommands.deleteComment(slug.value, 5L)
@@ -115,8 +115,8 @@ class CommentCommandsTest {
     @Test
     fun `deleteComment should throw NotFoundException when comment not found`() {
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.findById(CommentId(5L)) } returns null
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { commentWriteRepository.findById(CommentId(5L)) } returns null
 
         assertThrows<NotFoundException> {
             commentCommands.deleteComment(slug.value, 5L)
@@ -129,8 +129,8 @@ class CommentCommandsTest {
         val comment = Comment(id = commentId, articleId = ArticleId(999L), authorId = userId, body = "Wrong article")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.findById(commentId) } returns comment
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<NotFoundException> {
             commentCommands.deleteComment(slug.value, 5L)
@@ -144,8 +144,8 @@ class CommentCommandsTest {
         val comment = Comment(id = commentId, articleId = articleId, authorId = differentUserId, body = "Not my comment")
 
         every { currentUser.require() } returns userId
-        every { articleRepository.findBySlug(slug) } returns article
-        every { commentRepository.findById(commentId) } returns comment
+        every { articleWriteRepository.findBySlug(slug) } returns article
+        every { commentWriteRepository.findById(commentId) } returns comment
 
         assertThrows<ForbiddenException> {
             commentCommands.deleteComment(slug.value, 5L)

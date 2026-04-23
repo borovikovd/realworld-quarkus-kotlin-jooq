@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.application.query.ArticleQueries
-import com.example.application.query.readmodel.ArticleReadModel
-import com.example.application.query.readmodel.ProfileReadModel
+import com.example.application.port.outbound.ArticleReadModel
+import com.example.application.port.outbound.ArticleReadRepository
+import com.example.application.port.outbound.ProfileReadModel
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -19,9 +19,9 @@ import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqArticleQueries(
+class JooqArticleReadRepository(
     private val dsl: DSLContext,
-) : ArticleQueries {
+) : ArticleReadRepository {
     override fun getArticleById(
         id: Long,
         viewerId: Long?,

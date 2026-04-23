@@ -5,11 +5,11 @@ import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
-import com.example.application.CurrentUser
-import com.example.application.TokenIssuer
 import com.example.application.command.UserCommands
-import com.example.application.query.UserQueries
-import com.example.application.query.readmodel.UserReadModel
+import com.example.application.port.outbound.CurrentUser
+import com.example.application.port.outbound.TokenIssuer
+import com.example.application.port.outbound.UserReadModel
+import com.example.application.port.outbound.UserReadRepository
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -19,7 +19,7 @@ import com.example.api.model.User as ApiUser
 @ApplicationScoped
 class UserAndAuthenticationResource(
     private val userCommands: UserCommands,
-    private val userQueries: UserQueries,
+    private val userReadRepository: UserReadRepository,
     private val tokenIssuer: TokenIssuer,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
@@ -64,7 +64,7 @@ class UserAndAuthenticationResource(
     }
 
     private fun loadUser(userId: Long): ApiUser =
-        (userQueries.getUserById(userId) ?: throw NotFoundException("User not found"))
+        (userReadRepository.getUserById(userId) ?: throw NotFoundException("User not found"))
             .toDto()
 
     private fun UserReadModel.toDto(): ApiUser =

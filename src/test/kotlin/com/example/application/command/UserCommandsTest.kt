@@ -1,14 +1,14 @@
 package com.example.application.command
 
-import com.example.application.Clock
+import com.example.application.port.outbound.Clock
 import com.example.domain.exception.UnauthorizedException
 import com.example.domain.exception.ValidationException
-import com.example.application.PasswordHashing
+import com.example.application.port.outbound.PasswordHashing
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
-import com.example.domain.user.UserRepository
+import com.example.application.port.outbound.UserWriteRepository
 import com.example.domain.aggregate.user.Username
 import io.mockk.every
 import io.mockk.mockk
@@ -22,18 +22,18 @@ import kotlin.test.assertTrue
 
 class UserCommandsTest {
     private lateinit var userCommands: UserCommands
-    private lateinit var userRepository: UserRepository
+    private lateinit var userWriteRepository: UserWriteRepository
     private lateinit var passwordHashing: PasswordHashing
     private lateinit var clock: Clock
 
     @BeforeEach
     fun setup() {
-        userRepository = mockk()
+        userWriteRepository = mockk()
         passwordHashing = mockk()
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
         userCommands = UserCommands(
-            userRepository = userRepository,
+            userWriteRepository = userWriteRepository,
             passwordHashing = passwordHashing,
             clock = clock,
         )
@@ -47,25 +47,25 @@ class UserCommandsTest {
         val passwordHash = "hashed-password"
         val userId = UserId(1L)
 
-        every { userRepository.existsByEmail(Email(email)) } returns false
-        every { userRepository.existsByUsername(Username(username)) } returns false
+        every { userWriteRepository.existsByEmail(Email(email)) } returns false
+        every { userWriteRepository.existsByUsername(Username(username)) } returns false
         every { passwordHashing.hash(password) } returns PasswordHash(passwordHash)
-        every { userRepository.nextId() } returns userId
-        every { userRepository.create(any()) } answers { firstArg() }
+        every { userWriteRepository.nextId() } returns userId
+        every { userWriteRepository.create(any()) } answers { firstArg() }
 
         val result = userCommands.register(email, username, password)
 
         assertEquals(userId.value, result)
-        verify { userRepository.existsByEmail(Email(email)) }
-        verify { userRepository.existsByUsername(Username(username)) }
+        verify { userWriteRepository.existsByEmail(Email(email)) }
+        verify { userWriteRepository.existsByUsername(Username(username)) }
         verify { passwordHashing.hash(password) }
-        verify { userRepository.nextId() }
-        verify { userRepository.create(any()) }
+        verify { userWriteRepository.nextId() }
+        verify { userWriteRepository.create(any()) }
     }
 
     @Test
     fun `register should throw ValidationException when email is blank`() {
-        every { userRepository.existsByUsername(Username("testuser")) } returns false
+        every { userWriteRepository.existsByUsername(Username("testuser")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -77,7 +77,7 @@ class UserCommandsTest {
 
     @Test
     fun `register should throw ValidationException when email has invalid format`() {
-        every { userRepository.existsByUsername(Username("testuser")) } returns false
+        every { userWriteRepository.existsByUsername(Username("testuser")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -89,7 +89,7 @@ class UserCommandsTest {
 
     @Test
     fun `register should throw ValidationException when username is blank`() {
-        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
+        every { userWriteRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -101,7 +101,7 @@ class UserCommandsTest {
 
     @Test
     fun `register should throw ValidationException when username is too short`() {
-        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
+        every { userWriteRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -113,7 +113,7 @@ class UserCommandsTest {
 
     @Test
     fun `register should throw ValidationException when username is too long`() {
-        every { userRepository.existsByEmail(Email("test@example.com")) } returns false
+        every { userWriteRepository.existsByEmail(Email("test@example.com")) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -129,8 +129,8 @@ class UserCommandsTest {
         val username = "testuser"
         val password = "password123"
 
-        every { userRepository.existsByEmail(Email(email)) } returns true
-        every { userRepository.existsByUsername(Username(username)) } returns false
+        every { userWriteRepository.existsByEmail(Email(email)) } returns true
+        every { userWriteRepository.existsByUsername(Username(username)) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -147,8 +147,8 @@ class UserCommandsTest {
         val username = "takenuser"
         val password = "password123"
 
-        every { userRepository.existsByEmail(Email(email)) } returns false
-        every { userRepository.existsByUsername(Username(username)) } returns true
+        every { userWriteRepository.existsByEmail(Email(email)) } returns false
+        every { userWriteRepository.existsByUsername(Username(username)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -165,8 +165,8 @@ class UserCommandsTest {
         val username = "testuser"
         val password = "short"
 
-        every { userRepository.existsByEmail(Email(email)) } returns false
-        every { userRepository.existsByUsername(Username(username)) } returns false
+        every { userWriteRepository.existsByEmail(Email(email)) } returns false
+        every { userWriteRepository.existsByUsername(Username(username)) } returns false
 
         val exception =
             assertThrows<ValidationException> {
@@ -183,8 +183,8 @@ class UserCommandsTest {
         val username = "takenuser"
         val password = "short"
 
-        every { userRepository.existsByEmail(Email(email)) } returns true
-        every { userRepository.existsByUsername(Username(username)) } returns true
+        every { userWriteRepository.existsByEmail(Email(email)) } returns true
+        every { userWriteRepository.existsByUsername(Username(username)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -210,13 +210,13 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("hashed-password"),
             )
 
-        every { userRepository.findByEmail(Email(email)) } returns user
+        every { userWriteRepository.findByEmail(Email(email)) } returns user
         every { passwordHashing.verify(user.passwordHash, password) } returns true
 
         val result = userCommands.login(email, password)
 
         assertEquals(1L, result)
-        verify { userRepository.findByEmail(Email(email)) }
+        verify { userWriteRepository.findByEmail(Email(email)) }
         verify { passwordHashing.verify(user.passwordHash, password) }
     }
 
@@ -225,7 +225,7 @@ class UserCommandsTest {
         val email = "nonexistent@example.com"
         val password = "password123"
 
-        every { userRepository.findByEmail(Email(email)) } returns null
+        every { userWriteRepository.findByEmail(Email(email)) } returns null
 
         val exception =
             assertThrows<UnauthorizedException> {
@@ -248,7 +248,7 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("hashed-password"),
             )
 
-        every { userRepository.findByEmail(Email(email)) } returns user
+        every { userWriteRepository.findByEmail(Email(email)) } returns user
         every { passwordHashing.verify(user.passwordHash, password) } returns false
 
         val exception =
@@ -277,20 +277,20 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByEmail(Email(newEmail)) } returns false
-        every { userRepository.existsByUsername(Username(newUsername)) } returns false
+        every { userWriteRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.existsByEmail(Email(newEmail)) } returns false
+        every { userWriteRepository.existsByUsername(Username(newUsername)) } returns false
         every { passwordHashing.hash(newPassword) } returns PasswordHash(newPasswordHash)
-        every { userRepository.update(any()) } answers { firstArg() }
+        every { userWriteRepository.update(any()) } answers { firstArg() }
 
         val result = userCommands.updateUser(userId.value, newEmail, newUsername, newPassword, newBio, newImage)
 
         assertEquals(userId.value, result)
-        verify { userRepository.findById(userId) }
-        verify { userRepository.existsByEmail(Email(newEmail)) }
-        verify { userRepository.existsByUsername(Username(newUsername)) }
+        verify { userWriteRepository.findById(userId) }
+        verify { userWriteRepository.existsByEmail(Email(newEmail)) }
+        verify { userWriteRepository.existsByUsername(Username(newUsername)) }
         verify { passwordHashing.hash(newPassword) }
-        verify { userRepository.update(any()) }
+        verify { userWriteRepository.update(any()) }
     }
 
     @Test
@@ -305,15 +305,15 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.update(any()) } answers { firstArg() }
+        every { userWriteRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.update(any()) } answers { firstArg() }
 
         val result = userCommands.updateUser(userId.value, null, null, null, null, null)
 
         assertEquals(userId.value, result)
-        verify { userRepository.findById(userId) }
+        verify { userWriteRepository.findById(userId) }
         verify(exactly = 0) { passwordHashing.hash(any()) }
-        verify { userRepository.update(any()) }
+        verify { userWriteRepository.update(any()) }
     }
 
     @Test
@@ -327,7 +327,7 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.findById(userId) } returns existingUser
 
         val exception =
             assertThrows<ValidationException> {
@@ -348,7 +348,7 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.findById(userId) } returns existingUser
 
         val exception =
             assertThrows<ValidationException> {
@@ -369,7 +369,7 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.findById(userId) } returns existingUser
 
         val exception =
             assertThrows<ValidationException> {
@@ -392,8 +392,8 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByEmail(Email(newEmail)) } returns true
+        every { userWriteRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.existsByEmail(Email(newEmail)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -416,8 +416,8 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.existsByUsername(Username(newUsername)) } returns true
+        every { userWriteRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.existsByUsername(Username(newUsername)) } returns true
 
         val exception =
             assertThrows<ValidationException> {
@@ -440,7 +440,7 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("old-hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.findById(userId) } returns existingUser
 
         val exception =
             assertThrows<ValidationException> {
@@ -464,8 +464,8 @@ class UserCommandsTest {
                 passwordHash = PasswordHash("hash"),
             )
 
-        every { userRepository.findById(userId) } returns existingUser
-        every { userRepository.update(any()) } answers { firstArg() }
+        every { userWriteRepository.findById(userId) } returns existingUser
+        every { userWriteRepository.update(any()) } answers { firstArg() }
 
         val result = userCommands.updateUser(userId.value, email, username, null, null, null)
 

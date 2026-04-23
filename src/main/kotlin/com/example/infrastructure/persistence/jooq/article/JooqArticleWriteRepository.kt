@@ -1,10 +1,10 @@
 package com.example.infrastructure.persistence.jooq.article
 
+import com.example.application.port.outbound.ArticleWriteRepository
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.user.UserId
-import com.example.domain.article.ArticleRepository
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -14,9 +14,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 
 @ApplicationScoped
-class JooqArticleRepository(
+class JooqArticleWriteRepository(
     private val dsl: DSLContext,
-) : ArticleRepository {
+) : ArticleWriteRepository {
     override fun nextId(): ArticleId =
         ArticleId(
             dsl

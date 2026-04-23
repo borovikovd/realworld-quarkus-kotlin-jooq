@@ -1,11 +1,11 @@
 package com.example.application.command
 
-import com.example.application.CurrentUser
+import com.example.application.port.outbound.ArticleWriteRepository
+import com.example.application.port.outbound.CommentWriteRepository
+import com.example.application.port.outbound.CurrentUser
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
-import com.example.domain.article.ArticleRepository
-import com.example.domain.comment.CommentRepository
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class CommentCommands(
-    private val commentRepository: CommentRepository,
-    private val articleRepository: ArticleRepository,
+    private val commentWriteRepository: CommentWriteRepository,
+    private val articleWriteRepository: ArticleWriteRepository,
     private val currentUser: CurrentUser,
 ) {
     companion object {
@@ -34,10 +34,10 @@ class CommentCommands(
 
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(articleSlug))
+            articleWriteRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
-        val commentId = commentRepository.nextId()
+        val commentId = commentWriteRepository.nextId()
         val comment =
             Comment(
                 id = commentId,
@@ -45,7 +45,7 @@ class CommentCommands(
                 authorId = userId,
                 body = body,
             )
-        commentRepository.create(comment)
+        commentWriteRepository.create(comment)
         return commentId.value
     }
 
@@ -56,12 +56,12 @@ class CommentCommands(
     ) {
         val userId = currentUser.require()
         val article =
-            articleRepository.findBySlug(Slug(articleSlug))
+            articleWriteRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
         val typedCommentId = CommentId(commentId)
         val comment =
-            commentRepository.findById(typedCommentId)
+            commentWriteRepository.findById(typedCommentId)
                 ?: throw NotFoundException("Comment not found")
 
         if (comment.articleId != article.id) {
@@ -71,7 +71,7 @@ class CommentCommands(
         if (!comment.canBeDeletedBy(userId)) {
             throw ForbiddenException("You can only delete your own comments")
         }
-        commentRepository.deleteById(typedCommentId)
+        commentWriteRepository.deleteById(typedCommentId)
         logger.info("Comment deleted: commentId={}", commentId)
     }
 }
