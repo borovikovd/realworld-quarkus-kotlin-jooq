@@ -6,11 +6,11 @@ import com.example.api.model.CreateArticleRequest
 import com.example.api.model.GetArticlesFeed200Response
 import com.example.api.model.Profile
 import com.example.api.model.UpdateArticleRequest
-import com.example.application.command.ArticleCommands
-import com.example.application.outport.CurrentUser
-import com.example.application.query.ArticleQueries
+import com.example.application.inport.command.ArticleCommands
+import com.example.application.inport.query.ArticleQueries
 import com.example.application.inport.query.readmodel.ArticleReadModel
 import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.outport.CurrentUser
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

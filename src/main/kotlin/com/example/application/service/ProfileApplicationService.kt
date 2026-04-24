@@ -1,7 +1,11 @@
-package com.example.application.command
+package com.example.application.service
 
+import com.example.application.inport.command.ProfileCommands
+import com.example.application.inport.query.ProfileQueries
+import com.example.application.inport.query.readmodel.ProfileReadModel
 import com.example.application.outport.CurrentUser
 import com.example.application.outport.FollowRepository
+import com.example.application.outport.ProfileReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.BadRequestException
@@ -10,13 +14,15 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class ProfileCommands(
+class ProfileApplicationService(
     private val userWriteRepository: UserWriteRepository,
     private val followRepository: FollowRepository,
+    private val profileReadRepository: ProfileReadRepository,
     private val currentUser: CurrentUser,
-) {
+) : ProfileCommands,
+    ProfileQueries {
     @Transactional
-    fun followUser(username: String) {
+    override fun followUser(username: String) {
         val followerId = currentUser.require()
         val followee =
             userWriteRepository.findByUsername(Username(username))
@@ -30,7 +36,7 @@ class ProfileCommands(
     }
 
     @Transactional
-    fun unfollowUser(username: String) {
+    override fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followee =
             userWriteRepository.findByUsername(Username(username))
@@ -38,4 +44,9 @@ class ProfileCommands(
 
         followRepository.unfollow(followerId, followee.id)
     }
+
+    override fun getProfileByUsername(
+        username: String,
+        viewerId: Long?,
+    ): ProfileReadModel? = profileReadRepository.findByUsername(username, viewerId)
 }

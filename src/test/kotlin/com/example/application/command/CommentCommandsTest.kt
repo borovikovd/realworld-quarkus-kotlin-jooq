@@ -1,8 +1,11 @@
 package com.example.application.command
 
+import com.example.application.inport.command.CommentCommands
 import com.example.application.outport.ArticleWriteRepository
+import com.example.application.outport.CommentReadRepository
 import com.example.application.outport.CommentWriteRepository
 import com.example.application.outport.CurrentUser
+import com.example.application.service.CommentApplicationService
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug
@@ -43,8 +46,9 @@ class CommentCommandsTest {
         commentWriteRepository = mockk()
         articleWriteRepository = mockk()
         currentUser = mockk()
-        commentCommands = CommentCommands(
+        commentCommands = CommentApplicationService(
             commentWriteRepository = commentWriteRepository,
+            commentReadRepository = mockk(relaxed = true),
             articleWriteRepository = articleWriteRepository,
             currentUser = currentUser,
         )

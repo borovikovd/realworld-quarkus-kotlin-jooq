@@ -24,13 +24,16 @@ com.example/
 │   ├── exception/                   # NotFound, Forbidden, Validation, …
 │   └── service/SlugGenerator.kt     # stateless domain service
 │
-├── application/                     # use cases, ports, read projections
-│   ├── command/XCommands.kt         # @Transactional write-side services (raw args, return ids)
-│   ├── query/
-│   │   ├── XQueries.kt              # @ApplicationScoped services; delegate to XReadRepository
-│   │   └── readmodel/XReadModel.kt  # use-case-shaped projections returned by queries
-│   └── port/outbound/               # XWriteRepository, XReadRepository, FollowRepository,
-│                                    # Clock, CurrentUser, PasswordHashing, TokenIssuer
+├── application/                     # use cases and ports
+│   ├── inport/
+│   │   ├── command/XCommands.kt     # inbound port interfaces — write side
+│   │   └── query/
+│   │       ├── XQueries.kt          # inbound port interfaces — read side
+│   │       └── readmodel/           # use-case-shaped projections returned by queries
+│   ├── outport/                     # XWriteRepository, XReadRepository, FollowRepository,
+│   │                                # Clock, CurrentUser, PasswordHashing, TokenIssuer
+│   └── service/
+│       └── XApplicationService.kt  # implements XCommands + XQueries; @ApplicationScoped
 │
 ├── infrastructure/                  # adapters
 │   ├── rest/<agg>/
@@ -61,17 +64,17 @@ No layer depends inward-to-outward. `domain` has zero framework imports.
 
 # Design decisions
 
-**CQRS-lite: commands vs queries.** The application layer is split into `command/` (mutations via aggregates + write repository) and `query/` (reads via direct jOOQ projections). Resources inject both and call whichever they need — no service mediates reads just to forward them. Command-side protects invariants through the aggregate; query-side projects exactly what the UI needs, bypassing the write model entirely.
+**CQRS-lite: commands vs queries.** The application layer separates write and read via inbound ports: `application/inport/command/XCommands` (mutations) and `application/inport/query/XQueries` (reads). Resources inject both interfaces. Command-side protects invariants through the aggregate; query-side projects exactly what the UI needs, bypassing the write model entirely.
 
-**Query services delegate to read repositories.** `XQueries` are concrete `@ApplicationScoped` services in `application/query/`, symmetrical to `XCommands` on the write side. They take plain method parameters, return `XReadModel` values, and forward to an outbound `XReadRepository` port. This keeps both sides consistent, leaves a seam for future read-path concerns (caching, multi-source composition, viewer enrichment), and avoids a separate DTO-per-method ceremony layer.
+**One ApplicationService per aggregate.** `XApplicationService` in `application/service/` implements both `XCommands` and `XQueries` for its aggregate. CDI resolves the single `@ApplicationScoped` bean for both interface injection points. `@Transactional` is declared per command method; query methods are unannotated.
 
 **jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1, no lazy loading, no entity graphs. The query side returns `*ReadModel` data classes built straight from result sets.
 
-**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/query/readmodel/` — they're application-owned response shapes produced by query services. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against REST-layer churn.
+**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/inport/query/readmodel/` — they're application-owned response shapes, the return types of query port methods. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against REST-layer churn.
 
 **Value objects for domain primitives.** `Email`, `Username`, `Slug`, `Title`, `ArticleId`, `UserId`, `CommentId`, `PasswordHash` — all `@JvmInline value class` with `init { require(...) }` invariants. Construction validates; domain code never sees unvalidated strings.
 
-**Ports & adapters.** The application layer declares what it needs as outbound ports in `application/port/outbound/` — write repositories (`UserWriteRepository`, `ArticleWriteRepository`, `CommentWriteRepository`, `FollowRepository`), read repositories (`ArticleReadRepository`, `CommentReadRepository`, `ProfileReadRepository`, `UserReadRepository`), and collaborators (`PasswordHashing`, `TokenIssuer`, `TokenVerifier`, `Clock`, `CurrentUser`). Infrastructure provides concrete implementations. Nothing in `domain/` imports Jakarta, Quarkus, JWT libraries, or jOOQ.
+**Ports & adapters.** The application layer has two port layers: `application/inport/` (driving ports — interfaces through which callers invoke use cases) and `application/outport/` (driven ports — interfaces through which the application reaches infrastructure). Inbound ports are split by concern: `inport/command/` for mutations, `inport/query/` for reads. Outbound ports cover write repositories, read repositories, and collaborators (`PasswordHashing`, `TokenIssuer`, `TokenVerifier`, `Clock`, `CurrentUser`). Nothing in `domain/` imports Jakarta, Quarkus, JWT libraries, or jOOQ.
 
 **Nullable returns over thrown exceptions in queries.** `ArticleQueries.getArticleBySlug(slug, viewerId): ArticleReadModel?` returns null for a miss. The resource decides when a missing result is a 404. Adapters don't guess at error semantics.
 

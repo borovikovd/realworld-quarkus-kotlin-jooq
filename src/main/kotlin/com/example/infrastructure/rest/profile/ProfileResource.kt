@@ -3,10 +3,10 @@ package com.example.infrastructure.rest.profile
 import com.example.api.ProfileApi
 import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
-import com.example.application.command.ProfileCommands
-import com.example.application.outport.CurrentUser
-import com.example.application.query.ProfileQueries
+import com.example.application.inport.command.ProfileCommands
+import com.example.application.inport.query.ProfileQueries
 import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.outport.CurrentUser
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

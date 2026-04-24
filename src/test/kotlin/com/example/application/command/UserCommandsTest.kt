@@ -1,8 +1,11 @@
 package com.example.application.command
 
+import com.example.application.inport.command.UserCommands
 import com.example.application.outport.Clock
 import com.example.application.outport.PasswordHashing
+import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
+import com.example.application.service.UserApplicationService
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
@@ -32,8 +35,9 @@ class UserCommandsTest {
         passwordHashing = mockk()
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
-        userCommands = UserCommands(
+        userCommands = UserApplicationService(
             userWriteRepository = userWriteRepository,
+            userReadRepository = mockk(relaxed = true),
             passwordHashing = passwordHashing,
             clock = clock,
         )

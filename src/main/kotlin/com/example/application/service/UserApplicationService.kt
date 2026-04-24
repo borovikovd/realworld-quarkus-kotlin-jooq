@@ -1,7 +1,11 @@
-package com.example.application.command
+package com.example.application.service
 
+import com.example.application.inport.command.UserCommands
+import com.example.application.inport.query.UserQueries
+import com.example.application.inport.query.readmodel.UserReadModel
 import com.example.application.outport.Clock
 import com.example.application.outport.PasswordHashing
+import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.User
@@ -16,15 +20,17 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class UserCommands(
+class UserApplicationService(
     private val userWriteRepository: UserWriteRepository,
+    private val userReadRepository: UserReadRepository,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
-) {
+) : UserCommands,
+    UserQueries {
     @Timed("user.registration")
     @Counted("user.registration.count")
     @Transactional
-    fun register(
+    override fun register(
         email: String,
         username: String,
         password: String,
@@ -63,7 +69,7 @@ class UserCommands(
     }
 
     @Timed("user.login")
-    fun login(
+    override fun login(
         email: String,
         password: String,
     ): Long {
@@ -86,7 +92,7 @@ class UserCommands(
     }
 
     @Transactional
-    fun updateUser(
+    override fun updateUser(
         userId: Long,
         email: String?,
         username: String?,
@@ -132,6 +138,8 @@ class UserCommands(
         return saved.id.value
     }
 
+    override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)
+
     private fun parseEmail(
         value: String,
         errors: MutableMap<String, List<String>>,
@@ -162,6 +170,6 @@ class UserCommands(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private val logger = LoggerFactory.getLogger(UserCommands::class.java)
+        private val logger = LoggerFactory.getLogger(UserApplicationService::class.java)
     }
 }

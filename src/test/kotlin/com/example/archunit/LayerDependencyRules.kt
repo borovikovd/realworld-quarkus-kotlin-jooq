@@ -46,6 +46,7 @@ class LayerDependencyRules {
                             !name.contains("Resource") &&
                             !name.contains("Queries") &&
                             !name.contains("Commands") &&
+                            !name.contains("ApplicationService") &&
                             !name.startsWith("Jooq") &&
                             !input.fullName.contains("Jooq") &&
                             !input.packageName.contains(".jooq")

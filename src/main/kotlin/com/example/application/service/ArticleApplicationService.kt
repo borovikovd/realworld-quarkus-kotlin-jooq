@@ -1,5 +1,9 @@
-package com.example.application.command
+package com.example.application.service
 
+import com.example.application.inport.command.ArticleCommands
+import com.example.application.inport.query.ArticleQueries
+import com.example.application.inport.query.readmodel.ArticleReadModel
+import com.example.application.outport.ArticleReadRepository
 import com.example.application.outport.ArticleWriteRepository
 import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
@@ -15,14 +19,16 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class ArticleCommands(
+class ArticleApplicationService(
     private val articleWriteRepository: ArticleWriteRepository,
+    private val articleReadRepository: ArticleReadRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
-) {
+) : ArticleCommands,
+    ArticleQueries {
     @Counted("article.creation.count")
     @Transactional
-    fun createArticle(
+    override fun createArticle(
         title: String,
         description: String,
         body: String,
@@ -52,7 +58,7 @@ class ArticleCommands(
     }
 
     @Transactional
-    fun updateArticle(
+    override fun updateArticle(
         slug: String,
         title: String?,
         description: String?,
@@ -92,7 +98,7 @@ class ArticleCommands(
     }
 
     @Transactional
-    fun deleteArticle(slug: String) {
+    override fun deleteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleWriteRepository.findBySlug(Slug(slug))
@@ -107,7 +113,7 @@ class ArticleCommands(
     }
 
     @Transactional
-    fun favoriteArticle(slug: String) {
+    override fun favoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleWriteRepository.findBySlug(Slug(slug))
@@ -117,7 +123,7 @@ class ArticleCommands(
     }
 
     @Transactional
-    fun unfavoriteArticle(slug: String) {
+    override fun unfavoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
             articleWriteRepository.findBySlug(Slug(slug))
@@ -125,6 +131,41 @@ class ArticleCommands(
 
         articleWriteRepository.unfavorite(article.id, userId)
     }
+
+    override fun getArticleById(
+        id: Long,
+        viewerId: Long?,
+    ): ArticleReadModel? = articleReadRepository.findById(id, viewerId)
+
+    override fun getArticleBySlug(
+        slug: String,
+        viewerId: Long?,
+    ): ArticleReadModel? = articleReadRepository.findBySlug(slug, viewerId)
+
+    override fun getArticles(
+        tag: String?,
+        author: String?,
+        favorited: String?,
+        limit: Int,
+        offset: Int,
+        viewerId: Long?,
+    ): List<ArticleReadModel> = articleReadRepository.list(tag, author, favorited, limit, offset, viewerId)
+
+    override fun getArticlesFeed(
+        viewerId: Long,
+        limit: Int,
+        offset: Int,
+    ): List<ArticleReadModel> = articleReadRepository.listFeed(viewerId, limit, offset)
+
+    override fun countArticles(
+        tag: String?,
+        author: String?,
+        favorited: String?,
+    ): Int = articleReadRepository.count(tag, author, favorited)
+
+    override fun countArticlesFeed(viewerId: Long): Int = articleReadRepository.countFeed(viewerId)
+
+    override fun getAllTags(): List<String> = articleReadRepository.allTags()
 
     private fun validateArticleFields(
         title: String?,
@@ -139,6 +180,6 @@ class ArticleCommands(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArticleCommands::class.java)
+        private val logger = LoggerFactory.getLogger(ArticleApplicationService::class.java)
     }
 }

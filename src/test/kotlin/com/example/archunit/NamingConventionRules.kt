@@ -29,13 +29,39 @@ class NamingConventionRules {
             .because("REST resource classes should be @ApplicationScoped CDI beans")
 
     @ArchTest
-    val `application commands should end with Commands` =
+    val `inbound command ports should be interfaces ending with Commands` =
         classes()
-            .that().resideInAPackage("..application.command..")
-            .and().areNotInterfaces()
+            .that().resideInAPackage("..application.inport.command..")
             .and().areTopLevelClasses()
-            .should().haveSimpleNameEndingWith("Commands")
-            .because("Command-side application classes should be named *Commands")
+            .should().beInterfaces()
+            .andShould().haveSimpleNameEndingWith("Commands")
+            .because("Inbound command ports are contracts — interfaces named *Commands")
+
+    @ArchTest
+    val `inbound query ports should be interfaces ending with Queries` =
+        classes()
+            .that().resideInAPackage("..application.inport.query")
+            .and().areTopLevelClasses()
+            .should().beInterfaces()
+            .andShould().haveSimpleNameEndingWith("Queries")
+            .because("Inbound query ports are contracts — interfaces named *Queries")
+
+    @ArchTest
+    val `application services should be concrete and end with ApplicationService` =
+        classes()
+            .that().resideInAPackage("..application.service..")
+            .and().areTopLevelClasses()
+            .should().notBeInterfaces()
+            .andShould().haveSimpleNameEndingWith("ApplicationService")
+            .because("Use-case implementations are concrete classes named *ApplicationService")
+
+    @ArchTest
+    val `outbound ports should be interfaces` =
+        classes()
+            .that().resideInAPackage("..application.outport..")
+            .and().areTopLevelClasses()
+            .should().beInterfaces()
+            .because("Outbound ports are contracts implemented by infrastructure adapters")
 
     @ArchTest
     val `exceptions should end with Exception` =
@@ -53,20 +79,4 @@ class NamingConventionRules {
             .and().haveSimpleNameContaining("Mapper")
             .should().haveSimpleNameEndingWith("ExceptionMapper")
             .because("JAX-RS exception mappers should be named *ExceptionMapper")
-
-    @ArchTest
-    val `query services should end with Queries` =
-        classes()
-            .that().resideInAPackage("..application.query")
-            .and().areTopLevelClasses()
-            .should().haveSimpleNameEndingWith("Queries")
-            .because("Read-side application services should be named *Queries")
-
-    @ArchTest
-    val `outbound read repositories should be interfaces` =
-        classes()
-            .that().resideInAPackage("..application.port.outbound..")
-            .and().haveSimpleNameEndingWith("ReadRepository")
-            .should().beInterfaces()
-            .because("Outbound read repository ports are contracts implemented by infrastructure adapters")
 }

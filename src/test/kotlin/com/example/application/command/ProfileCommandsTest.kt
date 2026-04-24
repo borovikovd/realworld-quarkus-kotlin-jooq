@@ -1,8 +1,11 @@
 package com.example.application.command
 
+import com.example.application.inport.command.ProfileCommands
 import com.example.application.outport.CurrentUser
 import com.example.application.outport.FollowRepository
+import com.example.application.outport.ProfileReadRepository
 import com.example.application.outport.UserWriteRepository
+import com.example.application.service.ProfileApplicationService
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
@@ -29,9 +32,10 @@ class ProfileCommandsTest {
         userWriteRepository = mockk()
         followRepository = mockk()
         currentUser = mockk()
-        profileCommands = ProfileCommands(
+        profileCommands = ProfileApplicationService(
             userWriteRepository = userWriteRepository,
             followRepository = followRepository,
+            profileReadRepository = mockk(relaxed = true),
             currentUser = currentUser,
         )
     }

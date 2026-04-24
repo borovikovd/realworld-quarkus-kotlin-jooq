@@ -5,11 +5,11 @@ import com.example.api.model.CreateArticleComment200Response
 import com.example.api.model.CreateArticleCommentRequest
 import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
-import com.example.application.command.CommentCommands
-import com.example.application.outport.CurrentUser
-import com.example.application.query.CommentQueries
+import com.example.application.inport.command.CommentCommands
+import com.example.application.inport.query.CommentQueries
 import com.example.application.inport.query.readmodel.CommentReadModel
 import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.outport.CurrentUser
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

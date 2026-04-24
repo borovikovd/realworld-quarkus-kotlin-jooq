@@ -5,11 +5,11 @@ import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
 import com.example.api.model.UpdateCurrentUserRequest
-import com.example.application.command.UserCommands
+import com.example.application.inport.command.UserCommands
+import com.example.application.inport.query.UserQueries
+import com.example.application.inport.query.readmodel.UserReadModel
 import com.example.application.outport.CurrentUser
 import com.example.application.outport.TokenIssuer
-import com.example.application.query.UserQueries
-import com.example.application.inport.query.readmodel.UserReadModel
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

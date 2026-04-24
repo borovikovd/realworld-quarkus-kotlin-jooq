@@ -1,5 +1,8 @@
 package com.example.application.command
 
+import com.example.application.inport.command.ArticleCommands
+import com.example.application.outport.ArticleReadRepository
+import com.example.application.service.ArticleApplicationService
 import com.example.application.outport.ArticleWriteRepository
 import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
@@ -37,8 +40,9 @@ class ArticleCommandsTest {
         clock = mockk()
         every { clock.now() } returns OffsetDateTime.now()
         mockkObject(SlugGenerator)
-        articleCommands = ArticleCommands(
+        articleCommands = ArticleApplicationService(
             articleWriteRepository = articleWriteRepository,
+            articleReadRepository = mockk(relaxed = true),
             currentUser = currentUser,
             clock = clock,
         )

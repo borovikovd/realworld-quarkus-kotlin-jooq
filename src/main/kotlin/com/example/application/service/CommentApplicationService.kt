@@ -1,6 +1,10 @@
-package com.example.application.command
+package com.example.application.service
 
+import com.example.application.inport.command.CommentCommands
+import com.example.application.inport.query.CommentQueries
+import com.example.application.inport.query.readmodel.CommentReadModel
 import com.example.application.outport.ArticleWriteRepository
+import com.example.application.outport.CommentReadRepository
 import com.example.application.outport.CommentWriteRepository
 import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.article.Slug
@@ -14,13 +18,15 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class CommentCommands(
+class CommentApplicationService(
     private val commentWriteRepository: CommentWriteRepository,
+    private val commentReadRepository: CommentReadRepository,
     private val articleWriteRepository: ArticleWriteRepository,
     private val currentUser: CurrentUser,
-) {
+) : CommentCommands,
+    CommentQueries {
     @Transactional
-    fun addComment(
+    override fun addComment(
         articleSlug: String,
         body: String,
     ): Long {
@@ -46,7 +52,7 @@ class CommentCommands(
     }
 
     @Transactional
-    fun deleteComment(
+    override fun deleteComment(
         articleSlug: String,
         commentId: Long,
     ) {
@@ -71,7 +77,17 @@ class CommentCommands(
         logger.info("Comment deleted: commentId={}", commentId)
     }
 
+    override fun getCommentById(
+        id: Long,
+        viewerId: Long?,
+    ): CommentReadModel? = commentReadRepository.findById(id, viewerId)
+
+    override fun getCommentsBySlug(
+        slug: String,
+        viewerId: Long?,
+    ): List<CommentReadModel> = commentReadRepository.findByArticleSlug(slug, viewerId)
+
     companion object {
-        private val logger = LoggerFactory.getLogger(CommentCommands::class.java)
+        private val logger = LoggerFactory.getLogger(CommentApplicationService::class.java)
     }
 }
