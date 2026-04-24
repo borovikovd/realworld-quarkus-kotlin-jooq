@@ -1,5 +1,6 @@
-# Build output
+# Build output (exclude everything except the native runner binary)
 build/
+!build/*-runner
 .gradle/
 .quarkus/
 
