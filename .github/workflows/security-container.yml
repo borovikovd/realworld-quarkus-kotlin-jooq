@@ -37,7 +37,7 @@ jobs:
           cache: "gradle"
 
       - name: Build native image
-        run: chmod +x gradlew && ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true -Dquarkus.container-image.tag=scan --no-daemon
+        run: chmod +x gradlew && ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true -Dquarkus.package.jar.enabled=false -Dquarkus.container-image.build=true -Dquarkus.container-image.tag=scan --no-daemon
         env:
           QUARKUS_CONTAINER_IMAGE_NAME: realworld-api
 

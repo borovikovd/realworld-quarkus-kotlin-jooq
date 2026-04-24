@@ -12,7 +12,7 @@ COPY db db
 COPY src src
 
 RUN chmod +x gradlew && \
-    ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=false --no-daemon
+    ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=false -Dquarkus.package.jar.enabled=false --no-daemon
 
 FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
 
