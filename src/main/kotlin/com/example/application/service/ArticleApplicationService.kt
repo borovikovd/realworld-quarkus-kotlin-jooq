@@ -8,7 +8,11 @@ import com.example.application.outport.ArticleWriteRepository
 import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.article.Article
+import com.example.domain.aggregate.article.Body
+import com.example.domain.aggregate.article.Description
 import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.article.Tag
+import com.example.domain.aggregate.article.Title
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
@@ -47,11 +51,11 @@ class ArticleApplicationService(
             Article(
                 id = articleId,
                 slug = slug,
-                title = title,
-                description = description,
-                body = body,
+                title = Title(title),
+                description = Description(description),
+                body = Body(body),
                 authorId = userId,
-                tags = tags.toSet(),
+                tags = tags.map { Tag(it) }.toSet(),
             )
         articleWriteRepository.create(article)
         return articleId.value
@@ -75,12 +79,12 @@ class ArticleApplicationService(
 
         validateArticleFields(title, description, body)
 
-        val updatedTitle = title ?: article.title
-        val updatedDescription = description ?: article.description
-        val updatedBody = body ?: article.body
+        val updatedTitle = title?.let { Title(it) } ?: article.title
+        val updatedDescription = description?.let { Description(it) } ?: article.description
+        val updatedBody = body?.let { Body(it) } ?: article.body
 
         val updatedSlug =
-            if (title != null && title != article.title) {
+            if (title != null && title != article.title.value) {
                 SlugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidate ->

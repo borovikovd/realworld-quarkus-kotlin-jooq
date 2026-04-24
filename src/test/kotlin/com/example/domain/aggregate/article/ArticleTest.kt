@@ -15,19 +15,19 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("test-article"),
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = UserId(1L),
-                tags = setOf("tag1", "tag2"),
+                tags = setOf(Tag("tag1"), Tag("tag2")),
             )
 
         assertEquals("test-article", article.slug.value)
-        assertEquals("Test Article", article.title)
-        assertEquals("Test description", article.description)
-        assertEquals("Test body", article.body)
+        assertEquals("Test Article", article.title.value)
+        assertEquals("Test description", article.description.value)
+        assertEquals("Test body", article.body.value)
         assertEquals(UserId(1L), article.authorId)
-        assertEquals(setOf("tag1", "tag2"), article.tags)
+        assertEquals(setOf(Tag("tag1"), Tag("tag2")), article.tags)
     }
 
     @Test
@@ -37,9 +37,9 @@ class ArticleTest {
                 Article(
                     id = ArticleId(1L),
                     slug = Slug("test-article"),
-                    title = "",
-                    description = "Test description",
-                    body = "Test body",
+                    title = Title(""),
+                    description = Description("Test description"),
+                    body = Body("Test body"),
                     authorId = UserId(1L),
                 )
             }
@@ -54,9 +54,9 @@ class ArticleTest {
                 Article(
                     id = ArticleId(1L),
                     slug = Slug("test-article"),
-                    title = "Test Article",
-                    description = "",
-                    body = "Test body",
+                    title = Title("Test Article"),
+                    description = Description(""),
+                    body = Body("Test body"),
                     authorId = UserId(1L),
                 )
             }
@@ -71,9 +71,9 @@ class ArticleTest {
                 Article(
                     id = ArticleId(1L),
                     slug = Slug("test-article"),
-                    title = "Test Article",
-                    description = "Test description",
-                    body = "",
+                    title = Title("Test Article"),
+                    description = Description("Test description"),
+                    body = Body(""),
                     authorId = UserId(1L),
                 )
             }
@@ -87,9 +87,9 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("original-slug"),
-                title = "Original Title",
-                description = "Original description",
-                body = "Original body",
+                title = Title("Original Title"),
+                description = Description("Original description"),
+                body = Body("Original body"),
                 authorId = UserId(1L),
                 createdAt = OffsetDateTime.now().minusDays(1),
                 updatedAt = OffsetDateTime.now().minusDays(1),
@@ -98,16 +98,16 @@ class ArticleTest {
         val updatedArticle =
             originalArticle.update(
                 slug = Slug("updated-slug"),
-                title = "Updated Title",
-                description = "Updated description",
-                body = "Updated body",
+                title = Title("Updated Title"),
+                description = Description("Updated description"),
+                body = Body("Updated body"),
                 updatedAt = OffsetDateTime.now(),
             )
 
         assertEquals("updated-slug", updatedArticle.slug.value)
-        assertEquals("Updated Title", updatedArticle.title)
-        assertEquals("Updated description", updatedArticle.description)
-        assertEquals("Updated body", updatedArticle.body)
+        assertEquals("Updated Title", updatedArticle.title.value)
+        assertEquals("Updated description", updatedArticle.description.value)
+        assertEquals("Updated body", updatedArticle.body.value)
         assertTrue(updatedArticle.updatedAt.isAfter(originalArticle.updatedAt))
     }
 
@@ -117,9 +117,9 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("test-article"),
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = UserId(1L),
             )
 
@@ -132,9 +132,9 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("test-article"),
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = UserId(1L),
             )
 
@@ -147,9 +147,9 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("slug-1"),
-                title = "Title 1",
-                description = "Desc 1",
-                body = "Body 1",
+                title = Title("Title 1"),
+                description = Description("Desc 1"),
+                body = Body("Body 1"),
                 authorId = UserId(1L),
             )
 
@@ -157,9 +157,9 @@ class ArticleTest {
             Article(
                 id = ArticleId(1L),
                 slug = Slug("slug-2"),
-                title = "Title 2",
-                description = "Desc 2",
-                body = "Body 2",
+                title = Title("Title 2"),
+                description = Description("Desc 2"),
+                body = Body("Body 2"),
                 authorId = UserId(2L),
             )
 

@@ -1,4 +1,4 @@
-package com.example.application.command
+package com.example.application.inport.command
 
 import com.example.application.inport.command.UserCommands
 import com.example.application.outport.Clock

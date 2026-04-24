@@ -9,25 +9,19 @@ import java.time.OffsetDateTime
 class Article(
     override val id: ArticleId,
     val slug: Slug,
-    val title: String,
-    val description: String,
-    val body: String,
+    val title: Title,
+    val description: Description,
+    val body: Body,
     val authorId: UserId,
-    val tags: Set<String> = emptySet(),
+    val tags: Set<Tag> = emptySet(),
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
     val updatedAt: OffsetDateTime = OffsetDateTime.now(),
 ) : Entity<ArticleId>() {
-    init {
-        require(title.isNotBlank()) { "Title must not be blank" }
-        require(description.isNotBlank()) { "Description must not be blank" }
-        require(body.isNotBlank()) { "Body must not be blank" }
-    }
-
     fun update(
         slug: Slug,
-        title: String,
-        description: String,
-        body: String,
+        title: Title,
+        description: Description,
+        body: Body,
         updatedAt: OffsetDateTime,
     ): Article =
         Article(

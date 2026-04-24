@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.infrastructure.ratelimit
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine

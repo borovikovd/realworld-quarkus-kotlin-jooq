@@ -3,7 +3,11 @@ package com.example.infrastructure.persistence.jooq.article
 import com.example.application.outport.ArticleWriteRepository
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.article.Body
+import com.example.domain.aggregate.article.Description
 import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.article.Tag
+import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.user.UserId
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
@@ -30,9 +34,9 @@ class JooqArticleWriteRepository(
             .insertInto(ARTICLES)
             .set(ARTICLES.ID, entity.id.value)
             .set(ARTICLES.SLUG, entity.slug.value)
-            .set(ARTICLES.TITLE, entity.title)
-            .set(ARTICLES.DESCRIPTION, entity.description)
-            .set(ARTICLES.BODY, entity.body)
+            .set(ARTICLES.TITLE, entity.title.value)
+            .set(ARTICLES.DESCRIPTION, entity.description.value)
+            .set(ARTICLES.BODY, entity.body.value)
             .set(ARTICLES.AUTHOR_ID, entity.authorId.value)
             .set(ARTICLES.CREATED_AT, entity.createdAt)
             .set(ARTICLES.UPDATED_AT, entity.updatedAt)
@@ -47,9 +51,9 @@ class JooqArticleWriteRepository(
         dsl
             .update(ARTICLES)
             .set(ARTICLES.SLUG, entity.slug.value)
-            .set(ARTICLES.TITLE, entity.title)
-            .set(ARTICLES.DESCRIPTION, entity.description)
-            .set(ARTICLES.BODY, entity.body)
+            .set(ARTICLES.TITLE, entity.title.value)
+            .set(ARTICLES.DESCRIPTION, entity.description.value)
+            .set(ARTICLES.BODY, entity.body.value)
             .set(ARTICLES.UPDATED_AT, entity.updatedAt)
             .where(ARTICLES.ID.eq(entity.id.value))
             .execute()
@@ -66,18 +70,18 @@ class JooqArticleWriteRepository(
 
     private fun saveTags(
         articleId: ArticleId,
-        tags: Set<String>,
+        tags: Set<Tag>,
     ) {
         if (tags.isEmpty()) return
 
         val tagInserts =
-            tags.map { tagName ->
+            tags.map { tag ->
                 dsl
                     .insertInto(TAGS)
-                    .set(TAGS.NAME, tagName)
+                    .set(TAGS.NAME, tag.value)
                     .onConflict(TAGS.NAME)
                     .doUpdate()
-                    .set(TAGS.NAME, tagName)
+                    .set(TAGS.NAME, tag.value)
             }
         dsl.batch(tagInserts).execute()
 
@@ -85,13 +89,13 @@ class JooqArticleWriteRepository(
             dsl
                 .select(TAGS.ID, TAGS.NAME)
                 .from(TAGS)
-                .where(TAGS.NAME.`in`(tags))
+                .where(TAGS.NAME.`in`(tags.map { it.value }))
                 .fetch()
                 .associate { it.value2()!! to it.value1()!! }
 
         val articleTagInserts =
-            tags.mapNotNull { tagName ->
-                tagIds[tagName]?.let { tagId ->
+            tags.mapNotNull { tag ->
+                tagIds[tag.value]?.let { tagId ->
                     dsl
                         .insertInto(ARTICLE_TAGS)
                         .set(ARTICLE_TAGS.ARTICLE_ID, articleId.value)
@@ -158,11 +162,11 @@ class JooqArticleWriteRepository(
         return Article(
             id = ArticleId(record.id!!),
             slug = Slug(record.slug!!),
-            title = record.title!!,
-            description = record.description!!,
-            body = record.body!!,
+            title = Title(record.title!!),
+            description = Description(record.description!!),
+            body = Body(record.body!!),
             authorId = UserId(record.authorId!!),
-            tags = tags.toSet(),
+            tags = tags.map { Tag(it) }.toSet(),
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )

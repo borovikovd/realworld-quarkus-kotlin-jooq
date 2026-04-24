@@ -1,4 +1,4 @@
-package com.example.application.command
+package com.example.application.inport.command
 
 import com.example.application.inport.command.CommentCommands
 import com.example.application.outport.ArticleWriteRepository
@@ -8,7 +8,10 @@ import com.example.application.outport.CurrentUser
 import com.example.application.service.CommentApplicationService
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.article.Body
+import com.example.domain.aggregate.article.Description
 import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
@@ -35,9 +38,9 @@ class CommentCommandsTest {
     private val article = Article(
         id = articleId,
         slug = slug,
-        title = "Test Article",
-        description = "desc",
-        body = "body",
+        title = Title("Test Article"),
+        description = Description("desc"),
+        body = Body("body"),
         authorId = UserId(2L),
     )
 

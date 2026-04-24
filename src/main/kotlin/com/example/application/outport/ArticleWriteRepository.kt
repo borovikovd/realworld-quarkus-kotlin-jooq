@@ -1,6 +1,5 @@
 package com.example.application.outport
 
-import com.example.domain.Repository
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug

@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.infrastructure.logging
 
 import com.example.application.outport.CurrentUser
 import jakarta.enterprise.context.ApplicationScoped

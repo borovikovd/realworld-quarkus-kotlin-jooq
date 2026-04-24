@@ -1,4 +1,4 @@
-package com.example.application.command
+package com.example.application.inport.command
 
 import com.example.application.inport.command.ArticleCommands
 import com.example.application.outport.ArticleReadRepository
@@ -8,7 +8,10 @@ import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.article.Body
+import com.example.domain.aggregate.article.Description
 import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
@@ -87,9 +90,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Original Title",
-                description = "Original description",
-                body = "Original body",
+                title = Title("Original Title"),
+                description = Description("Original description"),
+                body = Body("Original body"),
                 authorId = userId,
             )
 
@@ -148,9 +151,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = originalSlug,
-                title = "Original Title",
-                description = "Original description",
-                body = "Original body",
+                title = Title("Original Title"),
+                description = Description("Original description"),
+                body = Body("Original body"),
                 authorId = userId,
             )
 
@@ -184,9 +187,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Original Title",
-                description = "Original description",
-                body = "Original body",
+                title = Title("Original Title"),
+                description = Description("Original description"),
+                body = Body("Original body"),
                 authorId = userId,
             )
 
@@ -226,9 +229,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = differentUserId,
             )
 
@@ -250,9 +253,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = userId,
             )
 
@@ -290,9 +293,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = differentUserId,
             )
 
@@ -314,9 +317,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = UserId(2L),
             )
 
@@ -353,9 +356,9 @@ class ArticleCommandsTest {
             Article(
                 id = ArticleId(1L),
                 slug = slug,
-                title = "Test Article",
-                description = "Test description",
-                body = "Test body",
+                title = Title("Test Article"),
+                description = Description("Test description"),
+                body = Body("Test body"),
                 authorId = UserId(2L),
             )
 

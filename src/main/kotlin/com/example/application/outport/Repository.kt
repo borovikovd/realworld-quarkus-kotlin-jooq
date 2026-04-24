@@ -1,4 +1,6 @@
-package com.example.domain
+package com.example.application.outport
+
+import com.example.domain.Entity
 
 interface Repository<T : Entity<ID>, ID> {
     fun nextId(): ID

@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.infrastructure.ratelimit
 
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerRequestContext

@@ -1,6 +1,5 @@
 package com.example.application.outport
 
-import com.example.domain.Repository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId

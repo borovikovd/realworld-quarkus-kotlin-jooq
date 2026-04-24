@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.infrastructure.ratelimit
 
 import java.time.Duration
 import kotlin.test.Test
