@@ -64,6 +64,9 @@ dependencies {
     // Rate limiting
     implementation("io.quarkus:quarkus-caffeine")
 
+    // Container image (native build via Quarkus tools)
+    implementation("io.quarkus:quarkus-container-image-docker")
+
     // External dependencies
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("io.swagger:swagger-annotations:1.6.16")
