@@ -19,9 +19,9 @@ services:
       - realworld
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Build image first:
+    # ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true -Dquarkus.package.jar.enabled=false -Dquarkus.container-image.build=true
+    image: realworld-api:latest
     container_name: realworld-api
     ports:
       - "8080:8080"
