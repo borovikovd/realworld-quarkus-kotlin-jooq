@@ -23,4 +23,4 @@ COPY --from=builder --chown=1001:root --chmod=0755 /build/build/*-runner /work/a
 EXPOSE 8080
 USER 1001
 
-ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]
+ENTRYPOINT ["/work/application", "-Dquarkus.http.host=0.0.0.0"]
