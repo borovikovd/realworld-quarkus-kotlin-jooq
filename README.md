@@ -17,32 +17,35 @@ For more information on how this works with other frontends/backends, head over 
 ```
 com.example/
 ├── domain/                          # pure business model — no framework code
-│   ├── Entity.kt, AggregateRoot.kt, ValueObject.kt, Repository.kt
+│   ├── Entity.kt, AggregateRoot.kt, ValueObject.kt   # DDD building blocks
 │   ├── aggregate/<agg>/             # article, comment, user
 │   │   ├── Article.kt               # aggregate root
-│   │   ├── ArticleId.kt, Slug.kt, Title.kt, …   # value objects
+│   │   └── ArticleId.kt, Slug.kt, Title.kt, …        # value objects
 │   ├── exception/                   # NotFound, Forbidden, Validation, …
 │   └── service/SlugGenerator.kt     # stateless domain service
 │
 ├── application/                     # use cases and ports
 │   ├── inport/
 │   │   ├── command/XCommands.kt     # inbound port interfaces — write side
-│   │   └── query/
-│   │       ├── XQueries.kt          # inbound port interfaces — read side
-│   │       └── readmodel/           # use-case-shaped projections returned by queries
-│   ├── outport/                     # XWriteRepository, XReadRepository, FollowRepository,
-│   │                                # Clock, CurrentUser, PasswordHashing, TokenIssuer
+│   │   └── query/XQueries.kt        # inbound port interfaces — read side
+│   ├── readmodel/                   # use-case-shaped projections returned by queries
+│   ├── outport/                     # Repository, XWriteRepository, XReadRepository,
+│   │                                # FollowWriteRepository, Clock, CurrentUser,
+│   │                                # PasswordHashing, TokenIssuer
 │   └── service/
 │       └── XApplicationService.kt  # implements XCommands + XQueries; @ApplicationScoped
 │
 ├── infrastructure/                  # adapters
-│   ├── rest/<agg>/
-│   │   └── ArticleResource.kt       # JAX-RS, implements generated OpenAPI interface
+│   ├── rest/
+│   │   ├── <agg>/XResource.kt       # JAX-RS, implements generated OpenAPI interface
+│   │   └── exception/               # JAX-RS exception mappers + response filters
 │   ├── persistence/jooq/<agg>/
 │   │   ├── JooqArticleWriteRepository.kt  # implements ArticleWriteRepository
 │   │   └── JooqArticleReadRepository.kt   # implements ArticleReadRepository w/ multiset
-│   ├── security/                    # JWT, Argon2id, rate limiter, logging MDC
-│   ├── web/                         # JAX-RS exception mappers + filters
+│   ├── security/                    # JWT adapters (JwtCurrentUser, JwtTokenIssuer),
+│   │                                # Argon2id password hashing
+│   ├── ratelimit/                   # in-process rate limiter + JAX-RS filter
+│   ├── logging/                     # MDC request filter
 │   └── time/SystemClock.kt
 │
 ├── api/                             # OpenAPI-generated interfaces + DTOs (build/)
@@ -70,7 +73,7 @@ No layer depends inward-to-outward. `domain` has zero framework imports.
 
 **jOOQ over Hibernate.** Full control over SQL. `multiset()` fetches nested collections (tags, author profile, favorite counts) in a single query — no N+1, no lazy loading, no entity graphs. The query side returns `*ReadModel` data classes built straight from result sets.
 
-**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/inport/query/readmodel/` — they're application-owned response shapes, the return types of query port methods. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Keeping them out of `domain/` keeps the write model stable against REST-layer churn.
+**Read models are not domain.** `ArticleReadModel`, `ProfileReadModel`, etc. live in `application/readmodel/` — they're application-owned response shapes, the return types of query port methods. They're use-case-shaped projections (viewer-relative `favorited` / `following` flags, cross-aggregate denormalization) — not aggregates and not subject to invariants. Shared between inports and outports, so they sit at the `application/` root rather than nested under `inport/query/`. Keeping them out of `domain/` keeps the write model stable against REST-layer churn.
 
 **Value objects for domain primitives.** `Email`, `Username`, `Slug`, `Title`, `ArticleId`, `UserId`, `CommentId`, `PasswordHash` — all `@JvmInline value class` with `init { require(...) }` invariants. Construction validates; domain code never sees unvalidated strings.
 
@@ -107,7 +110,7 @@ Swagger UI: http://localhost:8080/swagger-ui/
 
 ```bash
 ./gradlew build                                              # compile + tests + linting + spotbugs
-./gradlew test --tests com.example.application.command.*    # unit tests only
+./gradlew test --tests com.example.application.inport.command.*   # unit tests only
 ./gradlew test --tests com.example.archunit.*               # architecture tests only
 ```
 
