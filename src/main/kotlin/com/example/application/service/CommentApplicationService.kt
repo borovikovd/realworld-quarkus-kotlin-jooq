@@ -2,7 +2,7 @@ package com.example.application.service
 
 import com.example.application.inport.command.CommentCommands
 import com.example.application.inport.query.CommentQueries
-import com.example.application.inport.query.readmodel.CommentReadModel
+import com.example.application.readmodel.CommentReadModel
 import com.example.application.outport.ArticleWriteRepository
 import com.example.application.outport.CommentReadRepository
 import com.example.application.outport.CommentWriteRepository

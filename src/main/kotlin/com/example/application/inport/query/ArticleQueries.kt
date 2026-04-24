@@ -1,6 +1,6 @@
 package com.example.application.inport.query
 
-import com.example.application.inport.query.readmodel.ArticleReadModel
+import com.example.application.readmodel.ArticleReadModel
 
 interface ArticleQueries {
     fun getArticleById(

@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.readmodel.ProfileReadModel
 import com.example.application.outport.ProfileReadRepository
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USERS

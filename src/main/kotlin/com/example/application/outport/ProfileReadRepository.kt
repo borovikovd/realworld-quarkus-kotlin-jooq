@@ -1,6 +1,6 @@
 package com.example.application.outport
 
-import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.readmodel.ProfileReadModel
 
 interface ProfileReadRepository {
     fun findByUsername(

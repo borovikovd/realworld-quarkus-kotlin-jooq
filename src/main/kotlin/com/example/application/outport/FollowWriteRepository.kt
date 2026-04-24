@@ -2,7 +2,7 @@ package com.example.application.outport
 
 import com.example.domain.aggregate.user.UserId
 
-interface FollowRepository {
+interface FollowWriteRepository {
     fun follow(
         followerId: UserId,
         followeeId: UserId,
@@ -12,9 +12,4 @@ interface FollowRepository {
         followerId: UserId,
         followeeId: UserId,
     )
-
-    fun isFollowing(
-        followerId: UserId,
-        followeeId: UserId,
-    ): Boolean
 }

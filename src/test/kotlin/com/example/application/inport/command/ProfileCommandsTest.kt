@@ -2,7 +2,7 @@ package com.example.application.inport.command
 
 import com.example.application.inport.command.ProfileCommands
 import com.example.application.outport.CurrentUser
-import com.example.application.outport.FollowRepository
+import com.example.application.outport.FollowWriteRepository
 import com.example.application.outport.ProfileReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.application.service.ProfileApplicationService
@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 class ProfileCommandsTest {
     private lateinit var profileCommands: ProfileCommands
     private lateinit var userWriteRepository: UserWriteRepository
-    private lateinit var followRepository: FollowRepository
+    private lateinit var followRepository: FollowWriteRepository
     private lateinit var currentUser: CurrentUser
 
     @BeforeEach

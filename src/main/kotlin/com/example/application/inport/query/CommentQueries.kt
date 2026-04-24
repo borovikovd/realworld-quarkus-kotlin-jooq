@@ -1,6 +1,6 @@
 package com.example.application.inport.query
 
-import com.example.application.inport.query.readmodel.CommentReadModel
+import com.example.application.readmodel.CommentReadModel
 
 interface CommentQueries {
     fun getCommentById(

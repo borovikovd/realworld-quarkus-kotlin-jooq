@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.inport.query.readmodel.CommentReadModel
-import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.readmodel.CommentReadModel
+import com.example.application.readmodel.ProfileReadModel
 import com.example.application.outport.CommentReadRepository
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS

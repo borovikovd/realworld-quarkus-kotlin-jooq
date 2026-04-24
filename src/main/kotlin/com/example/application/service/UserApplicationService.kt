@@ -2,7 +2,7 @@ package com.example.application.service
 
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
-import com.example.application.inport.query.readmodel.UserReadModel
+import com.example.application.readmodel.UserReadModel
 import com.example.application.outport.Clock
 import com.example.application.outport.PasswordHashing
 import com.example.application.outport.UserReadRepository

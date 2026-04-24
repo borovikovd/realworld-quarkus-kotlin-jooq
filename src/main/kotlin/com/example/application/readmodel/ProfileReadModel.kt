@@ -1,4 +1,4 @@
-package com.example.application.inport.query.readmodel
+package com.example.application.readmodel
 
 data class ProfileReadModel(
     val username: String,

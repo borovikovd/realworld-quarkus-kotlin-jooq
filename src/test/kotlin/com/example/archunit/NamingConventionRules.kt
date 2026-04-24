@@ -75,7 +75,7 @@ class NamingConventionRules {
     @ArchTest
     val `exception mappers should end with ExceptionMapper` =
         classes()
-            .that().resideInAnyPackage("..exceptions..", "..infrastructure.web..")
+            .that().resideInAnyPackage("..exceptions..", "..infrastructure.rest.exception..")
             .and().haveSimpleNameContaining("Mapper")
             .should().haveSimpleNameEndingWith("ExceptionMapper")
             .because("JAX-RS exception mappers should be named *ExceptionMapper")

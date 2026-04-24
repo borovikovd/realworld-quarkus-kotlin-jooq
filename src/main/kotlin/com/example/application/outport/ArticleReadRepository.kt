@@ -1,6 +1,6 @@
 package com.example.application.outport
 
-import com.example.application.inport.query.readmodel.ArticleReadModel
+import com.example.application.readmodel.ArticleReadModel
 
 interface ArticleReadRepository {
     fun findById(

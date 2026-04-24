@@ -1,6 +1,6 @@
 package com.example.application.outport
 
-import com.example.application.inport.query.readmodel.UserReadModel
+import com.example.application.readmodel.UserReadModel
 
 interface UserReadRepository {
     fun findById(id: Long): UserReadModel?

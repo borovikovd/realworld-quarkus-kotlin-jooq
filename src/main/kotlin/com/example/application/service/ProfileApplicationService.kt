@@ -2,9 +2,9 @@ package com.example.application.service
 
 import com.example.application.inport.command.ProfileCommands
 import com.example.application.inport.query.ProfileQueries
-import com.example.application.inport.query.readmodel.ProfileReadModel
+import com.example.application.readmodel.ProfileReadModel
 import com.example.application.outport.CurrentUser
-import com.example.application.outport.FollowRepository
+import com.example.application.outport.FollowWriteRepository
 import com.example.application.outport.ProfileReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Username
@@ -16,7 +16,7 @@ import jakarta.transaction.Transactional
 @ApplicationScoped
 class ProfileApplicationService(
     private val userWriteRepository: UserWriteRepository,
-    private val followRepository: FollowRepository,
+    private val followRepository: FollowWriteRepository,
     private val profileReadRepository: ProfileReadRepository,
     private val currentUser: CurrentUser,
 ) : ProfileCommands,

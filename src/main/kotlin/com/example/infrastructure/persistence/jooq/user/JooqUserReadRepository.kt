@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.user
 
-import com.example.application.inport.query.readmodel.UserReadModel
+import com.example.application.readmodel.UserReadModel
 import com.example.application.outport.UserReadRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.UserId

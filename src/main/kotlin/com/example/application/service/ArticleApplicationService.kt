@@ -2,7 +2,7 @@ package com.example.application.service
 
 import com.example.application.inport.command.ArticleCommands
 import com.example.application.inport.query.ArticleQueries
-import com.example.application.inport.query.readmodel.ArticleReadModel
+import com.example.application.readmodel.ArticleReadModel
 import com.example.application.outport.ArticleReadRepository
 import com.example.application.outport.ArticleWriteRepository
 import com.example.application.outport.Clock

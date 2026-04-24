@@ -1,4 +1,4 @@
-package com.example.infrastructure.web
+package com.example.infrastructure.rest.exception
 
 import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ResourceInfo
