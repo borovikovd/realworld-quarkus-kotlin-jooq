@@ -408,6 +408,50 @@ class ArticleApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `should return all validation errors at once on create`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.articleCreation(title = "", description = "", body = ""))
+            .`when`()
+            .post("/api/articles")
+            .then()
+            .statusCode(422)
+            .body("errors.title[0]", equalTo("must not be blank"))
+            .body("errors.description[0]", equalTo("must not be blank"))
+            .body("errors.body[0]", equalTo("must not be blank"))
+    }
+
+    @Test
+    fun `should keep existing fields when updating with nulls`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token, description = "Original description", body = "Original body")
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.articleUpdate(title = TestDataBuilder.uniqueTitle("Updated")))
+            .`when`()
+            .put("/api/articles/${article.slug}")
+            .then()
+            .statusCode(200)
+            .body("article.description", equalTo("Original description"))
+            .body("article.body", equalTo("Original body"))
+    }
+
+    @Test
+    fun `should return 422 when adding comment with blank body`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.commentCreation(""))
+            .`when`()
+            .post("/api/articles/${article.slug}/comments")
+            .then()
+            .statusCode(422)
+            .body("errors.body[0]", equalTo("must not be blank"))
+    }
+
+    @Test
     fun `should limit articles returned`() {
         val user = ApiTestFixtures.registerUser()
         repeat(3) { ApiTestFixtures.createArticle(user.token) }

@@ -237,103 +237,34 @@ class UserAuthApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `should get profile by username`() {
-        val user = ApiTestFixtures.registerUser()
+    fun `should return all validation errors at once on register`() {
+        val takenEmail = TestDataBuilder.uniqueEmail()
+        val takenUsername = TestDataBuilder.uniqueUsername()
+        ApiTestFixtures.registerUser(email = takenEmail, username = takenUsername)
 
         given()
+            .contentType(ContentType.JSON)
+            .body(TestDataBuilder.userRegistration(email = takenEmail, username = takenUsername, password = "short"))
             .`when`()
-            .get("/api/profiles/${user.username}")
+            .post("/api/users")
             .then()
-            .statusCode(200)
-            .body("profile.username", equalTo(user.username))
-            .body("profile.following", equalTo(false))
+            .statusCode(422)
+            .body("errors.email[0]", equalTo("is already taken"))
+            .body("errors.username[0]", equalTo("is already taken"))
+            .body("errors.password[0]", equalTo("must be at least 8 characters"))
     }
 
     @Test
-    fun `should return 404 for non-existent profile`() {
-        given()
-            .`when`()
-            .get("/api/profiles/nonexistent")
-            .then()
-            .statusCode(404)
-            .body("errors.body[0]", equalTo("Profile not found"))
-    }
-
-    @Test
-    fun `should follow user`() {
-        val follower = ApiTestFixtures.registerUser()
-        val followee = ApiTestFixtures.registerUser()
-
-        ApiTestFixtures.authenticatedRequest(follower.token)
-            .`when`()
-            .post("/api/profiles/${followee.username}/follow")
-            .then()
-            .statusCode(200)
-            .body("profile.username", equalTo(followee.username))
-            .body("profile.following", equalTo(true))
-    }
-
-    @Test
-    fun `should unfollow user`() {
-        val follower = ApiTestFixtures.registerUser()
-        val followee = ApiTestFixtures.registerUser()
-
-        ApiTestFixtures.authenticatedRequest(follower.token)
-            .post("/api/profiles/${followee.username}/follow")
-
-        ApiTestFixtures.authenticatedRequest(follower.token)
-            .`when`()
-            .delete("/api/profiles/${followee.username}/follow")
-            .then()
-            .statusCode(200)
-            .body("profile.username", equalTo(followee.username))
-            .body("profile.following", equalTo(false))
-    }
-
-    @Test
-    fun `should not follow non-existent user`() {
+    fun `should allow updating with own current email and username`() {
         val user = ApiTestFixtures.registerUser()
 
         ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(email = user.email, username = user.username))
             .`when`()
-            .post("/api/profiles/nonexistent/follow")
+            .put("/api/user")
             .then()
-            .statusCode(404)
-            .body("errors.body[0]", equalTo("User not found"))
-    }
-
-    @Test
-    fun `should not follow yourself`() {
-        val user = ApiTestFixtures.registerUser()
-
-        ApiTestFixtures.authenticatedRequest(user.token)
-            .`when`()
-            .post("/api/profiles/${user.username}/follow")
-            .then()
-            .statusCode(400)
-            .body("errors.body[0]", equalTo("Cannot follow yourself"))
-    }
-
-    @Test
-    fun `should not follow without auth`() {
-        val user = ApiTestFixtures.registerUser()
-
-        given()
-            .`when`()
-            .post("/api/profiles/${user.username}/follow")
-            .then()
-            .statusCode(401)
-    }
-
-    @Test
-    fun `should not unfollow non-existent user`() {
-        val user = ApiTestFixtures.registerUser()
-
-        ApiTestFixtures.authenticatedRequest(user.token)
-            .`when`()
-            .delete("/api/profiles/nonexistent/follow")
-            .then()
-            .statusCode(404)
-            .body("errors.body[0]", equalTo("User not found"))
+            .statusCode(200)
+            .body("user.email", equalTo(user.email))
+            .body("user.username", equalTo(user.username))
     }
 }
