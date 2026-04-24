@@ -408,6 +408,55 @@ class ArticleApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `should limit articles returned`() {
+        val user = ApiTestFixtures.registerUser()
+        repeat(3) { ApiTestFixtures.createArticle(user.token) }
+
+        given()
+            .queryParam("author", user.username)
+            .queryParam("limit", 2)
+            .`when`()
+            .get("/api/articles")
+            .then()
+            .statusCode(200)
+            .body("articles", hasSize<Any>(2))
+            .body("articlesCount", equalTo(3))
+    }
+
+    @Test
+    fun `should skip articles with offset`() {
+        val user = ApiTestFixtures.registerUser()
+        repeat(3) { ApiTestFixtures.createArticle(user.token) }
+
+        given()
+            .queryParam("author", user.username)
+            .queryParam("limit", 10)
+            .queryParam("offset", 2)
+            .`when`()
+            .get("/api/articles")
+            .then()
+            .statusCode(200)
+            .body("articles", hasSize<Any>(1))
+            .body("articlesCount", equalTo(3))
+    }
+
+    @Test
+    fun `should return empty list when offset exceeds total`() {
+        val user = ApiTestFixtures.registerUser()
+        ApiTestFixtures.createArticle(user.token)
+
+        given()
+            .queryParam("author", user.username)
+            .queryParam("offset", 10)
+            .`when`()
+            .get("/api/articles")
+            .then()
+            .statusCode(200)
+            .body("articles", hasSize<Any>(0))
+            .body("articlesCount", equalTo(1))
+    }
+
+    @Test
     fun `should get all tags`() {
         val user = ApiTestFixtures.registerUser()
         val tag1 = "tag-${TestDataBuilder.uniqueUsername()}"
