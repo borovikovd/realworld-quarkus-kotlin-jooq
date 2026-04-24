@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.port.outbound.CommentWriteRepository
+import com.example.application.outport.CommentWriteRepository
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId

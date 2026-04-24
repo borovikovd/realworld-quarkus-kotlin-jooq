@@ -1,7 +1,7 @@
 package com.example.application.query
 
-import com.example.application.port.outbound.CommentReadRepository
-import com.example.application.query.readmodel.CommentReadModel
+import com.example.application.outport.CommentReadRepository
+import com.example.application.inport.query.readmodel.CommentReadModel
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped

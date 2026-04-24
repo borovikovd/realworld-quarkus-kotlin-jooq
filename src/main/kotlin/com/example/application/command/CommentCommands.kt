@@ -1,8 +1,8 @@
 package com.example.application.command
 
-import com.example.application.port.outbound.ArticleWriteRepository
-import com.example.application.port.outbound.CommentWriteRepository
-import com.example.application.port.outbound.CurrentUser
+import com.example.application.outport.ArticleWriteRepository
+import com.example.application.outport.CommentWriteRepository
+import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId

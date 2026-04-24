@@ -1,8 +1,8 @@
 package com.example.application.command
 
-import com.example.application.port.outbound.ArticleWriteRepository
-import com.example.application.port.outbound.Clock
-import com.example.application.port.outbound.CurrentUser
+import com.example.application.outport.ArticleWriteRepository
+import com.example.application.outport.Clock
+import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug

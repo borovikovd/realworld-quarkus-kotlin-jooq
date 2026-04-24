@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.application.port.outbound.ArticleWriteRepository
+import com.example.application.outport.ArticleWriteRepository
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Slug

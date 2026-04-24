@@ -1,8 +1,8 @@
 package com.example.application.command
 
-import com.example.application.port.outbound.Clock
-import com.example.application.port.outbound.PasswordHashing
-import com.example.application.port.outbound.UserWriteRepository
+import com.example.application.outport.Clock
+import com.example.application.outport.PasswordHashing
+import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId

@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.user
 
-import com.example.application.port.outbound.UserWriteRepository
+import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User

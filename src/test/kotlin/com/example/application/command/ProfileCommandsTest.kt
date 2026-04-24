@@ -1,8 +1,8 @@
 package com.example.application.command
 
-import com.example.application.port.outbound.CurrentUser
-import com.example.application.port.outbound.FollowRepository
-import com.example.application.port.outbound.UserWriteRepository
+import com.example.application.outport.CurrentUser
+import com.example.application.outport.FollowRepository
+import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User

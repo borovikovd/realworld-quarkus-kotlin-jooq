@@ -1,6 +1,6 @@
-package com.example.application.port.outbound
+package com.example.application.outport
 
-import com.example.application.query.readmodel.CommentReadModel
+import com.example.application.inport.query.readmodel.CommentReadModel
 
 interface CommentReadRepository {
     fun findById(

@@ -1,7 +1,7 @@
 package com.example.application.query
 
-import com.example.application.port.outbound.UserReadRepository
-import com.example.application.query.readmodel.UserReadModel
+import com.example.application.outport.UserReadRepository
+import com.example.application.inport.query.readmodel.UserReadModel
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
