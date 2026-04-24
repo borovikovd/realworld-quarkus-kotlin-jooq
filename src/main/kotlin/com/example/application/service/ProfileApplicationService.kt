@@ -2,11 +2,11 @@ package com.example.application.service
 
 import com.example.application.inport.command.ProfileCommands
 import com.example.application.inport.query.ProfileQueries
-import com.example.application.readmodel.ProfileReadModel
 import com.example.application.outport.CurrentUser
 import com.example.application.outport.FollowWriteRepository
 import com.example.application.outport.ProfileReadRepository
 import com.example.application.outport.UserWriteRepository
+import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException

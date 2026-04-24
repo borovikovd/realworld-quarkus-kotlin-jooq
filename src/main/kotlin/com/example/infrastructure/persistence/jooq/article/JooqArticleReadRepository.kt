@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.article
 
+import com.example.application.outport.ArticleReadRepository
 import com.example.application.readmodel.ArticleReadModel
 import com.example.application.readmodel.ProfileReadModel
-import com.example.application.outport.ArticleReadRepository
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES

@@ -2,11 +2,11 @@ package com.example.application.service
 
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
-import com.example.application.readmodel.UserReadModel
 import com.example.application.outport.Clock
 import com.example.application.outport.PasswordHashing
 import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
+import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
