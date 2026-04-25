@@ -12,7 +12,7 @@ import java.time.Instant
 
 @ApplicationScoped
 class JwtTokenIssuer(
-    @ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
+    @param:ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
 ) : TokenIssuer {
     override fun issue(
         userId: UserId,
