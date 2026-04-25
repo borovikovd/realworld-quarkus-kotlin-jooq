@@ -222,6 +222,11 @@ dependencyCheck {
     analyzers.assemblyEnabled = false
     analyzers.nodeEnabled = false
     analyzers.retirejs.enabled = false
+    analyzers.kev.enabled = false
+    // Workaround for ConcurrentModificationException (issue #500): Kotlin scripting plugin
+    // registers configurations dynamically while the plugin iterates all configurations.
+    // Pinning to runtimeClasspath avoids the race and covers all transitive runtime deps.
+    scanConfigurations = listOf("runtimeClasspath")
 }
 
 // CycloneDX SBOM
