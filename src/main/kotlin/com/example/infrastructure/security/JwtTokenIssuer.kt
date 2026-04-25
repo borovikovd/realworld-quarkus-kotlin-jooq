@@ -6,18 +6,21 @@ import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
+import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.time.Duration
 import java.time.Instant
 
 @ApplicationScoped
-class JwtTokenIssuer : TokenIssuer {
+class JwtTokenIssuer(
+    @ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
+) : TokenIssuer {
     override fun issue(
         userId: UserId,
         email: Email,
         username: Username,
     ): String =
         Jwt
-            .issuer("https://realworld.io")
+            .issuer(issuer)
             .subject(userId.value.toString())
             .claim("email", email.value)
             .claim("username", username.value)
