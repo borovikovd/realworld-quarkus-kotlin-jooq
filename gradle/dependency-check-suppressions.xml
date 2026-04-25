@@ -48,4 +48,43 @@
         <cpe>cpe:/a:cure53:dompurify</cpe>
     </suppress>
 
+    <!-- CVE-2026-33186: grpc locked to 1.79.0 by Quarkus BOM 3.32.x (no upstream fix yet).
+         gRPC is a transitive dep of quarkus-opentelemetry for OTLP export; this app exposes no gRPC server. -->
+    <suppress>
+        <notes>Locked by Quarkus BOM; no gRPC server exposed. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.grpc:grpc-.*:.*</gav>
+        <vulnerabilityName>CVE-2026-33186</vulnerabilityName>
+    </suppress>
+
+    <!-- CVE-2026-33871, CVE-2026-33870: netty locked to 4.1.130.Final by Quarkus BOM 3.32.x.
+         Tracked upstream; suppress until Quarkus ships a BOM update with a patched netty. -->
+    <suppress>
+        <notes>Locked by Quarkus BOM; tracked upstream. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.netty:netty-.*:.*</gav>
+        <vulnerabilityName>CVE-2026-33871</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes>Locked by Quarkus BOM; tracked upstream. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.netty:netty-.*:.*</gav>
+        <vulnerabilityName>CVE-2026-33870</vulnerabilityName>
+    </suppress>
+
+    <!-- CVE-2026-29181, CVE-2026-39883, CVE-2026-39882: opentelemetry-semconv locked to 1.37.0 by Quarkus BOM 3.32.x.
+         Semconv jars are metadata-only constants with no network-exposed code. -->
+    <suppress>
+        <notes>Locked by Quarkus BOM; semconv jars are metadata constants only. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.opentelemetry\.semconv:opentelemetry-semconv.*:.*</gav>
+        <vulnerabilityName>CVE-2026-29181</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes>Locked by Quarkus BOM; semconv jars are metadata constants only. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.opentelemetry\.semconv:opentelemetry-semconv.*:.*</gav>
+        <vulnerabilityName>CVE-2026-39883</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes>Locked by Quarkus BOM; semconv jars are metadata constants only. Re-evaluate on next Quarkus upgrade.</notes>
+        <gav regex="true">io\.opentelemetry\.semconv:opentelemetry-semconv.*:.*</gav>
+        <vulnerabilityName>CVE-2026-39882</vulnerabilityName>
+    </suppress>
+
 </suppressions>
