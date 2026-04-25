@@ -14,7 +14,7 @@ plugins {
     // when iterating configurations that interacts badly with Quarkus's dynamic config
     // registration. Track fix at https://github.com/dependency-check/dependency-check-gradle/issues/500
     id("org.owasp.dependencycheck") version "12.2.1"
-    id("org.cyclonedx.bom") version "2.3.1"
+    id("org.cyclonedx.bom") version "3.2.4"
 }
 
 // ============================================
@@ -231,12 +231,11 @@ dependencyCheck {
 }
 
 // CycloneDX SBOM
-tasks.cyclonedxBom {
-    includeConfigs = listOf("runtimeClasspath")
-    schemaVersion = "1.5"
-    destination = layout.buildDirectory.dir("reports/sbom").get().asFile
-    outputName = "sbom"
-    outputFormat = "all"
+tasks.withType<org.cyclonedx.gradle.CyclonedxDirectTask> {
+    includeConfigs.set(listOf("runtimeClasspath"))
+    schemaVersion.set(org.cyclonedx.Version.VERSION_15)
+    xmlOutput.set(layout.buildDirectory.file("reports/sbom/sbom.xml"))
+    jsonOutput.set(layout.buildDirectory.file("reports/sbom/sbom.json"))
 }
 
 // SpotBugs + FindSecBugs (bytecode security analysis)
