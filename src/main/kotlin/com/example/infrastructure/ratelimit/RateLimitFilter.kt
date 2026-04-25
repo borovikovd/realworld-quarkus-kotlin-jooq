@@ -1,10 +1,13 @@
 package com.example.infrastructure.ratelimit
 
+import io.vertx.ext.web.RoutingContext
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
+import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
@@ -16,6 +19,12 @@ class RateLimitFilter : ContainerRequestFilter {
         private const val TOO_MANY_REQUESTS = 429
         private const val PROBLEM_JSON = "application/problem+json"
     }
+
+    @Inject
+    lateinit var routingContext: RoutingContext
+
+    @ConfigProperty(name = "rate-limit.trusted-proxy-count", defaultValue = "0")
+    var trustedProxyCount: Int = 0
 
     private val loginLimiter = RateLimiter(maxRequests = 10, window = Duration.ofMinutes(1))
     private val registrationLimiter = RateLimiter(maxRequests = 3, window = Duration.ofMinutes(1))
@@ -51,12 +60,17 @@ class RateLimitFilter : ContainerRequestFilter {
         }
     }
 
-    private fun extractClientIp(requestContext: ContainerRequestContext): String =
-        requestContext
-            .getHeaderString("X-Forwarded-For")
-            ?.split(",")
-            ?.firstOrNull()
-            ?.trim()
-            ?: requestContext.getHeaderString("X-Real-IP")
-            ?: "unknown"
+    private fun extractClientIp(requestContext: ContainerRequestContext): String {
+        val remoteAddress = routingContext.request().remoteAddress()?.host() ?: "unknown"
+        if (trustedProxyCount == 0) return remoteAddress
+
+        val forwarded = requestContext.getHeaderString("X-Forwarded-For")
+        if (forwarded.isNullOrBlank()) return remoteAddress
+
+        // Each trusted proxy appends the IP it received the connection from (left-to-right).
+        // With N trusted proxies the rightmost N entries are proxy-controlled; the entry just
+        // before them is the actual client IP that the outermost trusted proxy observed.
+        val ips = forwarded.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        return ips.getOrNull(ips.size - trustedProxyCount) ?: remoteAddress
+    }
 }
