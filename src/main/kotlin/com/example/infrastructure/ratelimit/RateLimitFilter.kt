@@ -62,9 +62,13 @@ class RateLimitFilter : ContainerRequestFilter {
 
     private fun extractClientIp(requestContext: ContainerRequestContext): String {
         val remoteAddress = routingContext.request().remoteAddress()?.host() ?: "unknown"
-        val forwarded = requestContext.getHeaderString("X-Forwarded-For")
-            .takeIf { trustedProxyCount > 0 && !it.isNullOrBlank() }
-            ?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() }
+        val forwarded =
+            requestContext
+                .getHeaderString("X-Forwarded-For")
+                .takeIf { trustedProxyCount > 0 && !it.isNullOrBlank() }
+                ?.split(",")
+                ?.map { it.trim() }
+                ?.filter { it.isNotBlank() }
 
         // Each trusted proxy appends the IP it received the connection from (left-to-right).
         // With N trusted proxies the rightmost N entries are proxy-controlled; the entry just
