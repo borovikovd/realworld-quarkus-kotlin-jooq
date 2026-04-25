@@ -1,7 +1,7 @@
 package com.example.testsupport
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.nio.file.Files
 import java.nio.file.Paths
 
