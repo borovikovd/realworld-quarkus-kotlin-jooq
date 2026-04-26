@@ -136,58 +136,6 @@ class JooqUserWriteRepository(
             .fetchOne()
             ?.let { toUser(it) }
 
-    override fun findByEmail(email: Email): User? {
-        val emailHash = crypto.hmacEmail(email.value)
-        return dsl
-            .select(
-                USER.ID,
-                USER.CREATED_AT,
-                USER.UPDATED_AT,
-                ENCRYPTION_KEY.KEY_CIPHERTEXT,
-                PERSON.EMAIL_ENC,
-                PERSON.USERNAME_ENC,
-                PERSON.BIO_ENC,
-                PERSON.IMAGE_ENC,
-                PASSWORD.HASH,
-            ).from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .join(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(USER.ID))
-            .join(PASSWORD)
-            .on(PASSWORD.USER_ID.eq(USER.ID))
-            .where(PERSON.EMAIL_HASH.eq(emailHash))
-            .and(USER.DELETED_AT.isNull)
-            .fetchOne()
-            ?.let { toUser(it) }
-    }
-
-    override fun findByUsername(username: Username): User? {
-        val usernameHash = crypto.hmacUsername(username.value)
-        return dsl
-            .select(
-                USER.ID,
-                USER.CREATED_AT,
-                USER.UPDATED_AT,
-                ENCRYPTION_KEY.KEY_CIPHERTEXT,
-                PERSON.EMAIL_ENC,
-                PERSON.USERNAME_ENC,
-                PERSON.BIO_ENC,
-                PERSON.IMAGE_ENC,
-                PASSWORD.HASH,
-            ).from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .join(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(USER.ID))
-            .join(PASSWORD)
-            .on(PASSWORD.USER_ID.eq(USER.ID))
-            .where(PERSON.USERNAME_HASH.eq(usernameHash))
-            .and(USER.DELETED_AT.isNull)
-            .fetchOne()
-            ?.let { toUser(it) }
-    }
-
     override fun existsByEmail(email: Email): Boolean =
         dsl.fetchExists(
             dsl

@@ -5,9 +5,8 @@ import com.example.application.inport.query.ProfileQueries
 import com.example.application.outport.CurrentUser
 import com.example.application.outport.FollowWriteRepository
 import com.example.application.outport.ProfileReadRepository
-import com.example.application.outport.UserWriteRepository
+import com.example.application.outport.UserReadRepository
 import com.example.application.readmodel.ProfileReadModel
-import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
 import jakarta.enterprise.context.ApplicationScoped
@@ -15,7 +14,7 @@ import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class ProfileApplicationService(
-    private val userWriteRepository: UserWriteRepository,
+    private val userReadRepository: UserReadRepository,
     private val followRepository: FollowWriteRepository,
     private val profileReadRepository: ProfileReadRepository,
     private val currentUser: CurrentUser,
@@ -24,25 +23,25 @@ class ProfileApplicationService(
     @Transactional
     override fun followUser(username: String) {
         val followerId = currentUser.require()
-        val followee =
-            userWriteRepository.findByUsername(Username(username))
+        val followeeId =
+            userReadRepository.findUserIdByUsername(username)
                 ?: throw NotFoundException("User not found")
 
-        if (followee.id == followerId) {
+        if (followeeId == followerId) {
             throw BadRequestException("Cannot follow yourself")
         }
 
-        followRepository.follow(followerId, followee.id)
+        followRepository.follow(followerId, followeeId)
     }
 
     @Transactional
     override fun unfollowUser(username: String) {
         val followerId = currentUser.require()
-        val followee =
-            userWriteRepository.findByUsername(Username(username))
+        val followeeId =
+            userReadRepository.findUserIdByUsername(username)
                 ?: throw NotFoundException("User not found")
 
-        followRepository.unfollow(followerId, followee.id)
+        followRepository.unfollow(followerId, followeeId)
     }
 
     override fun getProfileByUsername(

@@ -77,18 +77,18 @@ class UserApplicationService(
             runCatching { Email(email) }
                 .getOrElse { throw UnauthorizedException("Invalid email or password") }
 
-        val user = userWriteRepository.findByEmail(emailVo)
-        if (user == null) {
+        val credentials = userReadRepository.findCredentialsByEmail(emailVo)
+        if (credentials == null) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
-        if (!passwordHashing.verify(user.passwordHash, password)) {
+        if (!passwordHashing.verify(credentials.passwordHash, password)) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
-        return user.id.value
+        return credentials.userId.value
     }
 
     @Transactional

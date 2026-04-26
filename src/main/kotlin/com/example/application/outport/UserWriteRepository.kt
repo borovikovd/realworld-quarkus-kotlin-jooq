@@ -6,10 +6,6 @@ import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 
 interface UserWriteRepository : Repository<User, UserId> {
-    fun findByEmail(email: Email): User?
-
-    fun findByUsername(username: Username): User?
-
     fun existsByEmail(email: Email): Boolean
 
     fun existsByUsername(username: Username): Boolean
