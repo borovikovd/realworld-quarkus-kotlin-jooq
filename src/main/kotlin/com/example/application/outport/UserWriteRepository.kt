@@ -13,4 +13,6 @@ interface UserWriteRepository : Repository<User, UserId> {
     fun existsByEmail(email: Email): Boolean
 
     fun existsByUsername(username: Username): Boolean
+
+    fun erase(id: UserId)
 }

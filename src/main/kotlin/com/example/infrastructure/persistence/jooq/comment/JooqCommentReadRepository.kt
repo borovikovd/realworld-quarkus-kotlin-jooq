@@ -3,12 +3,14 @@ package com.example.infrastructure.persistence.jooq.comment
 import com.example.application.outport.CommentReadRepository
 import com.example.application.readmodel.CommentReadModel
 import com.example.application.readmodel.ProfileReadModel
+import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.jooq.public.tables.references.USERS
+import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
@@ -16,25 +18,17 @@ import org.jooq.impl.DSL.select
 @ApplicationScoped
 class JooqCommentReadRepository(
     private val dsl: DSLContext,
+    private val crypto: CryptoService,
 ) : CommentReadRepository {
     override fun findByArticleSlug(
         slug: String,
         viewerId: Long?,
     ): List<CommentReadModel> =
         dsl
-            .select(
-                COMMENTS.ID,
-                COMMENTS.BODY,
-                COMMENTS.CREATED_AT,
-                COMMENTS.UPDATED_AT,
-                COMMENTS.AUTHOR_ID,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                followingField(viewerId),
-            ).from(COMMENTS)
-            .join(USERS)
-            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+            .select(commentFields(viewerId))
+            .from(COMMENTS)
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .join(ARTICLES)
             .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
             .where(ARTICLES.SLUG.eq(slug))
@@ -47,35 +41,36 @@ class JooqCommentReadRepository(
         viewerId: Long?,
     ): CommentReadModel? =
         dsl
-            .select(
-                COMMENTS.ID,
-                COMMENTS.BODY,
-                COMMENTS.CREATED_AT,
-                COMMENTS.UPDATED_AT,
-                COMMENTS.AUTHOR_ID,
-                USERS.USERNAME,
-                USERS.BIO,
-                USERS.IMAGE,
-                followingField(viewerId),
-            ).from(COMMENTS)
-            .join(USERS)
-            .on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+            .select(commentFields(viewerId))
+            .from(COMMENTS)
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .where(COMMENTS.ID.eq(id))
             .fetchOne()
             ?.toCommentReadModel()
 
-    private fun followingField(viewerId: Long?): org.jooq.Field<*> =
-        if (viewerId != null) {
-            select(count())
-                .from(FOLLOWERS)
-                .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
-                .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
-                .asField<Int>("following")
-        } else {
-            org.jooq.impl.DSL
-                .`val`(0)
-                .`as`("following")
-        }
+    private fun commentFields(viewerId: Long?): List<Field<*>> =
+        listOf(
+            COMMENTS.ID,
+            COMMENTS.BODY,
+            COMMENTS.CREATED_AT,
+            COMMENTS.UPDATED_AT,
+            COMMENTS.AUTHOR_ID,
+            PERSON.USERNAME_ENC,
+            PERSON.BIO_ENC,
+            PERSON.IMAGE_ENC,
+            if (viewerId != null) {
+                select(count())
+                    .from(FOLLOWERS)
+                    .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .asField<Int>("following")
+            } else {
+                org.jooq.impl.DSL
+                    .`val`(0)
+                    .`as`("following")
+            },
+        )
 
     private fun Record.toCommentReadModel(): CommentReadModel =
         CommentReadModel(
@@ -85,9 +80,12 @@ class JooqCommentReadRepository(
             updatedAt = get(COMMENTS.UPDATED_AT)!!,
             author =
                 ProfileReadModel(
-                    username = get(USERS.USERNAME)!!,
-                    bio = get(USERS.BIO),
-                    image = get(USERS.IMAGE),
+                    username =
+                        get(PERSON.USERNAME_ENC)
+                            ?.let { crypto.decryptField(it) }
+                            ?: "user_${get(COMMENTS.AUTHOR_ID)}",
+                    bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(it) },
+                    image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(it) },
                     following = get("following", Int::class.java) > 0,
                 ),
         )

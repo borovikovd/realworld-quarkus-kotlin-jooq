@@ -16,15 +16,19 @@ abstract class BaseApiTest {
     }
 
     private fun cleanDatabase() {
-        val tables = dsl.meta().tables
-            .filter { it.schema?.name == "public" }
-            .map { it.name }
-            .joinToString(",\n                ")
-
         dsl.execute(
             """
             TRUNCATE TABLE
-                $tables
+                vault.person,
+                vault.encryption_key,
+                auth.password,
+                public.article_tags,
+                public.favorites,
+                public.followers,
+                public.comments,
+                public.articles,
+                public.tags,
+                public."user"
             RESTART IDENTITY CASCADE
             """.trimIndent(),
         )

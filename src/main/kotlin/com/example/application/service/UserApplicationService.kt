@@ -138,6 +138,12 @@ class UserApplicationService(
         return saved.id.value
     }
 
+    @Transactional
+    override fun eraseUser(userId: Long) {
+        userWriteRepository.erase(UserId(userId))
+        logger.info("User erased: userId={}", userId)
+    }
+
     override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)
 
     private fun parseEmail(

@@ -84,6 +84,19 @@ paths:
       security:
         - Bearer: [ ]
       x-codegen-request-body-name: body
+    delete:
+      tags:
+        - User and Authentication
+      summary: Delete current user
+      description: Permanently erases the current user's personal data (GDPR Art. 17)
+      operationId: DeleteCurrentUser
+      responses:
+        '204':
+          description: User erased successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - Bearer: [ ]
   /profiles/{username}:
     get:
       tags:

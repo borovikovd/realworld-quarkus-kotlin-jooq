@@ -3,12 +3,13 @@ package com.example.infrastructure.persistence.jooq.article
 import com.example.application.outport.ArticleReadRepository
 import com.example.application.readmodel.ArticleReadModel
 import com.example.application.readmodel.ProfileReadModel
+import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
-import com.example.jooq.public.tables.references.USERS
+import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -21,6 +22,7 @@ import org.jooq.impl.DSL.select
 @ApplicationScoped
 class JooqArticleReadRepository(
     private val dsl: DSLContext,
+    private val crypto: CryptoService,
 ) : ArticleReadRepository {
     override fun findById(
         id: Long,
@@ -29,8 +31,8 @@ class JooqArticleReadRepository(
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
-            .join(USERS)
-            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.ID.eq(id))
             .fetchOne()
             ?.toArticleReadModel()
@@ -42,8 +44,8 @@ class JooqArticleReadRepository(
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
-            .join(USERS)
-            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.SLUG.eq(slug))
             .fetchOne()
             ?.toArticleReadModel()
@@ -59,8 +61,8 @@ class JooqArticleReadRepository(
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
-            .join(USERS)
-            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(buildConditions(tag, author, favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -76,8 +78,8 @@ class JooqArticleReadRepository(
         dsl
             .select(articleFields(viewerId))
             .from(ARTICLES)
-            .join(USERS)
-            .on(USERS.ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(PERSON)
+            .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
@@ -141,23 +143,25 @@ class JooqArticleReadRepository(
         }
 
         author?.let {
+            val authorHash = crypto.hmacUsername(it)
             conditions.add(
                 ARTICLES.AUTHOR_ID.`in`(
-                    select(USERS.ID)
-                        .from(USERS)
-                        .where(USERS.USERNAME.eq(it)),
+                    select(PERSON.USER_ID)
+                        .from(PERSON)
+                        .where(PERSON.USERNAME_HASH.eq(authorHash)),
                 ),
             )
         }
 
         favorited?.let {
+            val favoritedHash = crypto.hmacUsername(it)
             conditions.add(
                 ARTICLES.ID.`in`(
                     select(FAVORITES.ARTICLE_ID)
                         .from(FAVORITES)
-                        .join(USERS)
-                        .on(USERS.ID.eq(FAVORITES.USER_ID))
-                        .where(USERS.USERNAME.eq(it)),
+                        .join(PERSON)
+                        .on(PERSON.USER_ID.eq(FAVORITES.USER_ID))
+                        .where(PERSON.USERNAME_HASH.eq(favoritedHash)),
                 ),
             )
         }
@@ -201,9 +205,9 @@ class JooqArticleReadRepository(
             ARTICLES.AUTHOR_ID,
             ARTICLES.CREATED_AT,
             ARTICLES.UPDATED_AT,
-            USERS.USERNAME,
-            USERS.BIO,
-            USERS.IMAGE,
+            PERSON.USERNAME_ENC,
+            PERSON.BIO_ENC,
+            PERSON.IMAGE_ENC,
             multiset(
                 select(TAGS.NAME)
                     .from(TAGS)
@@ -235,9 +239,12 @@ class JooqArticleReadRepository(
             favoritesCount = get("favoritesCount", Int::class.java),
             author =
                 ProfileReadModel(
-                    username = get(USERS.USERNAME)!!,
-                    bio = get(USERS.BIO),
-                    image = get(USERS.IMAGE),
+                    username =
+                        get(PERSON.USERNAME_ENC)
+                            ?.let { crypto.decryptField(it) }
+                            ?: "user_${get(ARTICLES.AUTHOR_ID)}",
+                    bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(it) },
+                    image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(it) },
                     following = get("following", Int::class.java) > 0,
                 ),
         )

@@ -33,4 +33,10 @@
     <Match>
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>
     </Match>
+
+    <!-- CryptoService derives keys in init block — expected to throw on bad config at startup -->
+    <Match>
+        <Class name="com.example.infrastructure.security.CryptoService"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>

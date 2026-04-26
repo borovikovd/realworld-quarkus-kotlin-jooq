@@ -54,6 +54,12 @@ class UserAndAuthenticationResource(
         return Login200Response().user(loadUser(userId))
     }
 
+    @RolesAllowed("user")
+    @ResponseStatus(204)
+    override fun deleteCurrentUser() {
+        userCommands.eraseUser(currentUser.require().value)
+    }
+
     private fun loadUser(userId: Long): ApiUser {
         val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
         return user.toDto()
@@ -62,7 +68,7 @@ class UserAndAuthenticationResource(
     private fun UserReadModel.toDto(): ApiUser =
         ApiUser()
             .email(email.value)
-            .token(tokenIssuer.issue(id, email, username))
+            .token(tokenIssuer.issue(id))
             .username(username.value)
             .bio(bio)
             .image(image)

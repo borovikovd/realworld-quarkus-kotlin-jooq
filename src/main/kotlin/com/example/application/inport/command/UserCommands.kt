@@ -20,4 +20,6 @@ interface UserCommands {
         bio: String?,
         image: String?,
     ): Long
+
+    fun eraseUser(userId: Long)
 }

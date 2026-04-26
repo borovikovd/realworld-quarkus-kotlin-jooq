@@ -1,31 +1,18 @@
-schema "public" {
-}
+schema "public" {}
 
-table "users" {
+schema "vault" {}
+
+schema "auth" {}
+
+table "user" {
   schema = schema.public
   column "id" {
     null = false
     type = bigserial
   }
-  column "email" {
-    null = false
-    type = varchar(255)
-  }
-  column "username" {
-    null = false
-    type = varchar(255)
-  }
-  column "password_hash" {
-    null = false
-    type = varchar(255)
-  }
-  column "bio" {
+  column "deleted_at" {
     null = true
-    type = text
-  }
-  column "image" {
-    null = true
-    type = varchar(512)
+    type = timestamptz
   }
   column "created_at" {
     null    = false
@@ -40,17 +27,156 @@ table "users" {
   primary_key {
     columns = [column.id]
   }
-  unique "users_email_key" {
-    columns = [column.email]
+}
+
+table "encryption_key" {
+  schema = schema.vault
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
   }
-  unique "users_username_key" {
-    columns = [column.username]
+  column "user_id" {
+    null = false
+    type = bigint
   }
-  index "idx_users_email" {
-    columns = [column.email]
+  column "key_ciphertext" {
+    null = false
+    type = bytea
   }
-  index "idx_users_username" {
-    columns = [column.username]
+  column "algorithm" {
+    null    = false
+    type    = text
+    default = "AES-256-GCM"
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "encryption_key_user_id_key" {
+    columns = [column.user_id]
+  }
+  foreign_key "encryption_key_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.user.column.id]
+    on_delete   = CASCADE
+  }
+}
+
+table "person" {
+  schema = schema.vault
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "user_id" {
+    null = false
+    type = bigint
+  }
+  column "encryption_key_id" {
+    null = true
+    type = uuid
+  }
+  column "email_enc" {
+    null = false
+    type = text
+  }
+  column "email_hash" {
+    null = false
+    type = varchar(64)
+  }
+  column "email_verified_at" {
+    null = true
+    type = timestamptz
+  }
+  column "username_enc" {
+    null = false
+    type = text
+  }
+  column "username_hash" {
+    null = false
+    type = varchar(64)
+  }
+  column "bio_enc" {
+    null = true
+    type = text
+  }
+  column "image_enc" {
+    null = true
+    type = text
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "person_user_id_key" {
+    columns = [column.user_id]
+  }
+  unique "person_email_hash_key" {
+    columns = [column.email_hash]
+  }
+  unique "person_username_hash_key" {
+    columns = [column.username_hash]
+  }
+  foreign_key "person_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.user.column.id]
+    on_delete   = CASCADE
+  }
+  foreign_key "person_encryption_key_id_fkey" {
+    columns     = [column.encryption_key_id]
+    ref_columns = [table.encryption_key.column.id]
+    on_delete   = SET NULL
+  }
+  index "idx_person_email_hash" {
+    columns = [column.email_hash]
+  }
+  index "idx_person_username_hash" {
+    columns = [column.username_hash]
+  }
+}
+
+table "password" {
+  schema = schema.auth
+  column "user_id" {
+    null = false
+    type = bigint
+  }
+  column "hash" {
+    null = false
+    type = text
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.user_id]
+  }
+  foreign_key "password_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.user.column.id]
+    on_delete   = CASCADE
   }
 }
 
@@ -69,13 +195,13 @@ table "followers" {
   }
   foreign_key "followers_follower_id_fkey" {
     columns     = [column.follower_id]
-    ref_columns = [table.users.column.id]
+    ref_columns = [table.user.column.id]
     on_update   = CASCADE
     on_delete   = CASCADE
   }
   foreign_key "followers_followee_id_fkey" {
     columns     = [column.followee_id]
-    ref_columns = [table.users.column.id]
+    ref_columns = [table.user.column.id]
     on_update   = CASCADE
     on_delete   = CASCADE
   }
@@ -128,7 +254,7 @@ table "articles" {
   }
   foreign_key "articles_author_id_fkey" {
     columns     = [column.author_id]
-    ref_columns = [table.users.column.id]
+    ref_columns = [table.user.column.id]
     on_update   = CASCADE
     on_delete   = CASCADE
   }
@@ -215,7 +341,7 @@ table "favorites" {
   }
   foreign_key "favorites_user_id_fkey" {
     columns     = [column.user_id]
-    ref_columns = [table.users.column.id]
+    ref_columns = [table.user.column.id]
     on_update   = CASCADE
     on_delete   = CASCADE
   }
@@ -269,7 +395,7 @@ table "comments" {
   }
   foreign_key "comments_author_id_fkey" {
     columns     = [column.author_id]
-    ref_columns = [table.users.column.id]
+    ref_columns = [table.user.column.id]
     on_update   = CASCADE
     on_delete   = CASCADE
   }
