@@ -1,5 +1,6 @@
 package com.example.infrastructure.security
 
+import com.example.application.outport.CryptoService
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.SecureRandom
@@ -10,9 +11,9 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @ApplicationScoped
-class CryptoService(
+class HkdfAesGcmCryptoService(
     @param:ConfigProperty(name = "app.security.master-key") private val masterKeyBase64: String,
-) {
+) : CryptoService {
     private val hmacEmailKey: ByteArray
     private val hmacUsernameKey: ByteArray
     private val vaultKek: ByteArray
@@ -25,17 +26,17 @@ class CryptoService(
         vaultKek = hkdf(masterKey, "vault-kek")
     }
 
-    fun hmacEmail(email: String): String = hmac(hmacEmailKey, email.lowercase())
+    override fun hmacEmail(email: String): String = hmac(hmacEmailKey, email.lowercase())
 
-    fun hmacUsername(username: String): String = hmac(hmacUsernameKey, username.lowercase())
+    override fun hmacUsername(username: String): String = hmac(hmacUsernameKey, username.lowercase())
 
-    fun generateDek(): ByteArray = ByteArray(KEY_BYTES).also { secureRandom.nextBytes(it) }
+    override fun generateDek(): ByteArray = ByteArray(KEY_BYTES).also { secureRandom.nextBytes(it) }
 
-    fun encryptDek(dek: ByteArray): ByteArray = aesGcmEncrypt(vaultKek, dek)
+    override fun encryptDek(dek: ByteArray): ByteArray = aesGcmEncrypt(vaultKek, dek)
 
-    fun decryptDek(keyCiphertext: ByteArray): ByteArray = aesGcmDecryptBytes(vaultKek, keyCiphertext)
+    override fun decryptDek(keyCiphertext: ByteArray): ByteArray = aesGcmDecryptBytes(vaultKek, keyCiphertext)
 
-    fun encryptField(
+    override fun encryptField(
         dek: ByteArray,
         plaintext: String,
     ): String {
@@ -43,7 +44,7 @@ class CryptoService(
         return Base64.getEncoder().encodeToString(cipherBytes)
     }
 
-    fun decryptField(
+    override fun decryptField(
         dek: ByteArray,
         ciphertext: String,
     ): String {

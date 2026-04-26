@@ -1,9 +1,9 @@
 package com.example.infrastructure.persistence.jooq.comment
 
 import com.example.application.outport.CommentReadRepository
+import com.example.application.outport.CryptoService
 import com.example.application.readmodel.CommentReadModel
 import com.example.application.readmodel.ProfileReadModel
-import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS

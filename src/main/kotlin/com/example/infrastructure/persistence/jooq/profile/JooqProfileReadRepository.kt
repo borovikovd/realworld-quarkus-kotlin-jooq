@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.profile
 
+import com.example.application.outport.CryptoService
 import com.example.application.outport.ProfileReadRepository
 import com.example.application.readmodel.ProfileReadModel
-import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USER
 import com.example.jooq.vault.tables.references.ENCRYPTION_KEY

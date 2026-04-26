@@ -36,7 +36,7 @@
 
     <!-- CryptoService derives keys in init block — expected to throw on bad config at startup -->
     <Match>
-        <Class name="com.example.infrastructure.security.CryptoService"/>
+        <Class name="com.example.infrastructure.security.HkdfAesGcmCryptoService"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
 </FindBugsFilter>

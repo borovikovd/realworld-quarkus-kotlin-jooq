@@ -1,12 +1,12 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.application.outport.CryptoService
 import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
-import com.example.infrastructure.security.CryptoService
 import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS

@@ -1,11 +1,11 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.application.outport.CryptoService
 import com.example.application.outport.UserReadRepository
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
-import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.USER
 import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
