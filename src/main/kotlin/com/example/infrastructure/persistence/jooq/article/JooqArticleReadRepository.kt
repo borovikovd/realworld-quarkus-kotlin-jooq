@@ -3,7 +3,7 @@ package com.example.infrastructure.persistence.jooq.article
 import com.example.application.outport.ArticleReadRepository
 import com.example.application.outport.CryptoService
 import com.example.application.readmodel.ArticleReadModel
-import com.example.application.readmodel.ProfileReadModel
+import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -234,24 +234,8 @@ class JooqArticleReadRepository(
         )
     }
 
-    private fun Record.toArticleReadModel(): ArticleReadModel {
-        val keyCiphertext = get(ENCRYPTION_KEY.KEY_CIPHERTEXT)
-        val username: String
-        val bio: String?
-        val image: String?
-
-        if (keyCiphertext != null) {
-            val dek = crypto.decryptDek(keyCiphertext)
-            username = crypto.decryptField(dek, get(PERSON.USERNAME_ENC)!!)
-            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(dek, it) }
-            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(dek, it) }
-        } else {
-            username = "user_${get(ARTICLES.AUTHOR_ID)}"
-            bio = null
-            image = null
-        }
-
-        return ArticleReadModel(
+    private fun Record.toArticleReadModel(): ArticleReadModel =
+        ArticleReadModel(
             slug = get(ARTICLES.SLUG)!!,
             title = get(ARTICLES.TITLE)!!,
             description = get(ARTICLES.DESCRIPTION)!!,
@@ -263,13 +247,6 @@ class JooqArticleReadRepository(
             updatedAt = get(ARTICLES.UPDATED_AT)!!,
             favorited = get("favorited", Int::class.java) > 0,
             favoritesCount = get("favoritesCount", Int::class.java),
-            author =
-                ProfileReadModel(
-                    username = username,
-                    bio = bio,
-                    image = image,
-                    following = get("following", Int::class.java) > 0,
-                ),
+            author = decryptAuthorProfile(crypto, get(ARTICLES.AUTHOR_ID), get("following", Int::class.java) > 0),
         )
-    }
 }

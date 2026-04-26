@@ -3,7 +3,7 @@ package com.example.infrastructure.persistence.jooq.comment
 import com.example.application.outport.CommentReadRepository
 import com.example.application.outport.CryptoService
 import com.example.application.readmodel.CommentReadModel
-import com.example.application.readmodel.ProfileReadModel
+import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
@@ -78,35 +78,12 @@ class JooqCommentReadRepository(
             },
         )
 
-    private fun Record.toCommentReadModel(): CommentReadModel {
-        val keyCiphertext = get(ENCRYPTION_KEY.KEY_CIPHERTEXT)
-        val username: String
-        val bio: String?
-        val image: String?
-
-        if (keyCiphertext != null) {
-            val dek = crypto.decryptDek(keyCiphertext)
-            username = crypto.decryptField(dek, get(PERSON.USERNAME_ENC)!!)
-            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(dek, it) }
-            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(dek, it) }
-        } else {
-            username = "user_${get(COMMENTS.AUTHOR_ID)}"
-            bio = null
-            image = null
-        }
-
-        return CommentReadModel(
+    private fun Record.toCommentReadModel(): CommentReadModel =
+        CommentReadModel(
             id = get(COMMENTS.ID)!!,
             body = get(COMMENTS.BODY)!!,
             createdAt = get(COMMENTS.CREATED_AT)!!,
             updatedAt = get(COMMENTS.UPDATED_AT)!!,
-            author =
-                ProfileReadModel(
-                    username = username,
-                    bio = bio,
-                    image = image,
-                    following = get("following", Int::class.java) > 0,
-                ),
+            author = decryptAuthorProfile(crypto, get(COMMENTS.AUTHOR_ID), get("following", Int::class.java) > 0),
         )
-    }
 }
