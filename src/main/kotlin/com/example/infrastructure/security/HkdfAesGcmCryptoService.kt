@@ -68,6 +68,9 @@ class HkdfAesGcmCryptoService(
         key: ByteArray,
         payload: ByteArray,
     ): ByteArray {
+        require(payload.size > GCM_NONCE_BYTES + GCM_TAG_BYTES) {
+            "AES-GCM payload too short: ${payload.size} bytes (need > ${GCM_NONCE_BYTES + GCM_TAG_BYTES})"
+        }
         val nonce = payload.copyOfRange(0, GCM_NONCE_BYTES)
         val cipherAndTag = payload.copyOfRange(GCM_NONCE_BYTES, payload.size)
         val cipher = Cipher.getInstance(AES_GCM)
@@ -129,6 +132,7 @@ class HkdfAesGcmCryptoService(
         private const val HKDF_MAX_BLOCKS = 255 // RFC 5869 §2.3
         private const val GCM_NONCE_BYTES = 12
         private const val GCM_TAG_BITS = 128
+        private const val GCM_TAG_BYTES = GCM_TAG_BITS / 8
         private const val AES = "AES"
         private const val AES_GCM = "AES/GCM/NoPadding"
         private const val HMAC_SHA256 = "HmacSHA256"
