@@ -7,6 +7,7 @@ import com.example.infrastructure.security.CryptoService
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
+import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -29,6 +30,8 @@ class JooqCommentReadRepository(
             .from(COMMENTS)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .join(ARTICLES)
             .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
             .where(ARTICLES.SLUG.eq(slug))
@@ -45,6 +48,8 @@ class JooqCommentReadRepository(
             .from(COMMENTS)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .where(COMMENTS.ID.eq(id))
             .fetchOne()
             ?.toCommentReadModel()
@@ -56,6 +61,7 @@ class JooqCommentReadRepository(
             COMMENTS.CREATED_AT,
             COMMENTS.UPDATED_AT,
             COMMENTS.AUTHOR_ID,
+            ENCRYPTION_KEY.KEY_CIPHERTEXT,
             PERSON.USERNAME_ENC,
             PERSON.BIO_ENC,
             PERSON.IMAGE_ENC,
@@ -72,21 +78,35 @@ class JooqCommentReadRepository(
             },
         )
 
-    private fun Record.toCommentReadModel(): CommentReadModel =
-        CommentReadModel(
+    private fun Record.toCommentReadModel(): CommentReadModel {
+        val keyCiphertext = get(ENCRYPTION_KEY.KEY_CIPHERTEXT)
+        val username: String
+        val bio: String?
+        val image: String?
+
+        if (keyCiphertext != null) {
+            val dek = crypto.decryptDek(keyCiphertext)
+            username = crypto.decryptField(dek, get(PERSON.USERNAME_ENC)!!)
+            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(dek, it) }
+            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(dek, it) }
+        } else {
+            username = "user_${get(COMMENTS.AUTHOR_ID)}"
+            bio = null
+            image = null
+        }
+
+        return CommentReadModel(
             id = get(COMMENTS.ID)!!,
             body = get(COMMENTS.BODY)!!,
             createdAt = get(COMMENTS.CREATED_AT)!!,
             updatedAt = get(COMMENTS.UPDATED_AT)!!,
             author =
                 ProfileReadModel(
-                    username =
-                        get(PERSON.USERNAME_ENC)
-                            ?.let { crypto.decryptField(it) }
-                            ?: "user_${get(COMMENTS.AUTHOR_ID)}",
-                    bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(it) },
-                    image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(it) },
+                    username = username,
+                    bio = bio,
+                    image = image,
                     following = get("following", Int::class.java) > 0,
                 ),
         )
+    }
 }

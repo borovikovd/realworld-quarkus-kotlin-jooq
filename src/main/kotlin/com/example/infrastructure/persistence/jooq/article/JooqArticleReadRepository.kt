@@ -9,6 +9,7 @@ import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
+import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.Condition
@@ -33,6 +34,8 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.ID.eq(id))
             .fetchOne()
             ?.toArticleReadModel()
@@ -46,6 +49,8 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.SLUG.eq(slug))
             .fetchOne()
             ?.toArticleReadModel()
@@ -63,6 +68,8 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(buildConditions(tag, author, favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -80,6 +87,8 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .leftJoin(ENCRYPTION_KEY)
+            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
@@ -205,6 +214,7 @@ class JooqArticleReadRepository(
             ARTICLES.AUTHOR_ID,
             ARTICLES.CREATED_AT,
             ARTICLES.UPDATED_AT,
+            ENCRYPTION_KEY.KEY_CIPHERTEXT,
             PERSON.USERNAME_ENC,
             PERSON.BIO_ENC,
             PERSON.IMAGE_ENC,
@@ -224,8 +234,24 @@ class JooqArticleReadRepository(
         )
     }
 
-    private fun Record.toArticleReadModel(): ArticleReadModel =
-        ArticleReadModel(
+    private fun Record.toArticleReadModel(): ArticleReadModel {
+        val keyCiphertext = get(ENCRYPTION_KEY.KEY_CIPHERTEXT)
+        val username: String
+        val bio: String?
+        val image: String?
+
+        if (keyCiphertext != null) {
+            val dek = crypto.decryptDek(keyCiphertext)
+            username = crypto.decryptField(dek, get(PERSON.USERNAME_ENC)!!)
+            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(dek, it) }
+            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(dek, it) }
+        } else {
+            username = "user_${get(ARTICLES.AUTHOR_ID)}"
+            bio = null
+            image = null
+        }
+
+        return ArticleReadModel(
             slug = get(ARTICLES.SLUG)!!,
             title = get(ARTICLES.TITLE)!!,
             description = get(ARTICLES.DESCRIPTION)!!,
@@ -239,13 +265,11 @@ class JooqArticleReadRepository(
             favoritesCount = get("favoritesCount", Int::class.java),
             author =
                 ProfileReadModel(
-                    username =
-                        get(PERSON.USERNAME_ENC)
-                            ?.let { crypto.decryptField(it) }
-                            ?: "user_${get(ARTICLES.AUTHOR_ID)}",
-                    bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(it) },
-                    image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(it) },
+                    username = username,
+                    bio = bio,
+                    image = image,
                     following = get("following", Int::class.java) > 0,
                 ),
         )
+    }
 }
