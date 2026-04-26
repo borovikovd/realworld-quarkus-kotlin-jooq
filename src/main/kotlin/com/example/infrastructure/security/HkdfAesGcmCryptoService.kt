@@ -101,7 +101,7 @@ class HkdfAesGcmCryptoService(
         while (pos < length) {
             val mac = Mac.getInstance(HMAC_SHA256)
             mac.init(SecretKeySpec(prk, HMAC_SHA256))
-            mac.update(t)
+            if (t.isNotEmpty()) mac.update(t) // T(0) = empty; skip on first block
             mac.update(infoBytes)
             mac.update(counter.toByte())
             t = mac.doFinal()
