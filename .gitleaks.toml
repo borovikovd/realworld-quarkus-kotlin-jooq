@@ -6,3 +6,7 @@ paths = [
   '''src/main/resources/public\.pem''',
   '''src/test/''',
 ]
+
+[[allowlist.regexes]]
+description = "Dev/test profile master keys are not production secrets"
+regex = '''%(?:dev|test)\.app\.security\.master-key'''
