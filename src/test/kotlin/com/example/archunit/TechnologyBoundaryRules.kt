@@ -54,6 +54,16 @@ class TechnologyBoundaryRules {
             .because("Only Jooq* adapters should have direct access to jOOQ DSLContext")
 
     @ArchTest
+    val `persistence adapters must not depend on security implementations` =
+        noClasses()
+            .that().resideInAPackage("com.example.infrastructure.persistence..")
+            .should().dependOnClassesThat().resideInAPackage("com.example.infrastructure.security..")
+            .because(
+                "Persistence adapters must use security outports (CryptoService, PasswordHashing) " +
+                    "not their concrete implementations — keeps adapters swappable",
+            )
+
+    @ArchTest
     val `application classes should not use JAX-RS Response` =
         noClasses()
             .that().resideInAPackage("com.example.application..")
