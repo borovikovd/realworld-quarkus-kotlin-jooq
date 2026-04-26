@@ -84,7 +84,7 @@ class HkdfAesGcmCryptoService(
     ): String {
         val mac = Mac.getInstance(HMAC_SHA256)
         mac.init(SecretKeySpec(key, HMAC_SHA256))
-        return mac.doFinal(value.toByteArray(Charsets.UTF_8)).toHex()
+        return mac.doFinal(value.toByteArray(Charsets.UTF_8)).toBase64()
     }
 
     private fun hkdf(
@@ -125,7 +125,7 @@ class HkdfAesGcmCryptoService(
         return mac.doFinal(data)
     }
 
-    private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
+    private fun ByteArray.toBase64(): String = Base64.getEncoder().encodeToString(this)
 
     companion object {
         private const val KEY_BYTES = 32

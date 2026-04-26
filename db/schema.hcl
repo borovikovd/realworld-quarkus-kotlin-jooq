@@ -88,7 +88,7 @@ table "person" {
   }
   column "email_hash" {
     null = false
-    type = varchar(64)
+    type = varchar(44)
   }
   column "email_verified_at" {
     null = true
@@ -100,7 +100,7 @@ table "person" {
   }
   column "username_hash" {
     null = false
-    type = varchar(64)
+    type = varchar(44)
   }
   column "bio_enc" {
     null = true
