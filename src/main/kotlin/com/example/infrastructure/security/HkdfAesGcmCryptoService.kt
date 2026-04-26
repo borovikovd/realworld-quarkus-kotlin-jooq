@@ -65,8 +65,8 @@ class HkdfAesGcmCryptoService(
         key: ByteArray,
         payload: ByteArray,
     ): ByteArray {
-        require(payload.size > GCM_NONCE_BYTES + GCM_TAG_BYTES) {
-            "AES-GCM payload too short: ${payload.size} bytes (need > ${GCM_NONCE_BYTES + GCM_TAG_BYTES})"
+        require(payload.size >= GCM_NONCE_BYTES + GCM_TAG_BYTES) {
+            "AES-GCM payload too short: ${payload.size} bytes (need >= ${GCM_NONCE_BYTES + GCM_TAG_BYTES})"
         }
         val nonce = payload.copyOfRange(0, GCM_NONCE_BYTES)
         val cipherAndTag = payload.copyOfRange(GCM_NONCE_BYTES, payload.size)
