@@ -7,6 +7,6 @@ paths = [
   '''src/test/''',
 ]
 
-[[allowlist.regexes]]
-description = "Dev/test profile master keys are not production secrets"
-regex = '''%(?:dev|test)\.app\.security\.master-key'''
+regexes = [
+  '''%(?:dev|test)\.app\.security\.master-key''',
+]
