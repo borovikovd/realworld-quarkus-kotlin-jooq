@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.SecureRandom
 import java.util.Base64
+import java.util.Locale
 import javax.crypto.Cipher
 import javax.crypto.Mac
 import javax.crypto.spec.GCMParameterSpec
@@ -26,9 +27,9 @@ class HkdfAesGcmCryptoService(
         vaultKek = hkdf(masterKey, "vault-kek")
     }
 
-    override fun hmacEmail(email: String): String = hmac(hmacEmailKey, email.lowercase())
+    override fun hmacEmail(email: String): String = hmac(hmacEmailKey, email.trim().lowercase(Locale.ROOT))
 
-    override fun hmacUsername(username: String): String = hmac(hmacUsernameKey, username.lowercase())
+    override fun hmacUsername(username: String): String = hmac(hmacUsernameKey, username.trim().lowercase(Locale.ROOT))
 
     override fun generateDek(): ByteArray = ByteArray(KEY_BYTES).also { secureRandom.nextBytes(it) }
 
