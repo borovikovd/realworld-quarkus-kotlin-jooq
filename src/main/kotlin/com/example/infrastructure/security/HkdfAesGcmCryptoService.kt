@@ -40,18 +40,12 @@ class HkdfAesGcmCryptoService(
     override fun encryptField(
         dek: ByteArray,
         plaintext: String,
-    ): String {
-        val cipherBytes = aesGcmEncrypt(dek, plaintext.toByteArray(Charsets.UTF_8))
-        return Base64.getEncoder().encodeToString(cipherBytes)
-    }
+    ): ByteArray = aesGcmEncrypt(dek, plaintext.toByteArray(Charsets.UTF_8))
 
     override fun decryptField(
         dek: ByteArray,
-        ciphertext: String,
-    ): String {
-        val cipherBytes = Base64.getDecoder().decode(ciphertext)
-        return String(aesGcmDecryptBytes(dek, cipherBytes), Charsets.UTF_8)
-    }
+        ciphertext: ByteArray,
+    ): String = String(aesGcmDecryptBytes(dek, ciphertext), Charsets.UTF_8)
 
     private fun aesGcmEncrypt(
         key: ByteArray,

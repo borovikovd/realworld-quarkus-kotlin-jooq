@@ -14,10 +14,10 @@ interface CryptoService {
     fun encryptField(
         dek: ByteArray,
         plaintext: String,
-    ): String
+    ): ByteArray
 
     fun decryptField(
         dek: ByteArray,
-        ciphertext: String,
+        ciphertext: ByteArray,
     ): String
 }

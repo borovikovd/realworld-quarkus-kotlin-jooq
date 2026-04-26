@@ -84,7 +84,7 @@ table "person" {
   }
   column "email_enc" {
     null = false
-    type = text
+    type = bytea
   }
   column "email_hash" {
     null = false
@@ -96,7 +96,7 @@ table "person" {
   }
   column "username_enc" {
     null = false
-    type = text
+    type = bytea
   }
   column "username_hash" {
     null = false
@@ -104,11 +104,11 @@ table "person" {
   }
   column "bio_enc" {
     null = true
-    type = text
+    type = bytea
   }
   column "image_enc" {
     null = true
-    type = text
+    type = bytea
   }
   column "created_at" {
     null    = false
