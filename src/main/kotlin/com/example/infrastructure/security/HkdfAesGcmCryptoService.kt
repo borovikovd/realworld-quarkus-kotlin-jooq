@@ -22,6 +22,9 @@ class HkdfAesGcmCryptoService(
 
     init {
         val masterKey = Base64.getDecoder().decode(masterKeyBase64)
+        require(masterKey.size >= KEY_BYTES) {
+            "app.security.master-key must be at least $KEY_BYTES bytes (got ${masterKey.size})"
+        }
         hmacEmailKey = hkdf(masterKey, "hmac-email")
         hmacUsernameKey = hkdf(masterKey, "hmac-username")
         vaultKek = hkdf(masterKey, "vault-kek")
