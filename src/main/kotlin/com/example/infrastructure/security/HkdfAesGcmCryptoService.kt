@@ -86,15 +86,30 @@ class HkdfAesGcmCryptoService(
     private fun hkdf(
         ikm: ByteArray,
         info: String,
+        length: Int = KEY_BYTES,
     ): ByteArray {
-        val zeroes = ByteArray(KEY_BYTES)
-        val prk = hmacRaw(zeroes, ikm)
+        require(length in 1..(HKDF_MAX_BLOCKS * KEY_BYTES)) {
+            "HKDF output length $length out of range [1, ${HKDF_MAX_BLOCKS * KEY_BYTES}]"
+        }
+        val prk = hmacRaw(ByteArray(KEY_BYTES), ikm)
         val infoBytes = info.toByteArray(Charsets.UTF_8)
-        val mac = Mac.getInstance(HMAC_SHA256)
-        mac.init(SecretKeySpec(prk, HMAC_SHA256))
-        mac.update(infoBytes)
-        mac.update(0x01.toByte())
-        return mac.doFinal()
+        val result = ByteArray(length)
+        var t = ByteArray(0)
+        var pos = 0
+        var counter = 1
+        while (pos < length) {
+            val mac = Mac.getInstance(HMAC_SHA256)
+            mac.init(SecretKeySpec(prk, HMAC_SHA256))
+            mac.update(t)
+            mac.update(infoBytes)
+            mac.update(counter.toByte())
+            t = mac.doFinal()
+            val n = minOf(t.size, length - pos)
+            t.copyInto(result, pos, 0, n)
+            pos += n
+            counter++
+        }
+        return result
     }
 
     private fun hmacRaw(
@@ -110,6 +125,7 @@ class HkdfAesGcmCryptoService(
 
     companion object {
         private const val KEY_BYTES = 32
+        private const val HKDF_MAX_BLOCKS = 255 // RFC 5869 §2.3
         private const val GCM_NONCE_BYTES = 12
         private const val GCM_TAG_BITS = 128
         private const val AES = "AES"
