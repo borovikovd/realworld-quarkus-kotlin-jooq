@@ -17,6 +17,7 @@ class HkdfAesGcmCryptoService(
 ) : CryptoService {
     private val hmacEmailKey: ByteArray
     private val hmacUsernameKey: ByteArray
+    private val hmacRefreshTokenKey: ByteArray
     private val vaultKek: ByteArray
     private val secureRandom = SecureRandom()
 
@@ -27,12 +28,15 @@ class HkdfAesGcmCryptoService(
         }
         hmacEmailKey = hkdf(masterKey, "hmac-email")
         hmacUsernameKey = hkdf(masterKey, "hmac-username")
+        hmacRefreshTokenKey = hkdf(masterKey, "hmac-refresh-token")
         vaultKek = hkdf(masterKey, "vault-kek")
     }
 
     override fun hmacEmail(email: String): String = hmac(hmacEmailKey, email.trim().lowercase(Locale.ROOT))
 
     override fun hmacUsername(username: String): String = hmac(hmacUsernameKey, username.trim().lowercase(Locale.ROOT))
+
+    override fun hmacRefreshToken(token: String): String = hmac(hmacRefreshTokenKey, token)
 
     override fun generateDek(): ByteArray = ByteArray(KEY_BYTES).also { secureRandom.nextBytes(it) }
 

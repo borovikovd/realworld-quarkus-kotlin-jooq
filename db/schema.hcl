@@ -180,6 +180,50 @@ table "password" {
   }
 }
 
+table "refresh_token" {
+  schema = schema.auth
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "user_id" {
+    null = false
+    type = bigint
+  }
+  column "token_hash" {
+    null = false
+    type = varchar(44)
+  }
+  column "expires_at" {
+    null = false
+    type = timestamptz
+  }
+  column "revoked_at" {
+    null = true
+    type = timestamptz
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "refresh_token_token_hash_key" {
+    columns = [column.token_hash]
+  }
+  foreign_key "refresh_token_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.user.column.id]
+    on_delete   = CASCADE
+  }
+  index "idx_refresh_token_user_id" {
+    columns = [column.user_id]
+  }
+}
+
 table "followers" {
   schema = schema.public
   column "follower_id" {

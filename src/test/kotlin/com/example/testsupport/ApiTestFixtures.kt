@@ -32,6 +32,7 @@ object ApiTestFixtures {
             username = username,
             password = password,
             token = response.jsonPath().getString("user.token"),
+            refreshToken = response.jsonPath().getString("user.refreshToken"),
         )
     }
 
@@ -103,6 +104,7 @@ data class UserRegistrationResult(
     val username: String,
     val password: String,
     val token: String,
+    val refreshToken: String,
 )
 
 data class ArticleCreationResult(

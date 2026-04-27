@@ -5,6 +5,8 @@ interface CryptoService {
 
     fun hmacUsername(username: String): String
 
+    fun hmacRefreshToken(token: String): String
+
     fun generateDek(): ByteArray
 
     fun encryptDek(dek: ByteArray): ByteArray

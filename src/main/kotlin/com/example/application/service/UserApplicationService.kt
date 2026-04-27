@@ -3,7 +3,9 @@ package com.example.application.service
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
 import com.example.application.outport.Clock
+import com.example.application.outport.CryptoService
 import com.example.application.outport.PasswordHashing
+import com.example.application.outport.RefreshTokenRepository
 import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.application.readmodel.UserReadModel
@@ -23,7 +25,9 @@ import org.slf4j.LoggerFactory
 class UserApplicationService(
     private val userWriteRepository: UserWriteRepository,
     private val userReadRepository: UserReadRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
     private val passwordHashing: PasswordHashing,
+    private val crypto: CryptoService,
     private val clock: Clock,
 ) : UserCommands,
     UserQueries {
@@ -140,8 +144,33 @@ class UserApplicationService(
 
     @Transactional
     override fun eraseUser(userId: Long) {
-        userWriteRepository.erase(UserId(userId))
+        val typedUserId = UserId(userId)
+        refreshTokenRepository.revokeAllForUser(typedUserId, clock.now())
+        userWriteRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
+    }
+
+    @Transactional
+    override fun refresh(refreshToken: String): Long {
+        val tokenHash = crypto.hmacRefreshToken(refreshToken)
+        val stored =
+            refreshTokenRepository.findByHash(tokenHash)
+                ?: throw UnauthorizedException("Invalid refresh token")
+
+        val now = clock.now()
+        if (stored.revokedAt != null || stored.expiresAt.isBefore(now)) {
+            throw UnauthorizedException("Invalid refresh token")
+        }
+
+        // Single-use: revoke immediately. Caller (TokenIssuer) issues a new pair.
+        refreshTokenRepository.revokeByHash(tokenHash, now)
+        return stored.userId.value
+    }
+
+    @Transactional
+    override fun logout(refreshToken: String) {
+        val tokenHash = crypto.hmacRefreshToken(refreshToken)
+        refreshTokenRepository.revokeByHash(tokenHash, clock.now())
     }
 
     override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)

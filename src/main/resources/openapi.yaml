@@ -50,6 +50,38 @@ paths:
         '422':
           $ref: '#/components/responses/GenericError'
       x-codegen-request-body-name: body
+  /users/refresh:
+    post:
+      tags:
+        - User and Authentication
+      summary: Refresh access token
+      description: Exchange a valid refresh token for a new access token. Rotates the refresh token (single-use).
+      operationId: RefreshToken
+      requestBody:
+        $ref: '#/components/requestBodies/RefreshTokenRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/GenericError'
+      x-codegen-request-body-name: body
+  /users/logout:
+    post:
+      tags:
+        - User and Authentication
+      summary: Logout
+      description: Revoke the presented refresh token.
+      operationId: Logout
+      requestBody:
+        $ref: '#/components/requestBodies/RefreshTokenRequest'
+      responses:
+        '204':
+          description: Refresh token revoked
+        '422':
+          $ref: '#/components/responses/GenericError'
+      x-codegen-request-body-name: body
   /user:
     get:
       tags:
@@ -464,6 +496,7 @@ components:
         - bio
         - email
         - image
+        - refreshToken
         - token
         - username
       type: object
@@ -472,11 +505,22 @@ components:
           type: string
         token:
           type: string
+          description: Short-lived JWT access token (15 minutes).
+        refreshToken:
+          type: string
+          description: Long-lived opaque refresh token (30 days). Single-use; rotated on every refresh.
         username:
           type: string
         bio:
           type: string
         image:
+          type: string
+    RefreshTokenPayload:
+      required:
+        - refreshToken
+      type: object
+      properties:
+        refreshToken:
           type: string
     UpdateUser:
       type: object
@@ -806,6 +850,13 @@ components:
             properties:
               article:
                 $ref: '#/components/schemas/UpdateArticle'
+    RefreshTokenRequest:
+      required: true
+      description: Refresh token to exchange or revoke
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RefreshTokenPayload'
     NewCommentRequest:
       required: true
       description: Comment you want to create

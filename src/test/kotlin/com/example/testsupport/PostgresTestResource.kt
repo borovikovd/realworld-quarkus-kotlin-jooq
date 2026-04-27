@@ -29,12 +29,20 @@ class PostgresTestResource : QuarkusTestResourceLifecycleManager {
     }
 
     private fun applyMigrations() {
-        val migrationFile = Paths.get("db/migrations/20251013181033_initial.sql")
-        val sql = Files.readString(migrationFile)
+        val migrationsDir = Paths.get("db/migrations")
+        val migrations =
+            Files
+                .list(migrationsDir)
+                .use { stream ->
+                    stream
+                        .filter { it.fileName.toString().endsWith(".sql") }
+                        .sorted()
+                        .toList()
+                }
 
         postgres.createConnection("").use { conn ->
             conn.createStatement().use { stmt ->
-                stmt.execute(sql)
+                migrations.forEach { stmt.execute(Files.readString(it)) }
             }
         }
     }

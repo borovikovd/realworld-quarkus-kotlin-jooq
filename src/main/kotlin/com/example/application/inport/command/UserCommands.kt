@@ -22,4 +22,8 @@ interface UserCommands {
     ): Long
 
     fun eraseUser(userId: Long)
+
+    fun refresh(refreshToken: String): Long
+
+    fun logout(refreshToken: String)
 }
