@@ -170,8 +170,10 @@ class UserApplicationService(
             throw UnauthorizedException("Invalid refresh token")
         }
 
-        // Single-use: revoke immediately. Caller (TokenIssuer) issues a new pair.
-        refreshTokenRepository.revokeByHash(tokenHash, now)
+        // false means a concurrent request already won the UPDATE race — token already used.
+        if (!refreshTokenRepository.revokeByHash(tokenHash, now)) {
+            throw UnauthorizedException("Invalid refresh token")
+        }
         return stored.userId.value
     }
 

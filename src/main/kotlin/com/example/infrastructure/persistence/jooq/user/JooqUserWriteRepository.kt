@@ -1,5 +1,6 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.application.outport.Clock
 import com.example.application.outport.CryptoService
 import com.example.application.outport.UserWriteRepository
 import com.example.domain.aggregate.user.Email
@@ -16,12 +17,12 @@ import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import java.time.OffsetDateTime
 
 @ApplicationScoped
 class JooqUserWriteRepository(
     private val dsl: DSLContext,
     private val crypto: CryptoService,
+    private val clock: Clock,
 ) : UserWriteRepository {
     override fun nextId(): UserId =
         UserId(
@@ -153,7 +154,7 @@ class JooqUserWriteRepository(
         )
 
     override fun erase(id: UserId) {
-        val now = OffsetDateTime.now()
+        val now = clock.now()
         dsl.deleteFrom(PERSON).where(PERSON.USER_ID.eq(id.value)).execute()
         dsl.deleteFrom(ENCRYPTION_KEY).where(ENCRYPTION_KEY.USER_ID.eq(id.value)).execute()
         dsl.deleteFrom(PASSWORD).where(PASSWORD.USER_ID.eq(id.value)).execute()

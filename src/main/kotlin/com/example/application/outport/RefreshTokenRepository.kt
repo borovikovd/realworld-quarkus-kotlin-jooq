@@ -13,10 +13,11 @@ interface RefreshTokenRepository {
 
     fun findByHash(tokenHash: String): StoredRefreshToken?
 
+    /** Returns true if the token was revoked, false if it was already revoked or not found. */
     fun revokeByHash(
         tokenHash: String,
         revokedAt: OffsetDateTime,
-    )
+    ): Boolean
 
     fun revokeAllForUser(
         userId: UserId,

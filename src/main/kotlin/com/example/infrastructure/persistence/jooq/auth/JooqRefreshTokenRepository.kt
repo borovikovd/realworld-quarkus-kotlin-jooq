@@ -42,14 +42,13 @@ class JooqRefreshTokenRepository(
     override fun revokeByHash(
         tokenHash: String,
         revokedAt: OffsetDateTime,
-    ) {
+    ): Boolean =
         dsl
             .update(REFRESH_TOKEN)
             .set(REFRESH_TOKEN.REVOKED_AT, revokedAt)
             .where(REFRESH_TOKEN.TOKEN_HASH.eq(tokenHash))
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
-            .execute()
-    }
+            .execute() > 0
 
     override fun revokeAllForUser(
         userId: UserId,
