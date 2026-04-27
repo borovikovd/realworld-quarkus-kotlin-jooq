@@ -32,11 +32,14 @@ class RateLimitFilter : ContainerRequestFilter {
     override fun filter(requestContext: ContainerRequestContext) {
         if (requestContext.method != "POST") return
 
-        val path = requestContext.uriInfo.path
+        val path =
+            requestContext.uriInfo.path
+                .trim('/')
+                .lowercase()
         val limiter =
-            when {
-                path == "users/login" -> loginLimiter
-                path == "users" -> registrationLimiter
+            when (path) {
+                "users/login" -> loginLimiter
+                "users" -> registrationLimiter
                 else -> return
             }
 
