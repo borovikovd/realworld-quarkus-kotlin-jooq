@@ -26,8 +26,17 @@ class RateLimitFilter : ContainerRequestFilter {
     @ConfigProperty(name = "rate-limit.trusted-proxy-count", defaultValue = "0")
     var trustedProxyCount: Int = 0
 
-    private val loginLimiter = RateLimiter(maxRequests = 10, window = Duration.ofMinutes(1))
-    private val registrationLimiter = RateLimiter(maxRequests = 3, window = Duration.ofMinutes(1))
+    @ConfigProperty(name = "rate-limit.login.max-requests", defaultValue = "10")
+    var loginMaxRequests: Int = 10
+
+    @ConfigProperty(name = "rate-limit.registration.max-requests", defaultValue = "3")
+    var registrationMaxRequests: Int = 3
+
+    @ConfigProperty(name = "rate-limit.window-seconds", defaultValue = "60")
+    var windowSeconds: Long = 60
+
+    private val loginLimiter by lazy { RateLimiter(loginMaxRequests, Duration.ofSeconds(windowSeconds)) }
+    private val registrationLimiter by lazy { RateLimiter(registrationMaxRequests, Duration.ofSeconds(windowSeconds)) }
 
     override fun filter(requestContext: ContainerRequestContext) {
         if (requestContext.method != "POST") return
@@ -38,8 +47,8 @@ class RateLimitFilter : ContainerRequestFilter {
                 .lowercase()
         val limiter =
             when (path) {
-                "users/login" -> loginLimiter
-                "users" -> registrationLimiter
+                "users/login" -> if (loginMaxRequests > 0) loginLimiter else return
+                "users" -> if (registrationMaxRequests > 0) registrationLimiter else return
                 else -> return
             }
 

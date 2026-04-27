@@ -10,6 +10,7 @@ import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email
+import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
@@ -77,22 +78,29 @@ class UserApplicationService(
         email: String,
         password: String,
     ): Long {
-        val emailVo =
-            runCatching { Email(email) }
-                .getOrElse { throw UnauthorizedException("Invalid email or password") }
+        val emailVo = runCatching { Email(email) }.getOrNull()
+        val credentials = emailVo?.let { userReadRepository.findCredentialsByEmail(it) }
 
-        val credentials = userReadRepository.findCredentialsByEmail(emailVo)
-        if (credentials == null) {
+        // Always run Argon2 verify, even when the email is unknown or invalid, so that
+        // login latency does not leak whether an account exists for that email.
+        val verified =
+            if (credentials != null) {
+                passwordHashing.verify(credentials.passwordHash, password)
+            } else {
+                passwordHashing.verify(dummyHash, password)
+                false
+            }
+
+        if (!verified) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
-        if (!passwordHashing.verify(credentials.passwordHash, password)) {
-            logger.info("Login failed: invalid credentials")
-            throw UnauthorizedException("Invalid email or password")
-        }
+        return credentials!!.userId.value
+    }
 
-        return credentials.userId.value
+    private val dummyHash: PasswordHash by lazy {
+        passwordHashing.hash("timing-equalizer-not-a-real-password")
     }
 
     @Transactional
