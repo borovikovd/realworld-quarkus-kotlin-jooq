@@ -6,8 +6,8 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ on hexagonal architectu
 
 1. **Read before you write.** Understand what depends on the symbol you are changing. A "dead code" bug may have callers that rely on the bug; check the full call graph, not just the obvious site.
 2. **Write code and tests together.** Don't push code without the test that proves it.
-3. **Run the full gate before claiming done.** `./gradlew build` runs compile + tests + ktlint + detekt + architecture tests. Pushed ≠ green; if you didn't run it, you didn't verify it.
-4. **Regenerate after schema/spec changes.** OpenAPI, jOOQ, and other generators consume input files; relying on stale generated symbols is a common trap. Discover the right task with `./gradlew tasks` — don't memorize names.
+3. **Run the full gate before claiming done.** `./gradlew build` runs codegen → compile → tests (ArchUnit included) → ktlint → detekt → SpotBugs/FindSecBugs. Pushed ≠ green; if you didn't run it, you didn't verify it.
+4. **Regenerate after schema/spec changes.** OpenAPI and jOOQ consume input files (`src/main/resources/openapi.yaml`, `db/migrations/*.sql`); stale generated symbols are a common trap. Discover task names with `./gradlew tasks` — don't memorize them.
 5. **Conventional commits.** `feat/fix/refactor/test/chore/docs(scope): subject`. Keep commits focused; split independent concerns rather than bundling.
 
 ## Code
@@ -25,10 +25,11 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ on hexagonal architectu
 - **Transactions on writes only.** Mark command-side service methods `@Transactional`; reads don't need it.
 - **Aggregates, not rows.** Repositories return whole aggregates. DTO mapping happens at the REST layer.
 - **Domain throws domain exceptions; mappers translate to HTTP.** Any exception without a mapper becomes a 500 leak — register a mapper instead.
+- **OpenAPI is the API contract.** REST resources implement interfaces generated from `openapi.yaml`. Add or change an endpoint by editing the spec first; the compiler enforces the rest.
 
 ## Persistence
 
-- Schema flow: edit HCL → generate migration → apply → regenerate jOOQ.
+- Schema flow: edit `db/schema.hcl` → `atlas migrate diff` → `atlas migrate apply` (Atlas CLI, not Gradle) → regenerate jOOQ via Gradle. See `db/README.md` for Atlas commands.
 - When you add a migration, verify the test resource picks up new files — don't assume it loads the whole directory.
 - Build query conditions in a list, apply once. Don't reassign query variables across `.where()`.
 - Use `multiset` for nested collections; never query inside a `map`/`forEach`.
