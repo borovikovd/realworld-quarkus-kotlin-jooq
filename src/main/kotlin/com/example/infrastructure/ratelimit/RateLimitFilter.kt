@@ -18,6 +18,9 @@ class RateLimitFilter : ContainerRequestFilter {
         private val logger = LoggerFactory.getLogger(RateLimitFilter::class.java)
         private const val TOO_MANY_REQUESTS = 429
         private const val PROBLEM_JSON = "application/problem+json"
+        private const val DEFAULT_LOGIN_MAX_REQUESTS = 10
+        private const val DEFAULT_REGISTRATION_MAX_REQUESTS = 3
+        private const val DEFAULT_WINDOW_SECONDS = 60L
     }
 
     @Inject
@@ -27,13 +30,13 @@ class RateLimitFilter : ContainerRequestFilter {
     var trustedProxyCount: Int = 0
 
     @ConfigProperty(name = "rate-limit.login.max-requests", defaultValue = "10")
-    var loginMaxRequests: Int = 10
+    var loginMaxRequests: Int = DEFAULT_LOGIN_MAX_REQUESTS
 
     @ConfigProperty(name = "rate-limit.registration.max-requests", defaultValue = "3")
-    var registrationMaxRequests: Int = 3
+    var registrationMaxRequests: Int = DEFAULT_REGISTRATION_MAX_REQUESTS
 
     @ConfigProperty(name = "rate-limit.window-seconds", defaultValue = "60")
-    var windowSeconds: Long = 60
+    var windowSeconds: Long = DEFAULT_WINDOW_SECONDS
 
     private val loginLimiter by lazy { RateLimiter(loginMaxRequests, Duration.ofSeconds(windowSeconds)) }
     private val registrationLimiter by lazy { RateLimiter(registrationMaxRequests, Duration.ofSeconds(windowSeconds)) }
@@ -45,32 +48,35 @@ class RateLimitFilter : ContainerRequestFilter {
             requestContext.uriInfo.path
                 .trim('/')
                 .lowercase()
-        val limiter =
-            when (path) {
-                "users/login" -> if (loginMaxRequests > 0) loginLimiter else return
-                "users" -> if (registrationMaxRequests > 0) registrationLimiter else return
-                else -> return
-            }
+        val limiter = limiterFor(path) ?: return
 
         val clientIp = extractClientIp(requestContext)
         if (!limiter.tryAcquire(clientIp)) {
             logger.warn("Rate limit exceeded: path={}, ip={}", path, clientIp)
-            requestContext.abortWith(
-                Response
-                    .status(TOO_MANY_REQUESTS)
-                    .type(PROBLEM_JSON)
-                    .header("Retry-After", "60")
-                    .entity(
-                        mapOf(
-                            "type" to "about:blank",
-                            "title" to "Too Many Requests",
-                            "status" to TOO_MANY_REQUESTS,
-                            "detail" to "Rate limit exceeded",
-                        ),
-                    ).build(),
-            )
+            requestContext.abortWith(tooManyRequestsResponse())
         }
     }
+
+    private fun limiterFor(path: String): RateLimiter? =
+        when (path) {
+            "users/login" -> loginLimiter.takeIf { loginMaxRequests > 0 }
+            "users" -> registrationLimiter.takeIf { registrationMaxRequests > 0 }
+            else -> null
+        }
+
+    private fun tooManyRequestsResponse(): Response =
+        Response
+            .status(TOO_MANY_REQUESTS)
+            .type(PROBLEM_JSON)
+            .header("Retry-After", "60")
+            .entity(
+                mapOf(
+                    "type" to "about:blank",
+                    "title" to "Too Many Requests",
+                    "status" to TOO_MANY_REQUESTS,
+                    "detail" to "Rate limit exceeded",
+                ),
+            ).build()
 
     private fun extractClientIp(requestContext: ContainerRequestContext): String {
         val remoteAddress = routingContext.request().remoteAddress()?.host() ?: "unknown"

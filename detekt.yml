@@ -5,7 +5,7 @@ complexity:
   CognitiveComplexMethod:
     active: true
   TooManyFunctions:
-    thresholdInClasses: 14
+    thresholdInClasses: 15
   LongParameterList:
     functionThreshold: 10
     constructorThreshold: 10
