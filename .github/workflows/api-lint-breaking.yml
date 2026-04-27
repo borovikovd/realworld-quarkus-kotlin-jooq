@@ -20,10 +20,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Run Spectral
-        uses: stoplightio/spectral-action@v0.8.13
+        uses: stoplightio/spectral-action@6416fd018ae38e60136775066eb3e98172143141 # v0.8.13
         with:
           file_glob: src/main/resources/openapi.yaml
 
@@ -35,16 +35,16 @@ jobs:
       contents: read
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Checkout base branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.base_ref }}
           path: base
 
       - name: Check for breaking API changes
-        uses: oasdiff/oasdiff-action/breaking@main
+        uses: oasdiff/oasdiff-action/breaking@c002f996c3d084acf62ea6dd4f2e7a57b7bc2a35 # v0.0.43
         with:
           base: base/src/main/resources/openapi.yaml
           revision: src/main/resources/openapi.yaml
