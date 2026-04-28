@@ -9,9 +9,9 @@ interface CryptoService {
 
     fun generateDek(): ByteArray
 
-    fun encryptDek(dek: ByteArray): ByteArray
+    fun encryptDek(dek: ByteArray): String
 
-    fun decryptDek(keyCiphertext: ByteArray): ByteArray
+    fun decryptDek(keyCiphertext: String): ByteArray
 
     fun encryptField(
         dek: ByteArray,

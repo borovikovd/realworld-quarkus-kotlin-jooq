@@ -42,12 +42,7 @@ table "encryption_key" {
   }
   column "key_ciphertext" {
     null = false
-    type = bytea
-  }
-  column "algorithm" {
-    null    = false
-    type    = text
-    default = "AES-256-GCM"
+    type = text
   }
   column "created_at" {
     null    = false
@@ -88,7 +83,7 @@ table "person" {
   }
   column "email_hash" {
     null = false
-    type = varchar(44)
+    type = varchar(100)
   }
   column "email_verified_at" {
     null = true
@@ -100,7 +95,7 @@ table "person" {
   }
   column "username_hash" {
     null = false
-    type = varchar(44)
+    type = varchar(100)
   }
   column "bio_enc" {
     null = true
@@ -193,7 +188,7 @@ table "refresh_token" {
   }
   column "token_hash" {
     null = false
-    type = varchar(44)
+    type = varchar(100)
   }
   column "expires_at" {
     null = false

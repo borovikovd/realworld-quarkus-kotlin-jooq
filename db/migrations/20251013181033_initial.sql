@@ -82,8 +82,7 @@ CREATE SCHEMA IF NOT EXISTS "vault";
 CREATE TABLE "vault"."encryption_key" (
   "id"             uuid        NOT NULL DEFAULT gen_random_uuid(),
   "user_id"        bigint      NOT NULL,
-  "key_ciphertext" bytea       NOT NULL,
-  "algorithm"      text        NOT NULL DEFAULT 'AES-256-GCM',
+  "key_ciphertext" text        NOT NULL,
   "created_at"     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id"),
   CONSTRAINT "encryption_key_user_id_key"  UNIQUE ("user_id"),
@@ -91,23 +90,23 @@ CREATE TABLE "vault"."encryption_key" (
 );
 
 CREATE TABLE "vault"."person" (
-  "id"                uuid        NOT NULL DEFAULT gen_random_uuid(),
-  "user_id"           bigint      NOT NULL,
-  "encryption_key_id" uuid        NULL,
-  "email_enc"         bytea       NOT NULL,
-  "email_hash"        varchar(44) NOT NULL,
-  "email_verified_at" timestamptz NULL,
-  "username_enc"      bytea       NOT NULL,
-  "username_hash"     varchar(44) NOT NULL,
-  "bio_enc"           bytea       NULL,
-  "image_enc"         bytea       NULL,
-  "created_at"        timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at"        timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "id"                uuid         NOT NULL DEFAULT gen_random_uuid(),
+  "user_id"           bigint       NOT NULL,
+  "encryption_key_id" uuid         NULL,
+  "email_enc"         bytea        NOT NULL,
+  "email_hash"        varchar(100) NOT NULL,
+  "email_verified_at" timestamptz  NULL,
+  "username_enc"      bytea        NOT NULL,
+  "username_hash"     varchar(100) NOT NULL,
+  "bio_enc"           bytea        NULL,
+  "image_enc"         bytea        NULL,
+  "created_at"        timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at"        timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id"),
-  CONSTRAINT "person_user_id_key"           UNIQUE ("user_id"),
-  CONSTRAINT "person_email_hash_key"        UNIQUE ("email_hash"),
-  CONSTRAINT "person_username_hash_key"     UNIQUE ("username_hash"),
-  CONSTRAINT "person_user_id_fkey"          FOREIGN KEY ("user_id")           REFERENCES "public"."user"            ("id") ON DELETE CASCADE,
+  CONSTRAINT "person_user_id_key"            UNIQUE ("user_id"),
+  CONSTRAINT "person_email_hash_key"         UNIQUE ("email_hash"),
+  CONSTRAINT "person_username_hash_key"      UNIQUE ("username_hash"),
+  CONSTRAINT "person_user_id_fkey"           FOREIGN KEY ("user_id")           REFERENCES "public"."user"            ("id") ON DELETE CASCADE,
   CONSTRAINT "person_encryption_key_id_fkey" FOREIGN KEY ("encryption_key_id") REFERENCES "vault"."encryption_key" ("id") ON DELETE SET NULL
 );
 CREATE INDEX "idx_person_email_hash"    ON "vault"."person" ("email_hash");
@@ -125,3 +124,16 @@ CREATE TABLE "auth"."password" (
   PRIMARY KEY ("user_id"),
   CONSTRAINT "password_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
 );
+
+CREATE TABLE "auth"."refresh_token" (
+  "id"         uuid         NOT NULL DEFAULT gen_random_uuid(),
+  "user_id"    bigint       NOT NULL,
+  "token_hash" varchar(100) NOT NULL,
+  "expires_at" timestamptz  NOT NULL,
+  "revoked_at" timestamptz  NULL,
+  "created_at" timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("id"),
+  CONSTRAINT "refresh_token_token_hash_key" UNIQUE ("token_hash"),
+  CONSTRAINT "refresh_token_user_id_fkey"   FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
+);
+CREATE INDEX "idx_refresh_token_user_id" ON "auth"."refresh_token" ("user_id");

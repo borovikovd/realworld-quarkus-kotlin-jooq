@@ -55,6 +55,9 @@ dependencies {
     // jOOQ integration
     implementation("io.quarkiverse.jooq:quarkus-jooq:2.1.0")
 
+    // Vault Transit (HMAC, DEK wrapping)
+    implementation("io.quarkiverse.vault:quarkus-vault:4.7.0")
+
     // Observability
     implementation("io.quarkus:quarkus-logging-json")
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")

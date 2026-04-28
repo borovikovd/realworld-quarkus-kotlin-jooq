@@ -6,6 +6,7 @@ import org.jooq.DSLContext
 import org.junit.jupiter.api.BeforeEach
 
 @QuarkusTestResource(PostgresTestResource::class)
+@QuarkusTestResource(VaultTestResource::class)
 abstract class BaseApiTest {
     @Inject
     lateinit var dsl: DSLContext
