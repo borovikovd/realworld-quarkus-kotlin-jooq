@@ -48,3 +48,4 @@ secrets.*
 # Security scan reports
 *.sarif
 dependency-check-report/
+keyset-*-backup.json
