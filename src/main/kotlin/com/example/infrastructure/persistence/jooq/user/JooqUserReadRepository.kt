@@ -35,12 +35,14 @@ class JooqUserReadRepository(
             .fetchOne()
             ?.let { record ->
                 val userId = record.get(USER.ID)!!
+                val emailEnc = record.get(PERSON.EMAIL_ENC)!!
+                val usernameEnc = record.get(PERSON.USERNAME_ENC)!!
                 UserReadModel(
                     id = UserId(userId),
-                    email = Email(crypto.decryptField(userId, "email", record.get(PERSON.EMAIL_ENC)!!)),
-                    username = Username(crypto.decryptField(userId, "username", record.get(PERSON.USERNAME_ENC)!!)),
-                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, "bio", it) },
-                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, "image", it) },
+                    email = Email(crypto.decryptField(userId, CryptoService.EMAIL, emailEnc)),
+                    username = Username(crypto.decryptField(userId, CryptoService.USERNAME, usernameEnc)),
+                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, CryptoService.BIO, it) },
+                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, CryptoService.IMAGE, it) },
                 )
             }
 

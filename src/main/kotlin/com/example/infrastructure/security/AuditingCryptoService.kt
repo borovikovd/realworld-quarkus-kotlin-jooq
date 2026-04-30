@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package com.example.infrastructure.security
 
 import com.example.application.outport.CryptoService
@@ -6,7 +8,7 @@ import jakarta.decorator.Decorator
 import jakarta.decorator.Delegate
 import jakarta.enterprise.inject.Any
 import jakarta.inject.Inject
-import org.jboss.logging.Logger
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 @Decorator
@@ -31,10 +33,14 @@ class AuditingCryptoService : CryptoService {
         MDC.put("audit.userId", userId.toString())
         MDC.put("audit.field", field)
         MDC.put("audit.op", "encryptField")
-        log.info("pii-write")
         return try {
-            delegate.encryptField(userId, field, plaintext)
+            delegate.encryptField(userId, field, plaintext).also { log.info("pii-write") }
+        } catch (e: Exception) {
+            MDC.put("audit.error", e.javaClass.simpleName)
+            log.warn("pii-write-failed")
+            throw e
         } finally {
+            MDC.remove("audit.error")
             MDC.remove("audit.op")
             MDC.remove("audit.field")
             MDC.remove("audit.userId")
@@ -49,10 +55,14 @@ class AuditingCryptoService : CryptoService {
         MDC.put("audit.userId", userId.toString())
         MDC.put("audit.field", field)
         MDC.put("audit.op", "decryptField")
-        log.info("pii-access")
         return try {
-            delegate.decryptField(userId, field, ciphertext)
+            delegate.decryptField(userId, field, ciphertext).also { log.info("pii-access") }
+        } catch (e: Exception) {
+            MDC.put("audit.error", e.javaClass.simpleName)
+            log.warn("pii-access-failed")
+            throw e
         } finally {
+            MDC.remove("audit.error")
             MDC.remove("audit.op")
             MDC.remove("audit.field")
             MDC.remove("audit.userId")
@@ -60,6 +70,6 @@ class AuditingCryptoService : CryptoService {
     }
 
     companion object {
-        private val log: Logger = Logger.getLogger(AuditingCryptoService::class.java)
+        private val log = LoggerFactory.getLogger(AuditingCryptoService::class.java)
     }
 }

@@ -1,5 +1,6 @@
 package com.example.infrastructure.security
 
+import com.example.application.outport.CryptoService
 import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.TinkProtoKeysetFormat
@@ -46,20 +47,20 @@ class TinkCryptoServiceTest {
     @Test
     fun `encrypt and decrypt round-trips for same userId and field`() {
         val plaintext = "test@example.com"
-        val ciphertext = service.encryptField(1L, "email", plaintext)
-        assertEquals(plaintext, service.decryptField(1L, "email", ciphertext))
+        val ciphertext = service.encryptField(1L, CryptoService.EMAIL, plaintext)
+        assertEquals(plaintext, service.decryptField(1L, CryptoService.EMAIL, ciphertext))
     }
 
     @Test
     fun `decrypt with wrong userId fails (AD mismatch)`() {
-        val ciphertext = service.encryptField(1L, "email", "secret")
-        assertThrows<Exception> { service.decryptField(2L, "email", ciphertext) }
+        val ciphertext = service.encryptField(1L, CryptoService.EMAIL, "secret")
+        assertThrows<Exception> { service.decryptField(2L, CryptoService.EMAIL, ciphertext) }
     }
 
     @Test
     fun `decrypt with wrong field fails (AD mismatch)`() {
-        val ciphertext = service.encryptField(1L, "email", "secret")
-        assertThrows<Exception> { service.decryptField(1L, "username", ciphertext) }
+        val ciphertext = service.encryptField(1L, CryptoService.EMAIL, "secret")
+        assertThrows<Exception> { service.decryptField(1L, CryptoService.USERNAME, ciphertext) }
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.example.infrastructure.security
 
+import com.example.application.outport.CryptoService
 import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.KeysetManager
@@ -50,7 +51,7 @@ class TinkKeysetRotationTest {
         // Build a two-key AEAD keyset: key A is primary
         val keysetWithA = KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
         val serviceBeforeRotation = makeService(serialize(keysetWithA), macBytes, tokenMacBytes)
-        val ciphertext = serviceBeforeRotation.encryptField(42L, "email", "sensitive")
+        val ciphertext = serviceBeforeRotation.encryptField(42L, CryptoService.EMAIL, "sensitive")
 
         // Rotate: add key B and promote it to primary; key A is retained for decryption
         val manager = KeysetManager.withKeysetHandle(keysetWithA)
@@ -61,11 +62,11 @@ class TinkKeysetRotationTest {
         val serviceAfterRotation = makeService(serialize(rotatedKeyset), macBytes, tokenMacBytes)
 
         // Pre-rotation ciphertext (written with key A) still decrypts with the rotated keyset
-        assertEquals("sensitive", serviceAfterRotation.decryptField(42L, "email", ciphertext))
+        assertEquals("sensitive", serviceAfterRotation.decryptField(42L, CryptoService.EMAIL, ciphertext))
 
         // New writes use key B (the new primary); old service with key A only cannot decrypt them
-        val newCiphertext = serviceAfterRotation.encryptField(42L, "email", "new-sensitive")
-        assertEquals("new-sensitive", serviceAfterRotation.decryptField(42L, "email", newCiphertext))
+        val newCiphertext = serviceAfterRotation.encryptField(42L, CryptoService.EMAIL, "new-sensitive")
+        assertEquals("new-sensitive", serviceAfterRotation.decryptField(42L, CryptoService.EMAIL, newCiphertext))
     }
 
     @Test
