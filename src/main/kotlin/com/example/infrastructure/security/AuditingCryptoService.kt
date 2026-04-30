@@ -7,7 +7,7 @@ import jakarta.decorator.Delegate
 import jakarta.enterprise.inject.Any
 import jakarta.inject.Inject
 import org.jboss.logging.Logger
-import org.jboss.logging.MDC
+import org.slf4j.MDC
 
 @Decorator
 @Priority(1)
@@ -25,19 +25,38 @@ class AuditingCryptoService : CryptoService {
 
     override fun encryptField(
         userId: Long,
+        field: String,
         plaintext: String,
-    ): ByteArray = delegate.encryptField(userId, plaintext)
+    ): ByteArray {
+        MDC.put("audit.userId", userId.toString())
+        MDC.put("audit.field", field)
+        MDC.put("audit.op", "encryptField")
+        log.info("pii-write")
+        return try {
+            delegate.encryptField(userId, field, plaintext)
+        } finally {
+            MDC.remove("audit.op")
+            MDC.remove("audit.field")
+            MDC.remove("audit.userId")
+        }
+    }
 
     override fun decryptField(
         userId: Long,
+        field: String,
         ciphertext: ByteArray,
     ): String {
         MDC.put("audit.userId", userId.toString())
+        MDC.put("audit.field", field)
         MDC.put("audit.op", "decryptField")
         log.info("pii-access")
-        MDC.remove("audit.op")
-        MDC.remove("audit.userId")
-        return delegate.decryptField(userId, ciphertext)
+        return try {
+            delegate.decryptField(userId, field, ciphertext)
+        } finally {
+            MDC.remove("audit.op")
+            MDC.remove("audit.field")
+            MDC.remove("audit.userId")
+        }
     }
 
     companion object {

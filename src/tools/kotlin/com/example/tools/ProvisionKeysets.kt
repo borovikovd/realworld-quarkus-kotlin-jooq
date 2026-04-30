@@ -12,6 +12,7 @@ import io.quarkus.vault.client.VaultClient
 import io.quarkus.vault.client.VaultClientException
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitCreateKeyParams
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitDecryptParams
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitEncryptParams
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitKeyType
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
@@ -48,9 +49,9 @@ fun main(args: Array<String>) {
     val macHandle = KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG)
     val tokenMacHandle = KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG)
 
-    val wrappedAead = wrap(transit, aeadHandle)
-    val wrappedMac = wrap(transit, macHandle)
-    val wrappedTokenMac = wrap(transit, tokenMacHandle)
+    val wrappedAead = wrapAndVerify(transit, aeadHandle, "aead")
+    val wrappedMac = wrapAndVerify(transit, macHandle, "mac")
+    val wrappedTokenMac = wrapAndVerify(transit, tokenMacHandle, "token-mac")
 
     println("# ── Runtime env vars ────────────────────────────────────────────────────────")
     println("# Set these in your deployment (k8s Secret, Vault KV, etc.).")
@@ -61,14 +62,45 @@ fun main(args: Array<String>) {
     writeBackup(aeadHandle, macHandle, tokenMacHandle)
 }
 
+private fun wrapAndVerify(
+    transit: VaultSecretsTransit,
+    handle: KeysetHandle,
+    name: String,
+): String {
+    val access = InsecureSecretKeyAccess.get()
+    val plaintext = TinkProtoKeysetFormat.serializeKeyset(handle, access)
+    val ciphertext =
+        transit
+            .encrypt(KEYSET_KEK, VaultSecretsTransitEncryptParams().setPlaintext(plaintext))
+            .toCompletableFuture()
+            .join()
+            .ciphertext
+    val decrypted =
+        transit
+            .decrypt(KEYSET_KEK, VaultSecretsTransitDecryptParams().setCiphertext(ciphertext))
+            .toCompletableFuture()
+            .join()
+    check(decrypted.contentEquals(plaintext)) { "Wrap/unwrap round-trip failed for $name keyset" }
+    return ciphertext
+}
+
 private fun writeBackup(
     aeadHandle: KeysetHandle,
     macHandle: KeysetHandle,
     tokenMacHandle: KeysetHandle,
 ) {
-    val aeadFile = File("keyset-aead-backup.json")
-    val macFile = File("keyset-mac-backup.json")
-    val tokenMacFile = File("keyset-token-mac-backup.json")
+    val workDir = File(System.getProperty("user.dir"))
+    val aeadFile = File(workDir, "keyset-aead-backup.json")
+    val macFile = File(workDir, "keyset-mac-backup.json")
+    val tokenMacFile = File(workDir, "keyset-token-mac-backup.json")
+
+    println()
+    println("# ── Cold backup (mode 600) ──────────────────────────────────────────────────")
+    println("# ${aeadFile.absolutePath}")
+    println("# ${macFile.absolutePath}")
+    println("# ${tokenMacFile.absolutePath}")
+    println("# JSON format — readable by any Tink implementation.")
+    println("# Store offline. Delete after securing.")
 
     val access = InsecureSecretKeyAccess.get()
     aeadFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(aeadHandle, access))
@@ -82,22 +114,14 @@ private fun writeBackup(
             System.err.println("Warning: POSIX permissions not supported — secure ${file.absolutePath} manually")
         }
     }
-
-    println()
-    println("# ── Cold backup written (mode 600) ─────────────────────────────────────────")
-    println("# ${aeadFile.absolutePath}")
-    println("# ${macFile.absolutePath}")
-    println("# ${tokenMacFile.absolutePath}")
-    println("# JSON format — readable by any Tink implementation.")
-    println("# Store offline. Delete after securing.")
 }
 
 private fun ensureTransitMounted(client: VaultClient) {
     try {
-        client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
+        client.sys().mounts().read("transit").toCompletableFuture().join()
     } catch (e: VaultClientException) {
-        if (e.status != 400) throw e
-        // transit already mounted — that's fine
+        if (e.status != 404) throw e
+        client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
     }
 }
 
@@ -112,16 +136,3 @@ private fun ensureKekExists(transit: VaultSecretsTransit) {
             .join()
     }
 }
-
-private fun wrap(
-    transit: VaultSecretsTransit,
-    handle: KeysetHandle,
-): String =
-    transit
-        .encrypt(
-            KEYSET_KEK,
-            VaultSecretsTransitEncryptParams()
-                .setPlaintext(TinkProtoKeysetFormat.serializeKeyset(handle, InsecureSecretKeyAccess.get())),
-        ).toCompletableFuture()
-        .join()
-        .ciphertext

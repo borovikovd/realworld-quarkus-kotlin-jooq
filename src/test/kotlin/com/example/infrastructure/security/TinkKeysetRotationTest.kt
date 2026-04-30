@@ -47,7 +47,7 @@ class TinkKeysetRotationTest {
         val macBytes = serialize(macHandle)
 
         val oldService = makeService(serialize(originalHandle), macBytes)
-        val ciphertext = oldService.encryptField(42L, "sensitive")
+        val ciphertext = oldService.encryptField(42L, "email", "sensitive")
 
         // Rotate: add a new primary key to the keyset
         val rotatedHandle = KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
@@ -56,13 +56,13 @@ class TinkKeysetRotationTest {
         // Tink's KeysetManager merges keys; simulate by verifying old ciphertexts
         // still decrypt after the new primary encrypts new ones.
         val newService = makeService(serialize(rotatedHandle), macBytes)
-        val newCiphertext = newService.encryptField(42L, "new-sensitive")
+        val newCiphertext = newService.encryptField(42L, "email", "new-sensitive")
 
         // Old service can still decrypt its own ciphertexts (key still present)
-        assertEquals("sensitive", oldService.decryptField(42L, ciphertext))
+        assertEquals("sensitive", oldService.decryptField(42L, "email", ciphertext))
 
         // New service can decrypt new ciphertexts
-        assertEquals("new-sensitive", newService.decryptField(42L, newCiphertext))
+        assertEquals("new-sensitive", newService.decryptField(42L, "email", newCiphertext))
     }
 
     @Test

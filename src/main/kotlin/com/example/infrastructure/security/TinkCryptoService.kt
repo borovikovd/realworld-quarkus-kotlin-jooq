@@ -43,13 +43,15 @@ class TinkCryptoService(
 
     override fun encryptField(
         userId: Long,
+        field: String,
         plaintext: String,
-    ): ByteArray = aead.encrypt(plaintext.toByteArray(Charsets.UTF_8), userIdAd(userId))
+    ): ByteArray = aead.encrypt(plaintext.toByteArray(Charsets.UTF_8), fieldAd(userId, field))
 
     override fun decryptField(
         userId: Long,
+        field: String,
         ciphertext: ByteArray,
-    ): String = String(aead.decrypt(ciphertext, userIdAd(userId)), Charsets.UTF_8)
+    ): String = String(aead.decrypt(ciphertext, fieldAd(userId, field)), Charsets.UTF_8)
 
     private fun unwrapKeyset(wrapped: String) =
         TinkProtoKeysetFormat.parseKeyset(transit.decrypt(KEYSET_KEK, wrapped).value, InsecureSecretKeyAccess.get())
@@ -62,7 +64,10 @@ class TinkCryptoService(
         return Base64.getEncoder().encodeToString(bytes)
     }
 
-    private fun userIdAd(userId: Long): ByteArray = ByteBuffer.allocate(LONG_BYTES).putLong(userId).array()
+    private fun fieldAd(
+        userId: Long,
+        field: String,
+    ): ByteArray = ByteBuffer.allocate(LONG_BYTES).putLong(userId).array() + field.toByteArray(Charsets.UTF_8)
 
     companion object {
         private const val KEYSET_KEK = "app-keyset-kek"

@@ -45,9 +45,9 @@ class JooqProfileReadRepository(
             ?.let { record ->
                 val userId = record.get(USER.ID)!!
                 ProfileReadModel(
-                    username = crypto.decryptField(userId, record.get(PERSON.USERNAME_ENC)!!),
-                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, it) },
-                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, it) },
+                    username = crypto.decryptField(userId, "username", record.get(PERSON.USERNAME_ENC)!!),
+                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, "bio", it) },
+                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, "image", it) },
                     following = record.get("following", Int::class.java) > 0,
                 )
             }

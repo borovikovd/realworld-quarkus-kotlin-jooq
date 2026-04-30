@@ -13,9 +13,9 @@ internal fun Record.decryptAuthorProfile(
     val usernameEnc = get(PERSON.USERNAME_ENC)
     return if (usernameEnc != null && userId != null) {
         ProfileReadModel(
-            username = crypto.decryptField(userId, usernameEnc),
-            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, it) },
-            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, it) },
+            username = crypto.decryptField(userId, "username", usernameEnc),
+            bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, "bio", it) },
+            image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, "image", it) },
             following = following,
         )
     } else {

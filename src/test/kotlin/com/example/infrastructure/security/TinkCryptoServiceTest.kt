@@ -44,16 +44,22 @@ class TinkCryptoServiceTest {
     }
 
     @Test
-    fun `encrypt and decrypt round-trips for same userId`() {
+    fun `encrypt and decrypt round-trips for same userId and field`() {
         val plaintext = "test@example.com"
-        val ciphertext = service.encryptField(1L, plaintext)
-        assertEquals(plaintext, service.decryptField(1L, ciphertext))
+        val ciphertext = service.encryptField(1L, "email", plaintext)
+        assertEquals(plaintext, service.decryptField(1L, "email", ciphertext))
     }
 
     @Test
     fun `decrypt with wrong userId fails (AD mismatch)`() {
-        val ciphertext = service.encryptField(1L, "secret")
-        assertThrows<Exception> { service.decryptField(2L, ciphertext) }
+        val ciphertext = service.encryptField(1L, "email", "secret")
+        assertThrows<Exception> { service.decryptField(2L, "email", ciphertext) }
+    }
+
+    @Test
+    fun `decrypt with wrong field fails (AD mismatch)`() {
+        val ciphertext = service.encryptField(1L, "email", "secret")
+        assertThrows<Exception> { service.decryptField(1L, "username", ciphertext) }
     }
 
     @Test
@@ -76,7 +82,6 @@ class TinkCryptoServiceTest {
 
     @Test
     fun `hmacRefreshToken uses separate keyset from hmacEmail`() {
-        // same input, different key → different output
         assertNotEquals(service.hmacRefreshToken("alice"), service.hmacEmail("alice"))
     }
 }
