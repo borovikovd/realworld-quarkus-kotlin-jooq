@@ -8,15 +8,16 @@ import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
 import com.google.crypto.tink.mac.PredefinedMacParameters
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager
+import io.quarkus.vault.client.VaultClient
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitCreateKeyParams
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitEncryptParams
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitKeyType
+import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.ByteArrayOutputStream
-import java.net.URI
 import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.time.Duration
-import java.util.Base64
 
 class VaultTestResource : QuarkusTestResourceLifecycleManager {
     private val vault =
@@ -35,12 +36,24 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
 
         vault.start()
         val url = "http://${vault.host}:${vault.getMappedPort(8200)}"
-        val http = HttpClient.newHttpClient()
-        http.post(url, "/v1/sys/mounts/transit", """{"type":"transit"}""")
-        http.post(url, "/v1/transit/keys/$KEYSET_KEK", """{"type":"aes256-gcm96"}""")
 
-        val wrappedAead = wrapKeyset(http, url, KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
-        val wrappedMac = wrapKeyset(http, url, KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+        val client =
+            VaultClient
+                .builder()
+                .baseUrl(url)
+                .clientToken(TOKEN)
+                .executor(JDKVaultHttpClient(HttpClient.newHttpClient()))
+                .build()
+
+        val transit = client.secrets().transit()
+        client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
+        transit
+            .createKey(KEYSET_KEK, VaultSecretsTransitCreateKeyParams().setType(VaultSecretsTransitKeyType.AES256_GCM96))
+            .toCompletableFuture()
+            .join()
+
+        val wrappedAead = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
+        val wrappedMac = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
 
         return mapOf(
             "quarkus.vault.url" to url,
@@ -55,46 +68,16 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
     }
 
     private fun wrapKeyset(
-        http: HttpClient,
-        baseUrl: String,
+        transit: io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit,
         handle: KeysetHandle,
     ): String {
         val bos = ByteArrayOutputStream()
         CleartextKeysetHandle.write(handle, BinaryKeysetWriter.withOutputStream(bos))
-        val plaintext = Base64.getEncoder().encodeToString(bos.toByteArray())
-        val body = """{"plaintext":"$plaintext"}"""
-        val response =
-            http.send(
-                HttpRequest
-                    .newBuilder()
-                    .uri(URI.create("$baseUrl/v1/transit/encrypt/$KEYSET_KEK"))
-                    .header("X-Vault-Token", TOKEN)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString(),
-            )
-        val json = response.body()
-        val start = json.indexOf("\"ciphertext\":\"") + 14
-        val end = json.indexOf('"', start)
-        return json.substring(start, end)
-    }
-
-    private fun HttpClient.post(
-        baseUrl: String,
-        path: String,
-        body: String,
-    ) {
-        send(
-            HttpRequest
-                .newBuilder()
-                .uri(URI.create("$baseUrl$path"))
-                .header("X-Vault-Token", TOKEN)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build(),
-            HttpResponse.BodyHandlers.discarding(),
-        )
+        return transit
+            .encrypt(KEYSET_KEK, VaultSecretsTransitEncryptParams().setPlaintext(bos.toByteArray()))
+            .toCompletableFuture()
+            .join()
+            .ciphertext
     }
 
     companion object {
