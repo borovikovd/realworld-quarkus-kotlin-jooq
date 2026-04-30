@@ -29,6 +29,7 @@ class DataAccessExceptionMapper : ExceptionMapper<DataAccessException> {
         return when {
             "email_hash" in detail -> "email"
             "username_hash" in detail -> "username"
+            "articles_slug_key" in detail -> "slug"
             else -> null.also { logger.error("Unhandled unique constraint violation", exception) }
         }
     }

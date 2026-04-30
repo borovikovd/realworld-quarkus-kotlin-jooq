@@ -20,7 +20,9 @@ class LoggingMdcFilter :
     lateinit var currentUser: CurrentUser
 
     override fun filter(requestContext: ContainerRequestContext) {
-        MDC.put("requestId", UUID.randomUUID().toString())
+        val requestId = UUID.randomUUID().toString()
+        MDC.put("requestId", requestId)
+        requestContext.setProperty(REQUEST_ID_PROP, requestId)
         currentUser.id?.let { MDC.put("userId", it.value.toString()) }
     }
 
@@ -28,6 +30,14 @@ class LoggingMdcFilter :
         requestContext: ContainerRequestContext,
         responseContext: ContainerResponseContext,
     ) {
+        val requestId = requestContext.getProperty(REQUEST_ID_PROP) as? String
+        if (requestId != null) {
+            responseContext.headers.putSingle("X-Request-Id", requestId)
+        }
         MDC.clear()
+    }
+
+    companion object {
+        private const val REQUEST_ID_PROP = "requestId"
     }
 }

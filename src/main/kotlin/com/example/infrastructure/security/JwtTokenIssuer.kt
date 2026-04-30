@@ -16,19 +16,23 @@ import java.util.Base64
 @ApplicationScoped
 class JwtTokenIssuer(
     @param:ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
+    @param:ConfigProperty(name = "app.token.access-expiry-seconds") private val accessExpirySeconds: Long,
+    @param:ConfigProperty(name = "app.token.refresh-expiry-days") private val refreshExpiryDays: Long,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val crypto: CryptoService,
     private val clock: Clock,
 ) : TokenIssuer {
     private val secureRandom = SecureRandom()
     private val base64UrlEncoder = Base64.getUrlEncoder().withoutPadding()
+    private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
+    private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
     override fun issueAccessToken(userId: UserId): String =
         Jwt
             .issuer(issuer)
             .subject(userId.value.toString())
             .groups(setOf("user"))
-            .expiresAt(clock.now().toInstant().plus(ACCESS_TOKEN_EXPIRY))
+            .expiresAt(clock.now().toInstant().plus(accessTokenExpiry))
             .sign()
 
     override fun issue(userId: UserId): IssuedTokens {
@@ -37,7 +41,7 @@ class JwtTokenIssuer(
         refreshTokenRepository.store(
             userId = userId,
             tokenHash = crypto.hmacRefreshToken(refreshToken),
-            expiresAt = clock.now().plus(REFRESH_TOKEN_EXPIRY),
+            expiresAt = clock.now().plus(refreshTokenExpiry),
         )
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
@@ -48,8 +52,6 @@ class JwtTokenIssuer(
     }
 
     companion object {
-        private val ACCESS_TOKEN_EXPIRY: Duration = Duration.ofMinutes(15)
-        private val REFRESH_TOKEN_EXPIRY: Duration = Duration.ofDays(30)
         private const val REFRESH_TOKEN_BYTES = 32
     }
 }
