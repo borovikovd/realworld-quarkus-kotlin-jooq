@@ -28,23 +28,22 @@ class TinkCryptoServiceTest {
             AeadConfig.register()
             MacConfig.register()
 
-            val aeadHandle = KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
-            val macHandle = KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG)
-
             fun serialize(handle: KeysetHandle): ByteArray {
                 val bos = ByteArrayOutputStream()
                 CleartextKeysetHandle.write(handle, BinaryKeysetWriter.withOutputStream(bos))
                 return bos.toByteArray()
             }
 
-            val aeadBytes = serialize(aeadHandle)
-            val macBytes = serialize(macHandle)
+            val aeadBytes = serialize(KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
+            val macBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+            val tokenMacBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
 
             val transit = mockk<VaultTransitSecretEngine>()
             every { transit.decrypt("app-keyset-kek", "wrapped-aead") } returns ClearData(aeadBytes)
             every { transit.decrypt("app-keyset-kek", "wrapped-mac") } returns ClearData(macBytes)
+            every { transit.decrypt("app-keyset-kek", "wrapped-token-mac") } returns ClearData(tokenMacBytes)
 
-            service = TinkCryptoService(transit, "wrapped-aead", "wrapped-mac")
+            service = TinkCryptoService(transit, "wrapped-aead", "wrapped-mac", "wrapped-token-mac")
         }
     }
 
@@ -77,5 +76,11 @@ class TinkCryptoServiceTest {
     @Test
     fun `different inputs produce different macs`() {
         assertNotEquals(service.hmacEmail("a@b.com"), service.hmacEmail("c@d.com"))
+    }
+
+    @Test
+    fun `hmacRefreshToken uses separate keyset from hmacEmail`() {
+        // same input, different key → different output
+        assertNotEquals(service.hmacRefreshToken("alice"), service.hmacEmail("alice"))
     }
 }

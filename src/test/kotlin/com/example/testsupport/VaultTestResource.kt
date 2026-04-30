@@ -13,6 +13,7 @@ import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitCreateKeyP
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitEncryptParams
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitKeyType
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
+import io.quarkus.vault.client.logging.LogConfidentialityLevel
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.ByteArrayOutputStream
@@ -43,6 +44,7 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
                 .baseUrl(url)
                 .clientToken(TOKEN)
                 .executor(JDKVaultHttpClient(HttpClient.newHttpClient()))
+                .logConfidentialityLevel(LogConfidentialityLevel.HIGH)
                 .build()
 
         val transit = client.secrets().transit()
@@ -54,12 +56,14 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
 
         val wrappedAead = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
         val wrappedMac = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+        val wrappedTokenMac = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
 
         return mapOf(
             "quarkus.vault.url" to url,
             "quarkus.vault.authentication.client-token" to TOKEN,
             "app.tink.aead-keyset" to wrappedAead,
             "app.tink.mac-keyset" to wrappedMac,
+            "app.tink.token-mac-keyset" to wrappedTokenMac,
         )
     }
 
