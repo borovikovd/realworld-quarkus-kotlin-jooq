@@ -38,7 +38,7 @@ class TinkKeysetRotationTest {
             val transit = mockk<VaultTransitSecretEngine>()
             every { transit.decrypt("app-keyset-kek", "wrapped-aead") } returns ClearData(aeadBytes)
             every { transit.decrypt("app-keyset-kek", "wrapped-mac") } returns ClearData(macBytes)
-            return TinkCryptoService(transit, "wrapped-aead", "wrapped-mac").also { it.init() }
+            return TinkCryptoService(transit, "wrapped-aead", "wrapped-mac")
         }
     }
 

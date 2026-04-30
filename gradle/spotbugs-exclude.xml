@@ -34,9 +34,10 @@
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>
     </Match>
 
-    <!-- CryptoService derives keys in init block — expected to throw on bad config at startup -->
+    <!-- Keyset unwrap in init block throws on bad config at startup — intentional fail-fast behaviour.
+         No finalizer on this class; the finalizer-attack vector does not apply. -->
     <Match>
-        <Class name="com.example.infrastructure.security.HkdfAesGcmCryptoService"/>
+        <Class name="com.example.infrastructure.security.TinkCryptoService"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
 </FindBugsFilter>

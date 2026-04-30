@@ -9,7 +9,6 @@ import com.google.crypto.tink.Mac
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.mac.MacConfig
 import io.quarkus.vault.VaultTransitSecretEngine
-import jakarta.annotation.PostConstruct
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.nio.ByteBuffer
@@ -22,11 +21,10 @@ class TinkCryptoService(
     @param:ConfigProperty(name = "app.tink.aead-keyset") private val wrappedAead: String,
     @param:ConfigProperty(name = "app.tink.mac-keyset") private val wrappedMac: String,
 ) : CryptoService {
-    private lateinit var aead: Aead
-    private lateinit var mac: Mac
+    private val aead: Aead
+    private val mac: Mac
 
-    @PostConstruct
-    fun init() {
+    init {
         AeadConfig.register()
         MacConfig.register()
         aead = unwrapKeyset(wrappedAead).getPrimitive(Aead::class.java)

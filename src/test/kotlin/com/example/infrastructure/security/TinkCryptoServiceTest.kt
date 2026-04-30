@@ -44,7 +44,7 @@ class TinkCryptoServiceTest {
             every { transit.decrypt("app-keyset-kek", "wrapped-aead") } returns ClearData(aeadBytes)
             every { transit.decrypt("app-keyset-kek", "wrapped-mac") } returns ClearData(macBytes)
 
-            service = TinkCryptoService(transit, "wrapped-aead", "wrapped-mac").also { it.init() }
+            service = TinkCryptoService(transit, "wrapped-aead", "wrapped-mac")
         }
     }
 
