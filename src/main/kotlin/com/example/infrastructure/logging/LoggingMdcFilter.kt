@@ -9,6 +9,7 @@ import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ContainerResponseFilter
 import jakarta.ws.rs.ext.Provider
 import org.slf4j.MDC
+import java.util.UUID
 
 @Provider
 @ApplicationScoped
@@ -19,9 +20,8 @@ class LoggingMdcFilter :
     lateinit var currentUser: CurrentUser
 
     override fun filter(requestContext: ContainerRequestContext) {
-        currentUser.id?.let {
-            MDC.put("userId", it.value.toString())
-        }
+        MDC.put("requestId", UUID.randomUUID().toString())
+        currentUser.id?.let { MDC.put("userId", it.value.toString()) }
     }
 
     override fun filter(

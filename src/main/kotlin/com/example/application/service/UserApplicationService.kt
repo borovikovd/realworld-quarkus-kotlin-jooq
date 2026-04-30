@@ -147,6 +147,7 @@ class UserApplicationService(
         var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
 
         password?.let {
+            refreshTokenRepository.revokeAllForUser(typedUserId, now)
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
