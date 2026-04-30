@@ -10,10 +10,7 @@ import com.google.crypto.tink.aead.AeadKeyTemplates
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
 import com.google.crypto.tink.mac.PredefinedMacParameters
-import io.mockk.every
-import io.mockk.mockk
-import io.quarkus.vault.VaultTransitSecretEngine
-import io.quarkus.vault.transit.ClearData
+import io.quarkus.vault.client.VaultClient
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -34,13 +31,18 @@ class TinkKeysetRotationTest {
             aeadBytes: ByteArray,
             macBytes: ByteArray,
             tokenMacBytes: ByteArray,
-        ): TinkCryptoService {
-            val transit = mockk<VaultTransitSecretEngine>()
-            every { transit.decrypt("app-keyset-kek", "wrapped-aead") } returns ClearData(aeadBytes)
-            every { transit.decrypt("app-keyset-kek", "wrapped-mac") } returns ClearData(macBytes)
-            every { transit.decrypt("app-keyset-kek", "wrapped-token-mac") } returns ClearData(tokenMacBytes)
-            return TinkCryptoService(transit, "wrapped-aead", "wrapped-mac", "wrapped-token-mac")
-        }
+        ): TinkCryptoService =
+            TinkCryptoService(
+                TinkCryptoServiceTest.mockVaultClient(
+                    "app-keyset-kek",
+                    "wrapped-aead" to aeadBytes,
+                    "wrapped-mac" to macBytes,
+                    "wrapped-token-mac" to tokenMacBytes,
+                ),
+                "wrapped-aead",
+                "wrapped-mac",
+                "wrapped-token-mac",
+            )
     }
 
     @Test

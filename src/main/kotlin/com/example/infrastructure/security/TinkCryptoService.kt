@@ -8,7 +8,8 @@ import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.mac.MacConfig
-import io.quarkus.vault.VaultTransitSecretEngine
+import io.quarkus.vault.client.VaultClient
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitDecryptParams
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.nio.ByteBuffer
@@ -17,7 +18,7 @@ import java.util.Locale
 
 @ApplicationScoped
 class TinkCryptoService(
-    private val transit: VaultTransitSecretEngine,
+    private val vaultClient: VaultClient,
     @param:ConfigProperty(name = "app.tink.aead-keyset") private val wrappedAead: String,
     @param:ConfigProperty(name = "app.tink.mac-keyset") private val wrappedMac: String,
     @param:ConfigProperty(name = "app.tink.token-mac-keyset") private val wrappedTokenMac: String,
@@ -53,8 +54,16 @@ class TinkCryptoService(
         ciphertext: ByteArray,
     ): String = String(aead.decrypt(ciphertext, fieldAd(userId, field)), Charsets.UTF_8)
 
-    private fun unwrapKeyset(wrapped: String) =
-        TinkProtoKeysetFormat.parseKeyset(transit.decrypt(KEYSET_KEK, wrapped).value, InsecureSecretKeyAccess.get())
+    private fun unwrapKeyset(wrapped: String): com.google.crypto.tink.KeysetHandle {
+        val raw =
+            vaultClient
+                .secrets()
+                .transit()
+                .decrypt(KEYSET_KEK, VaultSecretsTransitDecryptParams().setCiphertext(wrapped))
+                .toCompletableFuture()
+                .join()
+        return TinkProtoKeysetFormat.parseKeyset(raw, InsecureSecretKeyAccess.get())
+    }
 
     private fun macTag(
         key: Mac,

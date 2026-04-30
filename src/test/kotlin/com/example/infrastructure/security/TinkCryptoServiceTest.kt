@@ -10,11 +10,14 @@ import com.google.crypto.tink.mac.MacConfig
 import com.google.crypto.tink.mac.PredefinedMacParameters
 import io.mockk.every
 import io.mockk.mockk
-import io.quarkus.vault.VaultTransitSecretEngine
-import io.quarkus.vault.transit.ClearData
+import io.quarkus.vault.client.VaultClient
+import io.quarkus.vault.client.api.VaultSecretsAccessor
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitDecryptParams
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
@@ -35,12 +38,29 @@ class TinkCryptoServiceTest {
             val macBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
             val tokenMacBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
 
-            val transit = mockk<VaultTransitSecretEngine>()
-            every { transit.decrypt("app-keyset-kek", "wrapped-aead") } returns ClearData(aeadBytes)
-            every { transit.decrypt("app-keyset-kek", "wrapped-mac") } returns ClearData(macBytes)
-            every { transit.decrypt("app-keyset-kek", "wrapped-token-mac") } returns ClearData(tokenMacBytes)
+            service = TinkCryptoService(
+                mockVaultClient("app-keyset-kek", "wrapped-aead" to aeadBytes, "wrapped-mac" to macBytes, "wrapped-token-mac" to tokenMacBytes),
+                "wrapped-aead",
+                "wrapped-mac",
+                "wrapped-token-mac",
+            )
+        }
 
-            service = TinkCryptoService(transit, "wrapped-aead", "wrapped-mac", "wrapped-token-mac")
+        fun mockVaultClient(
+            keyName: String,
+            vararg ciphertextToPlaintext: Pair<String, ByteArray>,
+        ): VaultClient {
+            val transit = mockk<VaultSecretsTransit>()
+            for ((ciphertext, plaintext) in ciphertextToPlaintext) {
+                every {
+                    transit.decrypt(keyName, match<VaultSecretsTransitDecryptParams> { it.ciphertext == ciphertext })
+                } returns CompletableFuture.completedFuture(plaintext)
+            }
+            val secrets = mockk<VaultSecretsAccessor>()
+            every { secrets.transit() } returns transit
+            val client = mockk<VaultClient>()
+            every { client.secrets() } returns secrets
+            return client
         }
     }
 
