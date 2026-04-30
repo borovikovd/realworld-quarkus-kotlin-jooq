@@ -61,4 +61,10 @@ class JooqRefreshTokenRepository(
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute()
     }
+
+    override fun deleteExpiredBefore(before: OffsetDateTime): Int =
+        dsl
+            .deleteFrom(REFRESH_TOKEN)
+            .where(REFRESH_TOKEN.EXPIRES_AT.lt(before))
+            .execute()
 }

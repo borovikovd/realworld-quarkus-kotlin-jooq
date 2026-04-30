@@ -39,8 +39,9 @@ class UserAndAuthenticationResource(
     }
 
     override fun refreshToken(body: RefreshTokenPayload): Login200Response {
-        val userId = userCommands.refresh(body.refreshToken)
-        return Login200Response().user(loadUserWithFreshTokens(userId))
+        val result = userCommands.refresh(body.refreshToken)
+        val user = userQueries.getUserById(result.userId) ?: throw NotFoundException("User not found")
+        return Login200Response().user(user.toDto(result.tokens.accessToken, result.tokens.refreshToken))
     }
 
     @ResponseStatus(204)

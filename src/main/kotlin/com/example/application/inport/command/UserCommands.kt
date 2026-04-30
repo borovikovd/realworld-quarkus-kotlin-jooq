@@ -1,5 +1,7 @@
 package com.example.application.inport.command
 
+import com.example.application.readmodel.RefreshedSession
+
 interface UserCommands {
     fun register(
         email: String,
@@ -23,7 +25,7 @@ interface UserCommands {
 
     fun eraseUser(userId: Long)
 
-    fun refresh(refreshToken: String): Long
+    fun refresh(refreshToken: String): RefreshedSession
 
     fun logout(refreshToken: String)
 }

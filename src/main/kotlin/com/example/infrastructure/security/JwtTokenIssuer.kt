@@ -1,5 +1,6 @@
 package com.example.infrastructure.security
 
+import com.example.application.outport.Clock
 import com.example.application.outport.CryptoService
 import com.example.application.outport.RefreshTokenRepository
 import com.example.application.outport.TokenIssuer
@@ -10,8 +11,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.SecureRandom
 import java.time.Duration
-import java.time.Instant
-import java.time.OffsetDateTime
 import java.util.Base64
 
 @ApplicationScoped
@@ -19,6 +18,7 @@ class JwtTokenIssuer(
     @param:ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val crypto: CryptoService,
+    private val clock: Clock,
 ) : TokenIssuer {
     private val secureRandom = SecureRandom()
     private val base64UrlEncoder = Base64.getUrlEncoder().withoutPadding()
@@ -28,7 +28,7 @@ class JwtTokenIssuer(
             .issuer(issuer)
             .subject(userId.value.toString())
             .groups(setOf("user"))
-            .expiresAt(Instant.now().plus(ACCESS_TOKEN_EXPIRY))
+            .expiresAt(clock.now().toInstant().plus(ACCESS_TOKEN_EXPIRY))
             .sign()
 
     override fun issue(userId: UserId): IssuedTokens {
@@ -37,9 +37,8 @@ class JwtTokenIssuer(
         refreshTokenRepository.store(
             userId = userId,
             tokenHash = crypto.hmacRefreshToken(refreshToken),
-            expiresAt = OffsetDateTime.now().plus(REFRESH_TOKEN_EXPIRY),
+            expiresAt = clock.now().plus(REFRESH_TOKEN_EXPIRY),
         )
-
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 

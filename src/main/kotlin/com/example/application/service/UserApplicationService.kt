@@ -1,13 +1,16 @@
 package com.example.application.service
 
+import com.example.application.inport.command.MaintenanceCommands
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
 import com.example.application.outport.Clock
 import com.example.application.outport.CryptoService
 import com.example.application.outport.PasswordHashing
 import com.example.application.outport.RefreshTokenRepository
+import com.example.application.outport.TokenIssuer
 import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
+import com.example.application.readmodel.RefreshedSession
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
@@ -21,6 +24,7 @@ import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
 class UserApplicationService(
@@ -30,7 +34,9 @@ class UserApplicationService(
     private val passwordHashing: PasswordHashing,
     private val crypto: CryptoService,
     private val clock: Clock,
+    private val tokenIssuer: TokenIssuer,
 ) : UserCommands,
+    MaintenanceCommands,
     UserQueries {
     @Timed("user.registration")
     @Counted("user.registration.count")
@@ -99,9 +105,7 @@ class UserApplicationService(
         return credentials!!.userId.value
     }
 
-    private val dummyHash: PasswordHash by lazy {
-        passwordHashing.hash("timing-equalizer-not-a-real-password")
-    }
+    private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
 
     @Transactional
     override fun updateUser(
@@ -159,7 +163,7 @@ class UserApplicationService(
     }
 
     @Transactional
-    override fun refresh(refreshToken: String): Long {
+    override fun refresh(refreshToken: String): RefreshedSession {
         val tokenHash = crypto.hmacRefreshToken(refreshToken)
         val stored =
             refreshTokenRepository.findByHash(tokenHash)
@@ -174,7 +178,16 @@ class UserApplicationService(
         if (!refreshTokenRepository.revokeByHash(tokenHash, now)) {
             throw UnauthorizedException("Invalid refresh token")
         }
-        return stored.userId.value
+        // Issue new tokens in the same transaction so revoke + issue are atomic.
+        // If either step fails the whole transaction rolls back, leaving the old token intact.
+        val tokens = tokenIssuer.issue(stored.userId)
+        return RefreshedSession(userId = stored.userId.value, tokens = tokens)
+    }
+
+    @Transactional
+    override fun cleanupExpiredRefreshTokens(): Int {
+        val cutoff = clock.now().minus(1, ChronoUnit.DAYS)
+        return refreshTokenRepository.deleteExpiredBefore(cutoff)
     }
 
     @Transactional

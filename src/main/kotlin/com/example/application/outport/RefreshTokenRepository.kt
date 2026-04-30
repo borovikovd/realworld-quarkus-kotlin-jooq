@@ -23,4 +23,7 @@ interface RefreshTokenRepository {
         userId: UserId,
         revokedAt: OffsetDateTime,
     )
+
+    /** Deletes tokens whose expiry is before [before]. Returns the number of rows deleted. */
+    fun deleteExpiredBefore(before: OffsetDateTime): Int
 }

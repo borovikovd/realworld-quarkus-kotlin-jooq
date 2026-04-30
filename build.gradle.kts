@@ -67,6 +67,9 @@ dependencies {
     // Rate limiting
     implementation("io.quarkus:quarkus-caffeine")
 
+    // Scheduled jobs (refresh token cleanup)
+    implementation("io.quarkus:quarkus-scheduler")
+
     // Container image (native build via Quarkus tools)
     implementation("io.quarkus:quarkus-container-image-docker")
 
