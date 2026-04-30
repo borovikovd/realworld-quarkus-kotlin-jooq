@@ -8,16 +8,17 @@ import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
 import com.google.crypto.tink.mac.PredefinedMacParameters
-import io.mockk.every
-import io.mockk.mockk
 import io.quarkus.vault.client.VaultClient
-import io.quarkus.vault.client.api.VaultSecretsAccessor
-import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit
-import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitDecryptParams
+import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitEncryptParams
+import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
+import io.quarkus.vault.client.logging.LogConfidentialityLevel
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.util.concurrent.CompletableFuture
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import java.net.http.HttpClient
+import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
@@ -31,36 +32,52 @@ class TinkCryptoServiceTest {
             AeadConfig.register()
             MacConfig.register()
 
+            val vault =
+                GenericContainer("hashicorp/vault:1.17")
+                    .withExposedPorts(8200)
+                    .withEnv("VAULT_DEV_ROOT_TOKEN_ID", "test-token")
+                    .withEnv("VAULT_DEV_LISTEN_ADDRESS", "0.0.0.0:8200")
+                    .waitingFor(
+                        Wait.forHttp("/v1/sys/health").forPort(8200).forStatusCode(200)
+                            .withStartupTimeout(Duration.ofSeconds(30)),
+                    )
+            vault.start()
+
+            val url = "http://${vault.host}:${vault.getMappedPort(8200)}"
+            val client =
+                VaultClient
+                    .builder()
+                    .baseUrl(url)
+                    .clientToken("test-token")
+                    .executor(JDKVaultHttpClient(HttpClient.newHttpClient()))
+                    .logConfidentialityLevel(LogConfidentialityLevel.HIGH)
+                    .build()
+
+            val transit = client.secrets().transit()
+            client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
+            transit
+                .createKey(
+                    "app-keyset-kek",
+                    io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitCreateKeyParams()
+                        .setType(io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitKeyType.AES256_GCM96),
+                ).toCompletableFuture()
+                .join()
+
             val access = InsecureSecretKeyAccess.get()
-            fun serialize(handle: KeysetHandle) = TinkProtoKeysetFormat.serializeKeyset(handle, access)
-
-            val aeadBytes = serialize(KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
-            val macBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
-            val tokenMacBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
-
-            service = TinkCryptoService(
-                mockVaultClient("app-keyset-kek", "wrapped-aead" to aeadBytes, "wrapped-mac" to macBytes, "wrapped-token-mac" to tokenMacBytes),
-                "wrapped-aead",
-                "wrapped-mac",
-                "wrapped-token-mac",
-            )
-        }
-
-        fun mockVaultClient(
-            keyName: String,
-            vararg ciphertextToPlaintext: Pair<String, ByteArray>,
-        ): VaultClient {
-            val transit = mockk<VaultSecretsTransit>()
-            for ((ciphertext, plaintext) in ciphertextToPlaintext) {
-                every {
-                    transit.decrypt(keyName, match<VaultSecretsTransitDecryptParams> { it.ciphertext == ciphertext })
-                } returns CompletableFuture.completedFuture(plaintext)
+            fun wrap(handle: KeysetHandle): String {
+                val bytes = TinkProtoKeysetFormat.serializeKeyset(handle, access)
+                return transit
+                    .encrypt("app-keyset-kek", VaultSecretsTransitEncryptParams().setPlaintext(bytes))
+                    .toCompletableFuture()
+                    .join()
+                    .ciphertext
             }
-            val secrets = mockk<VaultSecretsAccessor>()
-            every { secrets.transit() } returns transit
-            val client = mockk<VaultClient>()
-            every { client.secrets() } returns secrets
-            return client
+
+            val wrappedAead = wrap(KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
+            val wrappedMac = wrap(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+            val wrappedTokenMac = wrap(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+
+            service = TinkCryptoService(url, "test-token", wrappedAead, wrappedMac, wrappedTokenMac)
         }
     }
 

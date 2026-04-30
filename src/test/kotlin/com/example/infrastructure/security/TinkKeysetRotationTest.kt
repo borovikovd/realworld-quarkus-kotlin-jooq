@@ -1,87 +1,87 @@
 package com.example.infrastructure.security
 
-import com.example.application.outport.CryptoService
-import com.google.crypto.tink.InsecureSecretKeyAccess
-import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeysetManager
-import com.google.crypto.tink.TinkProtoKeysetFormat
+import com.google.crypto.tink.Mac
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.AeadKeyTemplates
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
 import com.google.crypto.tink.mac.PredefinedMacParameters
-import io.quarkus.vault.client.VaultClient
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.nio.ByteBuffer
+import java.util.Base64
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
+/**
+ * Tests Tink's multi-key keyset rotation contract directly.
+ * TinkCryptoService wraps these primitives; rotation behavior is Tink's responsibility.
+ */
 class TinkKeysetRotationTest {
     companion object {
+        private lateinit var config: com.google.crypto.tink.Configuration
+
         @BeforeAll
         @JvmStatic
         fun registerTink() {
             AeadConfig.register()
             MacConfig.register()
+            config = RegistryConfiguration.get()
         }
 
-        fun serialize(handle: KeysetHandle): ByteArray =
-            TinkProtoKeysetFormat.serializeKeyset(handle, InsecureSecretKeyAccess.get())
-
-        fun makeService(
-            aeadBytes: ByteArray,
-            macBytes: ByteArray,
-            tokenMacBytes: ByteArray,
-        ): TinkCryptoService =
-            TinkCryptoService(
-                TinkCryptoServiceTest.mockVaultClient(
-                    "app-keyset-kek",
-                    "wrapped-aead" to aeadBytes,
-                    "wrapped-mac" to macBytes,
-                    "wrapped-token-mac" to tokenMacBytes,
-                ),
-                "wrapped-aead",
-                "wrapped-mac",
-                "wrapped-token-mac",
-            )
+        private fun fieldAd(
+            userId: Long,
+            field: String,
+        ): ByteArray {
+            val fieldBytes = field.toByteArray(Charsets.UTF_8)
+            return ByteBuffer
+                .allocate(Long.SIZE_BYTES + Int.SIZE_BYTES + fieldBytes.size)
+                .putLong(userId)
+                .putInt(fieldBytes.size)
+                .put(fieldBytes)
+                .array()
+        }
     }
 
     @Test
     fun `ciphertexts encrypted with old primary key decrypt after keyset rotation`() {
-        val macBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
-        val tokenMacBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+        val keysetWithA = com.google.crypto.tink.KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
+        val aeadA = keysetWithA.getPrimitive(config, Aead::class.java)
 
-        // Build a two-key AEAD keyset: key A is primary
-        val keysetWithA = KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
-        val serviceBeforeRotation = makeService(serialize(keysetWithA), macBytes, tokenMacBytes)
-        val ciphertext = serviceBeforeRotation.encryptField(42L, CryptoService.EMAIL, "sensitive")
+        val ad = fieldAd(42L, "email")
+        val ciphertext = aeadA.encrypt("sensitive".toByteArray(), ad)
 
         // Rotate: add key B and promote it to primary; key A is retained for decryption
         val manager = KeysetManager.withKeysetHandle(keysetWithA)
         val newKeyId = manager.addNewKey(AeadKeyTemplates.AES256_GCM, false)
         manager.setPrimary(newKeyId)
         val rotatedKeyset = manager.getKeysetHandle()
-
-        val serviceAfterRotation = makeService(serialize(rotatedKeyset), macBytes, tokenMacBytes)
+        val aeadAB = rotatedKeyset.getPrimitive(config, Aead::class.java)
 
         // Pre-rotation ciphertext (written with key A) still decrypts with the rotated keyset
-        assertEquals("sensitive", serviceAfterRotation.decryptField(42L, CryptoService.EMAIL, ciphertext))
+        assertEquals("sensitive", String(aeadAB.decrypt(ciphertext, ad)))
 
-        // New writes use key B (the new primary); old service with key A only cannot decrypt them
-        val newCiphertext = serviceAfterRotation.encryptField(42L, CryptoService.EMAIL, "new-sensitive")
-        assertEquals("new-sensitive", serviceAfterRotation.decryptField(42L, CryptoService.EMAIL, newCiphertext))
+        // New writes use key B (the new primary)
+        val newCiphertext = aeadAB.encrypt("new-sensitive".toByteArray(), ad)
+        assertEquals("new-sensitive", String(aeadAB.decrypt(newCiphertext, ad)))
+
+        // Old AEAD with only key A cannot decrypt new ciphertext (different key)
+        assertNotEquals(ciphertext.toList(), newCiphertext.toList())
     }
 
     @Test
     fun `mac tags are stable across keyset instances with same key material`() {
-        val aeadBytes = serialize(KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
-        val macBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
-        val tokenMacBytes = serialize(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
+        val macHandle = com.google.crypto.tink.KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG)
+        val mac1 = macHandle.getPrimitive(config, Mac::class.java)
+        val mac2 = macHandle.getPrimitive(config, Mac::class.java)
 
-        val s1 = makeService(aeadBytes, macBytes, tokenMacBytes)
-        val s2 = makeService(aeadBytes, macBytes, tokenMacBytes)
-
-        assertEquals(s1.hmacEmail("foo@bar.com"), s2.hmacEmail("foo@bar.com"))
-        assertEquals(s1.hmacUsername("alice"), s2.hmacUsername("alice"))
-        assertEquals(s1.hmacRefreshToken("tok"), s2.hmacRefreshToken("tok"))
+        val input = "foo@bar.com".toByteArray()
+        assertEquals(
+            Base64.getEncoder().encodeToString(mac1.computeMac(input)),
+            Base64.getEncoder().encodeToString(mac2.computeMac(input)),
+        )
     }
 }

@@ -10,15 +10,19 @@ import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.mac.MacConfig
 import io.quarkus.vault.client.VaultClient
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitDecryptParams
+import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
+import io.quarkus.vault.client.logging.LogConfidentialityLevel
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import java.net.http.HttpClient
 import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.Locale
 
 @ApplicationScoped
 class TinkCryptoService(
-    private val vaultClient: VaultClient,
+    @param:ConfigProperty(name = "quarkus.vault.url") private val vaultUrl: String,
+    @param:ConfigProperty(name = "quarkus.vault.authentication.client-token") private val vaultToken: String,
     @param:ConfigProperty(name = "app.tink.aead-keyset") private val wrappedAead: String,
     @param:ConfigProperty(name = "app.tink.mac-keyset") private val wrappedMac: String,
     @param:ConfigProperty(name = "app.tink.token-mac-keyset") private val wrappedTokenMac: String,
@@ -31,9 +35,19 @@ class TinkCryptoService(
         AeadConfig.register()
         MacConfig.register()
         val config = RegistryConfiguration.get()
-        aead = unwrapKeyset(wrappedAead).getPrimitive(config, Aead::class.java)
-        mac = unwrapKeyset(wrappedMac).getPrimitive(config, Mac::class.java)
-        tokenMac = unwrapKeyset(wrappedTokenMac).getPrimitive(config, Mac::class.java)
+        val transit =
+            VaultClient
+                .builder()
+                .baseUrl(vaultUrl)
+                .clientToken(vaultToken)
+                .executor(JDKVaultHttpClient(HttpClient.newHttpClient()))
+                .logConfidentialityLevel(LogConfidentialityLevel.HIGH)
+                .build()
+                .secrets()
+                .transit()
+        aead = unwrapKeyset(transit, wrappedAead).getPrimitive(config, Aead::class.java)
+        mac = unwrapKeyset(transit, wrappedMac).getPrimitive(config, Mac::class.java)
+        tokenMac = unwrapKeyset(transit, wrappedTokenMac).getPrimitive(config, Mac::class.java)
     }
 
     override fun hmacEmail(email: String): String = macTag(mac, email.trim().lowercase(Locale.ROOT))
@@ -54,11 +68,12 @@ class TinkCryptoService(
         ciphertext: ByteArray,
     ): String = String(aead.decrypt(ciphertext, fieldAd(userId, field)), Charsets.UTF_8)
 
-    private fun unwrapKeyset(wrapped: String): com.google.crypto.tink.KeysetHandle {
+    private fun unwrapKeyset(
+        transit: io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit,
+        wrapped: String,
+    ): com.google.crypto.tink.KeysetHandle {
         val raw =
-            vaultClient
-                .secrets()
-                .transit()
+            transit
                 .decrypt(KEYSET_KEK, VaultSecretsTransitDecryptParams().setCiphertext(wrapped))
                 .toCompletableFuture()
                 .join()
