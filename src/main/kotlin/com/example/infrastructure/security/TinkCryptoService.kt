@@ -67,10 +67,9 @@ class TinkCryptoService(
     private fun fieldAd(
         userId: Long,
         field: String,
-    ): ByteArray = ByteBuffer.allocate(LONG_BYTES).putLong(userId).array() + field.toByteArray(Charsets.UTF_8)
+    ): ByteArray = ByteBuffer.allocate(Long.SIZE_BYTES).putLong(userId).array() + field.toByteArray(Charsets.UTF_8)
 
     companion object {
         private const val KEYSET_KEK = "app-keyset-kek"
-        private const val LONG_BYTES = 8
     }
 }

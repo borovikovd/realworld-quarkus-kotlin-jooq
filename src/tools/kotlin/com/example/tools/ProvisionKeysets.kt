@@ -23,6 +23,7 @@ import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermissions
 
 private const val KEYSET_KEK = "app-keyset-kek"
+private val ACCESS = InsecureSecretKeyAccess.get()
 
 fun main(args: Array<String>) {
     val vaultAddr = args.getOrElse(0) { "http://localhost:8200" }
@@ -67,8 +68,7 @@ private fun wrapAndVerify(
     handle: KeysetHandle,
     name: String,
 ): String {
-    val access = InsecureSecretKeyAccess.get()
-    val plaintext = TinkProtoKeysetFormat.serializeKeyset(handle, access)
+    val plaintext = TinkProtoKeysetFormat.serializeKeyset(handle, ACCESS)
     val ciphertext =
         transit
             .encrypt(KEYSET_KEK, VaultSecretsTransitEncryptParams().setPlaintext(plaintext))
@@ -102,10 +102,9 @@ private fun writeBackup(
     println("# JSON format — readable by any Tink implementation.")
     println("# Store offline. Delete after securing.")
 
-    val access = InsecureSecretKeyAccess.get()
-    aeadFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(aeadHandle, access))
-    macFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(macHandle, access))
-    tokenMacFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(tokenMacHandle, access))
+    aeadFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(aeadHandle, ACCESS))
+    macFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(macHandle, ACCESS))
+    tokenMacFile.writeText(TinkJsonProtoKeysetFormat.serializeKeyset(tokenMacHandle, ACCESS))
 
     for (file in listOf(aeadFile, macFile, tokenMacFile)) {
         try {

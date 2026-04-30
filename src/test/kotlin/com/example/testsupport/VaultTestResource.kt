@@ -31,6 +31,8 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
             )
 
     override fun start(): Map<String, String> {
+        // Must register before generateNew() calls below — this resource runs before the
+        // Quarkus container starts, so TinkCryptoService.init has not registered yet.
         AeadConfig.register()
         MacConfig.register()
 
