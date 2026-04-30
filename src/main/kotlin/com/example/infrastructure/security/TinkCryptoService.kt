@@ -2,10 +2,10 @@ package com.example.infrastructure.security
 
 import com.example.application.outport.CryptoService
 import com.google.crypto.tink.Aead
-import com.google.crypto.tink.BinaryKeysetReader
-import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.Mac
 import com.google.crypto.tink.RegistryConfiguration
+import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.mac.MacConfig
 import io.quarkus.vault.VaultTransitSecretEngine
@@ -52,7 +52,7 @@ class TinkCryptoService(
     ): String = String(aead.decrypt(ciphertext, userIdAd(userId)), Charsets.UTF_8)
 
     private fun unwrapKeyset(wrapped: String) =
-        CleartextKeysetHandle.read(BinaryKeysetReader.withBytes(transit.decrypt(KEYSET_KEK, wrapped).value))
+        TinkProtoKeysetFormat.parseKeyset(transit.decrypt(KEYSET_KEK, wrapped).value, InsecureSecretKeyAccess.get())
 
     private fun macTag(
         key: Mac,

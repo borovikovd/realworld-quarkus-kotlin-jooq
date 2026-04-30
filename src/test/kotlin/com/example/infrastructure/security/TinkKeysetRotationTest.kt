@@ -1,8 +1,8 @@
 package com.example.infrastructure.security
 
-import com.google.crypto.tink.BinaryKeysetWriter
-import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
@@ -13,7 +13,6 @@ import io.quarkus.vault.VaultTransitSecretEngine
 import io.quarkus.vault.transit.ClearData
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 
 class TinkKeysetRotationTest {
@@ -25,11 +24,8 @@ class TinkKeysetRotationTest {
             MacConfig.register()
         }
 
-        fun serialize(handle: KeysetHandle): ByteArray {
-            val bos = ByteArrayOutputStream()
-            CleartextKeysetHandle.write(handle, BinaryKeysetWriter.withOutputStream(bos))
-            return bos.toByteArray()
-        }
+        fun serialize(handle: KeysetHandle): ByteArray =
+            TinkProtoKeysetFormat.serializeKeyset(handle, InsecureSecretKeyAccess.get())
 
         fun makeService(
             aeadBytes: ByteArray,

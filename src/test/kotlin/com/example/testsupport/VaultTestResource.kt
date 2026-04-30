@@ -1,8 +1,8 @@
 package com.example.testsupport
 
-import com.google.crypto.tink.BinaryKeysetWriter
-import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.mac.MacConfig
@@ -16,7 +16,6 @@ import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient
 import io.quarkus.vault.client.logging.LogConfidentialityLevel
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
-import java.io.ByteArrayOutputStream
 import java.net.http.HttpClient
 import java.time.Duration
 
@@ -74,15 +73,15 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
     private fun wrapKeyset(
         transit: io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransit,
         handle: KeysetHandle,
-    ): String {
-        val bos = ByteArrayOutputStream()
-        CleartextKeysetHandle.write(handle, BinaryKeysetWriter.withOutputStream(bos))
-        return transit
-            .encrypt(KEYSET_KEK, VaultSecretsTransitEncryptParams().setPlaintext(bos.toByteArray()))
-            .toCompletableFuture()
+    ): String =
+        transit
+            .encrypt(
+                KEYSET_KEK,
+                VaultSecretsTransitEncryptParams()
+                    .setPlaintext(TinkProtoKeysetFormat.serializeKeyset(handle, InsecureSecretKeyAccess.get())),
+            ).toCompletableFuture()
             .join()
             .ciphertext
-    }
 
     companion object {
         private const val TOKEN = "test-root-token"
