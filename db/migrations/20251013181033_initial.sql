@@ -79,20 +79,9 @@ CREATE INDEX "idx_followers_followee_id" ON "public"."followers" ("followee_id")
 
 CREATE SCHEMA IF NOT EXISTS "vault";
 
-CREATE TABLE "vault"."encryption_key" (
-  "id"             uuid        NOT NULL DEFAULT gen_random_uuid(),
-  "user_id"        bigint      NOT NULL,
-  "key_ciphertext" text        NOT NULL,
-  "created_at"     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  CONSTRAINT "encryption_key_user_id_key"  UNIQUE ("user_id"),
-  CONSTRAINT "encryption_key_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
-);
-
 CREATE TABLE "vault"."person" (
   "id"                uuid         NOT NULL DEFAULT gen_random_uuid(),
   "user_id"           bigint       NOT NULL,
-  "encryption_key_id" uuid         NULL,
   "email_enc"         bytea        NOT NULL,
   "email_hash"        varchar(100) NOT NULL,
   "email_verified_at" timestamptz  NULL,
@@ -103,11 +92,10 @@ CREATE TABLE "vault"."person" (
   "created_at"        timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated_at"        timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id"),
-  CONSTRAINT "person_user_id_key"            UNIQUE ("user_id"),
-  CONSTRAINT "person_email_hash_key"         UNIQUE ("email_hash"),
-  CONSTRAINT "person_username_hash_key"      UNIQUE ("username_hash"),
-  CONSTRAINT "person_user_id_fkey"           FOREIGN KEY ("user_id")           REFERENCES "public"."user"            ("id") ON DELETE CASCADE,
-  CONSTRAINT "person_encryption_key_id_fkey" FOREIGN KEY ("encryption_key_id") REFERENCES "vault"."encryption_key" ("id") ON DELETE SET NULL
+  CONSTRAINT "person_user_id_key"       UNIQUE ("user_id"),
+  CONSTRAINT "person_email_hash_key"    UNIQUE ("email_hash"),
+  CONSTRAINT "person_username_hash_key" UNIQUE ("username_hash"),
+  CONSTRAINT "person_user_id_fkey"      FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
 );
 CREATE INDEX "idx_person_email_hash"    ON "vault"."person" ("email_hash");
 CREATE INDEX "idx_person_username_hash" ON "vault"."person" ("username_hash");

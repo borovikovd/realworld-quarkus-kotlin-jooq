@@ -7,19 +7,13 @@ interface CryptoService {
 
     fun hmacRefreshToken(token: String): String
 
-    fun generateDek(): ByteArray
-
-    fun encryptDek(dek: ByteArray): String
-
-    fun decryptDek(keyCiphertext: String): ByteArray
-
     fun encryptField(
-        dek: ByteArray,
+        userId: Long,
         plaintext: String,
     ): ByteArray
 
     fun decryptField(
-        dek: ByteArray,
+        userId: Long,
         ciphertext: ByteArray,
     ): String
 }

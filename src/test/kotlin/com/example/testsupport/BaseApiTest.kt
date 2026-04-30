@@ -21,7 +21,6 @@ abstract class BaseApiTest {
             """
             TRUNCATE TABLE
                 vault.person,
-                vault.encryption_key,
                 auth.password,
                 public.article_tags,
                 public.favorites,

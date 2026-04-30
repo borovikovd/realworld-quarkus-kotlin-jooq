@@ -70,6 +70,9 @@ dependencies {
     // Container image (native build via Quarkus tools)
     implementation("io.quarkus:quarkus-container-image-docker")
 
+    // In-process field encryption + MAC (keysets wrapped at rest by Vault Transit KEK)
+    implementation("com.google.crypto.tink:tink:1.13.0")
+
     // External dependencies
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("io.swagger:swagger-annotations:1.6.16")

@@ -10,7 +10,6 @@ import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.USER
-import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -24,7 +23,6 @@ class JooqUserReadRepository(
         dsl
             .select(
                 USER.ID,
-                ENCRYPTION_KEY.KEY_CIPHERTEXT,
                 PERSON.EMAIL_ENC,
                 PERSON.USERNAME_ENC,
                 PERSON.BIO_ENC,
@@ -32,19 +30,17 @@ class JooqUserReadRepository(
             ).from(USER)
             .join(PERSON)
             .on(PERSON.USER_ID.eq(USER.ID))
-            .join(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(USER.ID))
             .where(USER.ID.eq(id))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->
-                val dek = crypto.decryptDek(record.get(ENCRYPTION_KEY.KEY_CIPHERTEXT)!!)
+                val userId = record.get(USER.ID)!!
                 UserReadModel(
-                    id = UserId(record.get(USER.ID)!!),
-                    email = Email(crypto.decryptField(dek, record.get(PERSON.EMAIL_ENC)!!)),
-                    username = Username(crypto.decryptField(dek, record.get(PERSON.USERNAME_ENC)!!)),
-                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(dek, it) },
-                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(dek, it) },
+                    id = UserId(userId),
+                    email = Email(crypto.decryptField(userId, record.get(PERSON.EMAIL_ENC)!!)),
+                    username = Username(crypto.decryptField(userId, record.get(PERSON.USERNAME_ENC)!!)),
+                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, it) },
+                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, it) },
                 )
             }
 

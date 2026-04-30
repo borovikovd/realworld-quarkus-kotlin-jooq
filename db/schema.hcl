@@ -29,39 +29,6 @@ table "user" {
   }
 }
 
-table "encryption_key" {
-  schema = schema.vault
-  column "id" {
-    null    = false
-    type    = uuid
-    default = sql("gen_random_uuid()")
-  }
-  column "user_id" {
-    null = false
-    type = bigint
-  }
-  column "key_ciphertext" {
-    null = false
-    type = text
-  }
-  column "created_at" {
-    null    = false
-    type    = timestamptz
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  primary_key {
-    columns = [column.id]
-  }
-  unique "encryption_key_user_id_key" {
-    columns = [column.user_id]
-  }
-  foreign_key "encryption_key_user_id_fkey" {
-    columns     = [column.user_id]
-    ref_columns = [table.user.column.id]
-    on_delete   = CASCADE
-  }
-}
-
 table "person" {
   schema = schema.vault
   column "id" {
@@ -72,10 +39,6 @@ table "person" {
   column "user_id" {
     null = false
     type = bigint
-  }
-  column "encryption_key_id" {
-    null = true
-    type = uuid
   }
   column "email_enc" {
     null = false
@@ -131,11 +94,6 @@ table "person" {
     columns     = [column.user_id]
     ref_columns = [table.user.column.id]
     on_delete   = CASCADE
-  }
-  foreign_key "person_encryption_key_id_fkey" {
-    columns     = [column.encryption_key_id]
-    ref_columns = [table.encryption_key.column.id]
-    on_delete   = SET NULL
   }
   index "idx_person_email_hash" {
     columns = [column.email_hash]

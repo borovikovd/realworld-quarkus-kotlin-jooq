@@ -9,7 +9,6 @@ import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.TAGS
-import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.Condition
@@ -34,8 +33,6 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.ID.eq(id))
             .fetchOne()
             ?.toArticleReadModel()
@@ -49,8 +46,6 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(ARTICLES.SLUG.eq(slug))
             .fetchOne()
             ?.toArticleReadModel()
@@ -68,8 +63,6 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(buildConditions(tag, author, favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -87,8 +80,6 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .where(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
@@ -214,7 +205,6 @@ class JooqArticleReadRepository(
             ARTICLES.AUTHOR_ID,
             ARTICLES.CREATED_AT,
             ARTICLES.UPDATED_AT,
-            ENCRYPTION_KEY.KEY_CIPHERTEXT,
             PERSON.USERNAME_ENC,
             PERSON.BIO_ENC,
             PERSON.IMAGE_ENC,

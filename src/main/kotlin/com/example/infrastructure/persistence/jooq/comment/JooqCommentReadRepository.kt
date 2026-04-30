@@ -7,7 +7,6 @@ import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.jooq.vault.tables.references.ENCRYPTION_KEY
 import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -30,8 +29,6 @@ class JooqCommentReadRepository(
             .from(COMMENTS)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .join(ARTICLES)
             .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
             .where(ARTICLES.SLUG.eq(slug))
@@ -48,8 +45,6 @@ class JooqCommentReadRepository(
             .from(COMMENTS)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
-            .leftJoin(ENCRYPTION_KEY)
-            .on(ENCRYPTION_KEY.USER_ID.eq(COMMENTS.AUTHOR_ID))
             .where(COMMENTS.ID.eq(id))
             .fetchOne()
             ?.toCommentReadModel()
@@ -61,7 +56,6 @@ class JooqCommentReadRepository(
             COMMENTS.CREATED_AT,
             COMMENTS.UPDATED_AT,
             COMMENTS.AUTHOR_ID,
-            ENCRYPTION_KEY.KEY_CIPHERTEXT,
             PERSON.USERNAME_ENC,
             PERSON.BIO_ENC,
             PERSON.IMAGE_ENC,
