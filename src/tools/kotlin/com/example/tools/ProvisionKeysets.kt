@@ -117,21 +117,25 @@ private fun writeBackup(
 
 private fun ensureTransitMounted(client: VaultClient) {
     try {
-        client.sys().mounts().read("transit").toCompletableFuture().join()
-    } catch (e: VaultClientException) {
-        if (e.status != 404) throw e
         client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
+    } catch (e: Exception) {
+        // 400 = transit already mounted — idempotent; .join() wraps VaultClientException in CompletionException
+        if (e.vaultStatus != 400) throw e
     }
 }
 
 private fun ensureKekExists(transit: VaultSecretsTransit) {
     try {
         transit.readKey(KEYSET_KEK).toCompletableFuture().join()
-    } catch (e: VaultClientException) {
-        if (e.status != 404) throw e
+    } catch (e: Exception) {
+        if (e.vaultStatus != 404) throw e
         transit
             .createKey(KEYSET_KEK, VaultSecretsTransitCreateKeyParams().setType(VaultSecretsTransitKeyType.AES256_GCM96))
             .toCompletableFuture()
             .join()
     }
 }
+
+/** Extracts the HTTP status from a VaultClientException, whether thrown directly or wrapped in CompletionException. */
+private val Exception.vaultStatus: Int?
+    get() = (this as? VaultClientException ?: cause as? VaultClientException)?.status
