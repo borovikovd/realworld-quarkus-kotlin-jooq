@@ -129,6 +129,11 @@ sourceSets {
             srcDir("${layout.buildDirectory.get()}/generated/openapi/src/gen/java")
         }
     }
+    create("tools") {
+        kotlin.srcDir("src/tools/kotlin")
+        compileClasspath += configurations["runtimeClasspath"]
+        runtimeClasspath += configurations["runtimeClasspath"]
+    }
 }
 
 // ============================================
@@ -290,4 +295,18 @@ tasks.named("compileKotlin") {
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask> {
     mustRunAfter("generateJooq", "openApiGenerate")
     setSource(fileTree("src/main/kotlin"))
+}
+
+// Provision Tink keysets against a running Vault instance.
+// Usage: VAULT_ADDR=http://... VAULT_TOKEN=... ./gradlew provisionKeysets
+tasks.register<JavaExec>("provisionKeysets") {
+    group = "operations"
+    description = "Generate Tink keysets, wrap with Vault Transit, print env vars and cold-backup cleartext."
+    classpath = sourceSets["tools"].runtimeClasspath
+    mainClass = "com.example.tools.ProvisionKeysetsKt"
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+    args = listOf(
+        providers.environmentVariable("VAULT_ADDR").getOrElse("http://localhost:8200"),
+        providers.environmentVariable("VAULT_TOKEN").getOrElse("dev-root-token"),
+    )
 }
