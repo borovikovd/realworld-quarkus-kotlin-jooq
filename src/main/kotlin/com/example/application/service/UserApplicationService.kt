@@ -56,9 +56,7 @@ class UserApplicationService(
             errors["username"] = listOf("is already taken")
         }
 
-        if (password.length < MIN_PASSWORD_LENGTH) {
-            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
-        }
+        validatePassword(password, errors)
 
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
@@ -136,9 +134,7 @@ class UserApplicationService(
             errors["username"] = listOf("is already taken")
         }
 
-        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
-            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
-        }
+        validatePassword(password, errors)
 
         if (errors.isNotEmpty()) {
             throw ValidationException(errors)
@@ -213,6 +209,15 @@ class UserApplicationService(
             accessToken = tokenIssuer.issueAccessToken(UserId(id)),
             refreshToken = "",
         )
+    }
+
+    private fun validatePassword(
+        password: String?,
+        errors: MutableMap<String, List<String>>,
+    ) {
+        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
+            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
+        }
     }
 
     private fun parseEmail(
