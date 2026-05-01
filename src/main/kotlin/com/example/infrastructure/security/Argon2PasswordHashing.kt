@@ -100,7 +100,7 @@ class Argon2PasswordHashing : PasswordHashing {
     companion object {
         private const val SALT_LENGTH = 32
         private const val HASH_LENGTH = 64
-        private const val ITERATIONS = 1
+        private const val ITERATIONS = 3
         private const val MEMORY_KB = 65536
         private const val PARALLELISM = 1
         private const val ENCODED_PARTS_COUNT = 5

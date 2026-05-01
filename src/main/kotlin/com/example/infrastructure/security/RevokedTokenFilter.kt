@@ -4,6 +4,7 @@ import com.example.application.outport.RevokedTokenRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
 import org.eclipse.microprofile.jwt.JsonWebToken
@@ -21,6 +22,7 @@ class RevokedTokenFilter(
             requestContext.abortWith(
                 Response
                     .status(Response.Status.UNAUTHORIZED)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(mapOf("errors" to mapOf("token" to listOf("has been revoked"))))
                     .build(),
             )
