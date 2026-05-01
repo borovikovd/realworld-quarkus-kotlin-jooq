@@ -10,7 +10,7 @@ For more information on how this works with other frontends/backends, head over 
 
 # How it works
 
-**Stack:** Quarkus, Kotlin, jOOQ, PostgreSQL, Atlas (migrations), SmallRye JWT, Argon2id
+**Stack:** Quarkus, Kotlin, jOOQ, PostgreSQL, Atlas (migrations), SmallRye JWT, Argon2id, HashiCorp Vault, Google Tink
 
 **Architecture:** hexagonal (ports & adapters), layer-first packaging, CQRS-lite split between command and query sides.
 
@@ -87,21 +87,32 @@ No layer depends inward-to-outward. `domain` has zero framework imports.
 
 **Offset pagination.** The RealWorld spec uses offset/limit. Cursor-based would be better at scale, but deviating from the spec wasn't worth it here.
 
+**Field-level encryption with Tink + Vault.** Personal data (`email`, `username`, `bio`, `image`) is encrypted at rest using Google Tink AEAD (AES-256-GCM). HashiCorp Vault Transit wraps two Tink keysets at rest (one AEAD keyset for field encryption, two MAC keysets for lookup hashes). Vault is called exactly twice at startup to unwrap the keysets into process memory — zero Vault calls on the hot path. Lookup hashes (`email_hash`, `username_hash`, `token_hash`) use HMAC-SHA256 via a Tink MAC keyset, storing only the tag so raw values are never persisted. Cross-user binding is enforced via Tink associated data (`AD = userId || len(field) || field`), preventing ciphertext swap attacks between columns. A CDI decorator (`AuditingCryptoService`) logs every `decryptField` call to a structured `pii-access` audit trail.
+
 **No domain events.** Commands are synchronous. For 4 aggregates this is fine. At scale you'd introduce an event bus for cross-aggregate reactions.
 
 # Getting started
 
-**Prerequisites:** Java 21, Docker
+**Prerequisites:** Java 21, Docker, [Atlas CLI](https://atlasgo.io/getting-started)
 
 ```bash
-# Start PostgreSQL
-docker-compose up -d postgres
+# 1. Start PostgreSQL and Vault
+docker compose up -d postgres
+docker run -d --rm --name vault-dev \
+  -p 8200:8200 \
+  -e VAULT_DEV_ROOT_TOKEN_ID=dev-root-token \
+  hashicorp/vault:1.17
 
-# Apply migrations (install Atlas: https://atlasgo.io/getting-started)
+# 2. Apply DB migrations
 atlas migrate apply --env local
 
-# Run in dev mode (hot reload on http://localhost:8080)
-./gradlew quarkusDev
+# 3. Provision Tink keysets (first time, or after resetting Vault)
+VAULT_ADDR=http://localhost:8200 VAULT_TOKEN=dev-root-token \
+  ./gradlew provisionKeysets | grep "^APP_TINK" > .env
+# The .env file is gitignored. Vault ciphertexts are safe to store there locally.
+
+# 4. Run in dev mode (hot reload on http://localhost:8080)
+source .env && QUARKUS_HTTP_CORS_ORIGINS=http://localhost:3000 ./gradlew quarkusDev
 ```
 
 Swagger UI: http://localhost:8080/swagger-ui/
@@ -109,15 +120,12 @@ Swagger UI: http://localhost:8080/swagger-ui/
 ## Tests
 
 ```bash
-./gradlew build                                              # compile + tests + linting + spotbugs
-./gradlew test --tests com.example.application.inport.command.*   # unit tests only
-./gradlew test --tests com.example.archunit.*               # architecture tests only
+./gradlew build                        # compile + tests + linting + spotbugs
+./gradlew test --tests "com.example.archunit.*"   # architecture tests only
 ```
 
-Integration tests use Testcontainers (real PostgreSQL). No mocked DB layer.
+Integration tests use Testcontainers (real PostgreSQL + Vault). No mocked infrastructure.
 
 ## Docker
 
-```bash
-docker-compose up --build    # PostgreSQL + API
-```
+The `docker-compose.yml` starts PostgreSQL for local development. The API image is not included — run the service directly with `./gradlew quarkusDev` during development or build a container image with the Quarkus container-image plugin.
