@@ -4,6 +4,8 @@ build:
 complexity:
   CognitiveComplexMethod:
     active: true
+  CyclomaticComplexMethod:
+    threshold: 16
   TooManyFunctions:
     thresholdInInterfaces: 13
     thresholdInClasses: 23

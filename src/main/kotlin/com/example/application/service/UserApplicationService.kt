@@ -124,7 +124,25 @@ class UserApplicationService(
             userRepository.findById(typedUserId)
                 ?: throw UnauthorizedException("User not found")
 
-        val (emailVo, usernameVo) = validateUserUpdate(email, username, password, user)
+        val errors = mutableMapOf<String, List<String>>()
+
+        val emailVo = email?.let { parseEmail(it, errors) }
+        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
+            errors["email"] = listOf("is already taken")
+        }
+
+        val usernameVo = username?.let { parseUsername(it, errors) }
+        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
+            errors["username"] = listOf("is already taken")
+        }
+
+        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
+            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
+        }
+
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
 
         val now = clock.now()
         var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
@@ -195,28 +213,6 @@ class UserApplicationService(
             accessToken = tokenIssuer.issueAccessToken(UserId(id)),
             refreshToken = "",
         )
-    }
-
-    private fun validateUserUpdate(
-        email: String?,
-        username: String?,
-        password: String?,
-        current: User,
-    ): Pair<Email?, Username?> {
-        val errors = mutableMapOf<String, List<String>>()
-        val emailVo = email?.let { parseEmail(it, errors) }
-        if (emailVo != null && emailVo != current.email && userRepository.existsByEmail(emailVo)) {
-            errors["email"] = listOf("is already taken")
-        }
-        val usernameVo = username?.let { parseUsername(it, errors) }
-        if (usernameVo != null && usernameVo != current.username && userRepository.existsByUsername(usernameVo)) {
-            errors["username"] = listOf("is already taken")
-        }
-        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
-            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
-        }
-        if (errors.isNotEmpty()) throw ValidationException(errors)
-        return emailVo to usernameVo
     }
 
     private fun parseEmail(
