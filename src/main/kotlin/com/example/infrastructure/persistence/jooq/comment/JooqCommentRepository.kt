@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.comment
 
-import com.example.application.outport.auth.CryptoService
 import com.example.application.outport.comment.CommentRepository
+import com.example.application.outport.security.CryptoService
 import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment

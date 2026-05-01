@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.application.outport.auth.RevokedTokenRepository
+import com.example.application.outport.security.RevokedTokenRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter

@@ -1,4 +1,4 @@
-package com.example.application.outport.auth
+package com.example.application.outport.security
 
 interface CryptoService {
     fun hmacEmail(email: String): String

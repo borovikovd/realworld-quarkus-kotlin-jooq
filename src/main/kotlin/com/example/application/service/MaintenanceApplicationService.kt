@@ -1,9 +1,9 @@
 package com.example.application.service
 
 import com.example.application.inport.command.MaintenanceCommands
-import com.example.application.outport.auth.RefreshTokenRepository
-import com.example.application.outport.auth.RevokedTokenRepository
 import com.example.application.outport.idempotency.IdempotencyRepository
+import com.example.application.outport.security.RefreshTokenRepository
+import com.example.application.outport.security.RevokedTokenRepository
 import com.example.application.outport.time.Clock
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional

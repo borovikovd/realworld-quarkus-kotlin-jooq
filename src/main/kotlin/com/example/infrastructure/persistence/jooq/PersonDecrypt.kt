@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq
 
-import com.example.application.outport.auth.CryptoService
+import com.example.application.outport.security.CryptoService
 import com.example.application.readmodel.ProfileReadModel
 import com.example.jooq.vault.tables.references.PERSON
 import org.jooq.Record
