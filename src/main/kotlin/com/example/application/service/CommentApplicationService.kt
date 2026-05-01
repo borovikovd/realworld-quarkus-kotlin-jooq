@@ -2,9 +2,9 @@ package com.example.application.service
 
 import com.example.application.inport.command.CommentCommands
 import com.example.application.inport.query.CommentQueries
-import com.example.application.outport.ArticleRepository
-import com.example.application.outport.CommentRepository
-import com.example.application.outport.CurrentUser
+import com.example.application.outport.article.ArticleRepository
+import com.example.application.outport.comment.CommentRepository
+import com.example.application.outport.user.CurrentUser
 import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment

@@ -9,8 +9,8 @@ import com.example.api.model.RefreshTokenPayload
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
-import com.example.application.outport.CurrentUser
-import com.example.application.outport.TokenIssuer
+import com.example.application.outport.auth.TokenIssuer
+import com.example.application.outport.user.CurrentUser
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.NotFoundException

@@ -2,9 +2,9 @@
 
 package com.example.infrastructure.idempotency
 
-import com.example.application.outport.Clock
-import com.example.application.outport.CurrentUser
-import com.example.application.outport.IdempotencyRepository
+import com.example.application.outport.idempotency.IdempotencyRepository
+import com.example.application.outport.time.Clock
+import com.example.application.outport.user.CurrentUser
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.enterprise.context.ApplicationScoped

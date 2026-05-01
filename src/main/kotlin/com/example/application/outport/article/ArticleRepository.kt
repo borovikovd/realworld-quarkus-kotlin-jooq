@@ -1,5 +1,6 @@
-package com.example.application.outport
+package com.example.application.outport.article
 
+import com.example.application.outport.Repository
 import com.example.application.readmodel.ArticleReadModel
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId

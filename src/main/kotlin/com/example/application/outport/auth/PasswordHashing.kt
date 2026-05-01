@@ -1,4 +1,4 @@
-package com.example.application.outport
+package com.example.application.outport.auth
 
 import com.example.domain.aggregate.user.PasswordHash
 

@@ -1,6 +1,6 @@
 package com.example.infrastructure.logging
 
-import com.example.application.outport.CurrentUser
+import com.example.application.outport.user.CurrentUser
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter

@@ -1,6 +1,6 @@
 package com.example.infrastructure.time
 
-import com.example.application.outport.Clock
+import com.example.application.outport.time.Clock
 import jakarta.enterprise.context.ApplicationScoped
 import java.time.OffsetDateTime
 

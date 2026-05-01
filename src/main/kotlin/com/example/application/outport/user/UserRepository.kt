@@ -1,5 +1,6 @@
-package com.example.application.outport
+package com.example.application.outport.user
 
+import com.example.application.outport.Repository
 import com.example.application.readmodel.LoginCredentials
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email

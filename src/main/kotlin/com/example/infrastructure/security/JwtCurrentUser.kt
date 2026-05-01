@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.application.outport.CurrentUser
+import com.example.application.outport.user.CurrentUser
 import com.example.domain.aggregate.user.UserId
 import jakarta.enterprise.context.RequestScoped
 import org.eclipse.microprofile.jwt.JsonWebToken

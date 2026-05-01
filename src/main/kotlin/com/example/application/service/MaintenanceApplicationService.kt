@@ -1,10 +1,10 @@
 package com.example.application.service
 
 import com.example.application.inport.command.MaintenanceCommands
-import com.example.application.outport.Clock
-import com.example.application.outport.IdempotencyRepository
-import com.example.application.outport.RefreshTokenRepository
-import com.example.application.outport.RevokedTokenRepository
+import com.example.application.outport.auth.RefreshTokenRepository
+import com.example.application.outport.auth.RevokedTokenRepository
+import com.example.application.outport.idempotency.IdempotencyRepository
+import com.example.application.outport.time.Clock
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.time.temporal.ChronoUnit

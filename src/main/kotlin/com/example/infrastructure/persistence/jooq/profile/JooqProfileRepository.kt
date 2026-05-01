@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.outport.CryptoService
-import com.example.application.outport.ProfileRepository
+import com.example.application.outport.auth.CryptoService
+import com.example.application.outport.profile.ProfileRepository
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId
 import com.example.jooq.public.tables.references.FOLLOWERS

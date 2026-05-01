@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.auth
 
-import com.example.application.outport.RefreshTokenRepository
+import com.example.application.outport.auth.RefreshTokenRepository
 import com.example.application.readmodel.StoredRefreshToken
 import com.example.domain.aggregate.user.UserId
 import com.example.jooq.auth.tables.references.REFRESH_TOKEN

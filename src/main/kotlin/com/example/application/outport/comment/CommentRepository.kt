@@ -1,5 +1,6 @@
-package com.example.application.outport
+package com.example.application.outport.comment
 
+import com.example.application.outport.Repository
 import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment

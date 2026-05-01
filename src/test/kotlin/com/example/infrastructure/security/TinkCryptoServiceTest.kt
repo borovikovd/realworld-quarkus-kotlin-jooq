@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.application.outport.CryptoService
+import com.example.application.outport.auth.CryptoService
 import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.TinkProtoKeysetFormat
