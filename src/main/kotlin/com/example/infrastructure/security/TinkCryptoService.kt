@@ -31,6 +31,12 @@ class TinkCryptoService(
     private val mac: Mac
     private val tokenMac: Mac
 
+    // Envelope encryption: Tink keysets are unwrapped via Vault Transit exactly twice at startup,
+    // then held in memory. All hot-path crypto runs locally via Tink (AES-256-GCM / HMAC-SHA256)
+    // with no Vault calls on the request path. This keeps p99 latency independent of Vault
+    // availability and avoids making Vault a synchronous dependency on every DB write.
+    // Tradeoff: key revocation requires a restart. Acceptable for this threat model;
+    // revisit if online key rotation becomes a requirement.
     init {
         AeadConfig.register()
         MacConfig.register()
