@@ -188,40 +188,18 @@ class UserApplicationService(
     @Transactional
     override fun logout(
         refreshToken: String,
-        accessToken: String,
+        jti: UUID?,
+        userId: Long?,
     ) {
         val tokenHash = crypto.hmacRefreshToken(refreshToken)
         refreshTokenRepository.revokeByHash(tokenHash, clock.now())
-        val jti = parseJti(accessToken) ?: return
-        val userId = parseUserId(accessToken) ?: return
-        val expiry = clock.now().plusMinutes(ACCESS_TOKEN_EXPIRY_MINUTES)
-        revokedTokenRepository.insert(jti, userId, expiry)
+        if (jti != null && userId != null) {
+            val expiry = clock.now().plusMinutes(ACCESS_TOKEN_EXPIRY_MINUTES)
+            revokedTokenRepository.insert(jti, userId, expiry)
+        }
     }
 
     override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)
-
-    private fun parseJti(accessToken: String): UUID? =
-        runCatching {
-            val payload = accessToken.split(".")[1]
-            val decoded =
-                java.util.Base64
-                    .getUrlDecoder()
-                    .decode(payload)
-            val json = String(decoded, Charsets.UTF_8)
-            val jtiValue = json.substringAfter("\"jti\":\"").substringBefore("\"")
-            UUID.fromString(jtiValue)
-        }.getOrNull()
-
-    private fun parseUserId(accessToken: String): Long? =
-        runCatching {
-            val payload = accessToken.split(".")[1]
-            val decoded =
-                java.util.Base64
-                    .getUrlDecoder()
-                    .decode(payload)
-            val json = String(decoded, Charsets.UTF_8)
-            json.substringAfter("\"sub\":\"").substringBefore("\"").toLong()
-        }.getOrNull()
 
     private fun parseEmail(
         value: String,

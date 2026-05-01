@@ -45,9 +45,10 @@ class UserAndAuthenticationResource(
         return Login200Response().user(user.toDto(result.tokens.accessToken, result.tokens.refreshToken))
     }
 
+    @RolesAllowed("user")
     @ResponseStatus(204)
     override fun logout(body: LogoutPayload) {
-        userCommands.logout(body.refreshToken, body.accessToken)
+        userCommands.logout(body.refreshToken, currentUser.jti, currentUser.id?.value)
     }
 
     @RolesAllowed("user")

@@ -68,9 +68,10 @@ class RefreshTokenApiTest : BaseApiTest() {
     fun `logout revokes the refresh token`() {
         val user = ApiTestFixtures.registerUser()
 
-        given()
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
             .contentType(ContentType.JSON)
-            .body("""{"refreshToken":"${user.refreshToken}","accessToken":"${user.token}"}""")
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
             .`when`()
             .post("/api/users/logout")
             .then()
@@ -89,9 +90,10 @@ class RefreshTokenApiTest : BaseApiTest() {
     fun `logout revokes the access token (jti blocklist)`() {
         val user = ApiTestFixtures.registerUser()
 
-        given()
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
             .contentType(ContentType.JSON)
-            .body("""{"refreshToken":"${user.refreshToken}","accessToken":"${user.token}"}""")
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
             .`when`()
             .post("/api/users/logout")
             .then()

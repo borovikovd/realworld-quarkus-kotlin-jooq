@@ -74,11 +74,15 @@ paths:
       summary: Logout
       description: Revoke the presented refresh and access tokens.
       operationId: Logout
+      security:
+        - Token: []
       requestBody:
         $ref: '#/components/requestBodies/LogoutRequest'
       responses:
         '204':
           description: Refresh token revoked
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/GenericError'
       x-codegen-request-body-name: body
@@ -525,12 +529,9 @@ components:
     LogoutPayload:
       required:
         - refreshToken
-        - accessToken
       type: object
       properties:
         refreshToken:
-          type: string
-        accessToken:
           type: string
     UpdateUser:
       type: object
@@ -869,7 +870,7 @@ components:
             $ref: '#/components/schemas/RefreshTokenPayload'
     LogoutRequest:
       required: true
-      description: Refresh token and access token to revoke
+      description: Refresh token to revoke
       content:
         application/json:
           schema:

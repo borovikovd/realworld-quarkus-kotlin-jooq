@@ -1,6 +1,7 @@
 package com.example.application.inport.command
 
 import com.example.application.readmodel.RefreshedSession
+import java.util.UUID
 
 interface UserCommands {
     fun register(
@@ -29,6 +30,7 @@ interface UserCommands {
 
     fun logout(
         refreshToken: String,
-        accessToken: String,
+        jti: UUID?,
+        userId: Long?,
     )
 }

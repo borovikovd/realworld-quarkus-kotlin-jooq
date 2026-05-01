@@ -4,6 +4,7 @@ import com.example.application.outport.CurrentUser
 import com.example.domain.aggregate.user.UserId
 import jakarta.enterprise.context.RequestScoped
 import org.eclipse.microprofile.jwt.JsonWebToken
+import java.util.UUID
 
 @RequestScoped
 class JwtCurrentUser(
@@ -11,4 +12,7 @@ class JwtCurrentUser(
 ) : CurrentUser {
     override val id: UserId?
         get() = jwt.subject?.toLongOrNull()?.let { UserId(it) }
+
+    override val jti: UUID?
+        get() = jwt.tokenID?.let { runCatching { UUID.fromString(it) }.getOrNull() }
 }
