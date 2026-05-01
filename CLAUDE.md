@@ -29,8 +29,8 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ on hexagonal architectu
 
 ## Persistence
 
-- Schema flow: edit `db/schema.hcl` → `atlas migrate diff` → `atlas migrate apply` (Atlas CLI, not Gradle) → regenerate jOOQ via Gradle. See `db/README.md` for Atlas commands.
-- When you add a migration, verify the test resource picks up new files — don't assume it loads the whole directory.
+- **Schema flow: edit `db/schema.hcl` → `atlas migrate diff --env local --name <name>` → commit the generated file → `atlas migrate apply --env local` → `./gradlew generateJooq`.** Never hand-edit migration files; they are generated artifacts. `atlas.sum` is regenerated automatically by `migrate diff`.
+- The test resource loads the entire `db/migrations/` directory — new migration files are picked up automatically.
 - Build query conditions in a list, apply once. Don't reassign query variables across `.where()`.
 - Use `multiset` for nested collections; never query inside a `map`/`forEach`.
 - `fetchOne()` is nullable. Resolve with `?:`, not `!!`.
