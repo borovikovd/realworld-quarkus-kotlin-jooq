@@ -47,13 +47,13 @@ class NamingConventionRules {
             .because("Use case query ports are contracts — interfaces named *Queries")
 
     @ArchTest
-    val `application services should be concrete and end with ApplicationService` =
+    val `application services should be concrete and end with Service` =
         classes()
             .that().resideInAPackage("..application.service..")
             .and().areTopLevelClasses()
             .should().notBeInterfaces()
-            .andShould().haveSimpleNameEndingWith("ApplicationService")
-            .because("Use-case implementations are concrete classes named *ApplicationService")
+            .andShould().haveSimpleNameEndingWith("Service")
+            .because("Use-case implementations are concrete classes named *Service")
 
     @ArchTest
     val `outbound ports should be interfaces` =

@@ -12,7 +12,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
 @ApplicationScoped
-class ProfileApplicationService(
+class ProfileService(
     private val userRepository: UserRepository,
     private val profileRepository: ProfileRepository,
     private val currentUser: CurrentUser,

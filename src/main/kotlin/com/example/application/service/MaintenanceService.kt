@@ -10,7 +10,7 @@ import jakarta.transaction.Transactional
 import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
-class MaintenanceApplicationService(
+class MaintenanceService(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val idempotencyRepository: IdempotencyRepository,
     private val revokedTokenRepository: RevokedTokenRepository,

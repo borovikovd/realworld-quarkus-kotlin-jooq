@@ -22,7 +22,7 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class ArticleApplicationService(
+class ArticleService(
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
@@ -182,6 +182,6 @@ class ArticleApplicationService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArticleApplicationService::class.java)
+        private val logger = LoggerFactory.getLogger(ArticleService::class.java)
     }
 }

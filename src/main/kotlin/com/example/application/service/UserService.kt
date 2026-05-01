@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
 import java.util.UUID
 
 @ApplicationScoped
-class UserApplicationService(
+class UserService(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
@@ -250,6 +250,6 @@ class UserApplicationService(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private val logger = LoggerFactory.getLogger(UserApplicationService::class.java)
+        private val logger = LoggerFactory.getLogger(UserService::class.java)
     }
 }

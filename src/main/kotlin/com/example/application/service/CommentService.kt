@@ -17,7 +17,7 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
-class CommentApplicationService(
+class CommentService(
     private val commentRepository: CommentRepository,
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
@@ -86,6 +86,6 @@ class CommentApplicationService(
     ): List<CommentReadModel> = commentRepository.findByArticleSlug(slug, viewerId)
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CommentApplicationService::class.java)
+        private val logger = LoggerFactory.getLogger(CommentService::class.java)
     }
 }
