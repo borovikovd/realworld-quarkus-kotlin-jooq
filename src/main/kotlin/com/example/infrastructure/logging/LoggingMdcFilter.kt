@@ -2,7 +2,6 @@ package com.example.infrastructure.logging
 
 import com.example.application.outport.CurrentUser
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.container.ContainerResponseContext
@@ -13,12 +12,10 @@ import java.util.UUID
 
 @Provider
 @ApplicationScoped
-class LoggingMdcFilter :
-    ContainerRequestFilter,
+class LoggingMdcFilter(
+    private val currentUser: CurrentUser,
+) : ContainerRequestFilter,
     ContainerResponseFilter {
-    @Inject
-    lateinit var currentUser: CurrentUser
-
     override fun filter(requestContext: ContainerRequestContext) {
         val requestId = UUID.randomUUID().toString()
         MDC.put("requestId", requestId)

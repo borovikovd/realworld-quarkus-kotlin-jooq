@@ -6,6 +6,8 @@ import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields
+import jakarta.inject.Inject
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
 import org.jooq.DSLContext
@@ -64,6 +66,12 @@ class TechnologyBoundaryRules {
                 "Adapters outside infrastructure.security must use CryptoService and PasswordHashing " +
                     "outports — not the concrete implementations",
             )
+
+    @ArchTest
+    val `no field injection - use constructor injection` =
+        noFields()
+            .should().beAnnotatedWith(Inject::class.java)
+            .because("Use constructor injection instead of field injection")
 
     @ArchTest
     val `application classes should not use JAX-RS Response` =

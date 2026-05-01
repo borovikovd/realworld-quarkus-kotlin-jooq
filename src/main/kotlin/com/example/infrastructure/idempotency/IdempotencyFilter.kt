@@ -8,7 +8,6 @@ import com.example.application.outport.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.container.ContainerResponseContext
@@ -21,21 +20,13 @@ import org.slf4j.LoggerFactory
 
 @Provider
 @ApplicationScoped
-class IdempotencyFilter :
-    ContainerRequestFilter,
+class IdempotencyFilter(
+    private val idempotencyRepository: IdempotencyRepository,
+    private val currentUser: CurrentUser,
+    private val clock: Clock,
+    private val objectMapper: ObjectMapper,
+) : ContainerRequestFilter,
     ContainerResponseFilter {
-    @Inject
-    lateinit var idempotencyRepository: IdempotencyRepository
-
-    @Inject
-    lateinit var currentUser: CurrentUser
-
-    @Inject
-    lateinit var clock: Clock
-
-    @Inject
-    lateinit var objectMapper: ObjectMapper
-
     override fun filter(requestContext: ContainerRequestContext) {
         val key = requestContext.getHeaderString(IDEMPOTENCY_KEY_HEADER) ?: return
         if (requestContext.method != "POST") return

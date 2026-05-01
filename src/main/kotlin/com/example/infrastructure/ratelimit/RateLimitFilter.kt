@@ -2,7 +2,6 @@ package com.example.infrastructure.ratelimit
 
 import io.vertx.ext.web.RoutingContext
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.core.Response
@@ -13,33 +12,27 @@ import java.time.Duration
 
 @Provider
 @ApplicationScoped
-class RateLimitFilter : ContainerRequestFilter {
+class RateLimitFilter(
+    private val routingContext: RoutingContext,
+    @param:ConfigProperty(name = "rate-limit.trusted-proxy-count", defaultValue = "0")
+    private val trustedProxyCount: Int,
+    @ConfigProperty(name = "rate-limit.login.max-requests", defaultValue = "10")
+    loginMaxRequests: Int,
+    @ConfigProperty(name = "rate-limit.registration.max-requests", defaultValue = "3")
+    registrationMaxRequests: Int,
+    @ConfigProperty(name = "rate-limit.window-seconds", defaultValue = "60")
+    windowSeconds: Long,
+) : ContainerRequestFilter {
+    private val window = Duration.ofSeconds(windowSeconds)
+    private val loginLimiter = RateLimiter(loginMaxRequests, window).takeIf { loginMaxRequests > 0 }
+    private val registrationLimiter =
+        RateLimiter(registrationMaxRequests, window).takeIf { registrationMaxRequests > 0 }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RateLimitFilter::class.java)
         private const val TOO_MANY_REQUESTS = 429
         private const val PROBLEM_JSON = "application/problem+json"
-        private const val DEFAULT_LOGIN_MAX_REQUESTS = 10
-        private const val DEFAULT_REGISTRATION_MAX_REQUESTS = 3
-        private const val DEFAULT_WINDOW_SECONDS = 60L
     }
-
-    @Inject
-    lateinit var routingContext: RoutingContext
-
-    @ConfigProperty(name = "rate-limit.trusted-proxy-count", defaultValue = "0")
-    var trustedProxyCount: Int = 0
-
-    @ConfigProperty(name = "rate-limit.login.max-requests", defaultValue = "10")
-    var loginMaxRequests: Int = DEFAULT_LOGIN_MAX_REQUESTS
-
-    @ConfigProperty(name = "rate-limit.registration.max-requests", defaultValue = "3")
-    var registrationMaxRequests: Int = DEFAULT_REGISTRATION_MAX_REQUESTS
-
-    @ConfigProperty(name = "rate-limit.window-seconds", defaultValue = "60")
-    var windowSeconds: Long = DEFAULT_WINDOW_SECONDS
-
-    private val loginLimiter by lazy { RateLimiter(loginMaxRequests, Duration.ofSeconds(windowSeconds)) }
-    private val registrationLimiter by lazy { RateLimiter(registrationMaxRequests, Duration.ofSeconds(windowSeconds)) }
 
     override fun filter(requestContext: ContainerRequestContext) {
         if (requestContext.method != "POST") return
@@ -59,8 +52,8 @@ class RateLimitFilter : ContainerRequestFilter {
 
     private fun limiterFor(path: String): RateLimiter? =
         when (path) {
-            "users/login" -> loginLimiter.takeIf { loginMaxRequests > 0 }
-            "users" -> registrationLimiter.takeIf { registrationMaxRequests > 0 }
+            "users/login" -> loginLimiter
+            "users" -> registrationLimiter
             else -> null
         }
 
