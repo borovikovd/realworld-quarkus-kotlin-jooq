@@ -16,24 +16,19 @@ class CommentTest {
                 id = CommentId(1L),
                 articleId = ArticleId(1L),
                 authorId = UserId(2L),
-                body = "Test comment body",
+                body = Body("Test comment body"),
             )
 
         assertEquals(ArticleId(1L), comment.articleId)
         assertEquals(UserId(2L), comment.authorId)
-        assertEquals("Test comment body", comment.body)
+        assertEquals(Body("Test comment body"), comment.body)
     }
 
     @Test
     fun `should fail when body is blank`() {
         val exception =
             assertThrows<IllegalArgumentException> {
-                Comment(
-                    id = CommentId(1L),
-                    articleId = ArticleId(1L),
-                    authorId = UserId(2L),
-                    body = "",
-                )
+                Body("")
             }
 
         assertEquals("Body must not be blank", exception.message)
@@ -46,7 +41,7 @@ class CommentTest {
                 id = CommentId(1L),
                 articleId = ArticleId(1L),
                 authorId = UserId(2L),
-                body = "Test comment body",
+                body = Body("Test comment body"),
             )
 
         assertTrue(comment.canBeDeletedBy(UserId(2L)))
@@ -59,7 +54,7 @@ class CommentTest {
                 id = CommentId(1L),
                 articleId = ArticleId(1L),
                 authorId = UserId(2L),
-                body = "Test comment body",
+                body = Body("Test comment body"),
             )
 
         assertFalse(comment.canBeDeletedBy(UserId(3L)))
@@ -72,7 +67,7 @@ class CommentTest {
                 id = CommentId(1L),
                 articleId = ArticleId(1L),
                 authorId = UserId(2L),
-                body = "Body 1",
+                body = Body("Body 1"),
             )
 
         val comment2 =
@@ -80,7 +75,7 @@ class CommentTest {
                 id = CommentId(1L),
                 articleId = ArticleId(2L),
                 authorId = UserId(3L),
-                body = "Body 2",
+                body = Body("Body 2"),
             )
 
         assertEquals(comment1, comment2)

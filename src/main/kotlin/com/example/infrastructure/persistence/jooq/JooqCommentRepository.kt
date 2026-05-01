@@ -4,6 +4,7 @@ import com.example.application.port.CommentRepository
 import com.example.application.port.security.CryptoService
 import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
@@ -39,7 +40,7 @@ class JooqCommentRepository(
             .set(COMMENTS.ID, entity.id.value)
             .set(COMMENTS.ARTICLE_ID, entity.articleId.value)
             .set(COMMENTS.AUTHOR_ID, entity.authorId.value)
-            .set(COMMENTS.BODY, entity.body)
+            .set(COMMENTS.BODY, entity.body.value)
             .set(COMMENTS.CREATED_AT, entity.createdAt)
             .set(COMMENTS.UPDATED_AT, entity.updatedAt)
             .execute()
@@ -60,7 +61,7 @@ class JooqCommentRepository(
     override fun update(entity: Comment): Comment {
         dsl
             .update(COMMENTS)
-            .set(COMMENTS.BODY, entity.body)
+            .set(COMMENTS.BODY, entity.body.value)
             .set(COMMENTS.UPDATED_AT, entity.updatedAt)
             .where(COMMENTS.ID.eq(entity.id.value))
             .execute()
@@ -149,7 +150,7 @@ class JooqCommentRepository(
             id = CommentId(record.id!!),
             articleId = ArticleId(record.articleId!!),
             authorId = UserId(record.authorId!!),
-            body = record.body!!,
+            body = Body(record.body!!),
             createdAt = record.createdAt!!,
             updatedAt = record.updatedAt!!,
         )

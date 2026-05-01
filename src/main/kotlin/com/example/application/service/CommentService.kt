@@ -7,6 +7,7 @@ import com.example.application.readmodel.CommentReadModel
 import com.example.application.usecase.CommentCommands
 import com.example.application.usecase.CommentQueries
 import com.example.domain.aggregate.article.Slug
+import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.exception.ForbiddenException
@@ -28,9 +29,9 @@ class CommentService(
         articleSlug: String,
         body: String,
     ): Long {
-        if (body.isBlank()) {
-            throw ValidationException(mapOf("body" to listOf("must not be blank")))
-        }
+        val bodyVo =
+            runCatching { Body(body) }
+                .getOrElse { throw ValidationException(mapOf("body" to listOf("must not be blank"))) }
 
         val userId = currentUser.require()
         val article =
@@ -43,7 +44,7 @@ class CommentService(
                 id = commentId,
                 articleId = article.id,
                 authorId = userId,
-                body = body,
+                body = bodyVo,
             )
         commentRepository.create(comment)
         return commentId.value
