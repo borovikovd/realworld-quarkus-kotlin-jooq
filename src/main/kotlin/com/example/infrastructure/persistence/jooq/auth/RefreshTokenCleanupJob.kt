@@ -11,10 +11,9 @@ class RefreshTokenCleanupJob(
 ) {
     @Scheduled(every = "24h", delayed = "1h")
     fun deleteExpired() {
-        val deleted = maintenance.cleanupExpiredRefreshTokens()
-        if (deleted > 0) {
-            log.info("Deleted {} expired refresh tokens", deleted)
-        }
+        val deletedTokens = maintenance.cleanupExpiredRefreshTokens()
+        val deletedKeys = maintenance.cleanupExpiredIdempotencyKeys()
+        log.info("Maintenance: deleted {} refresh tokens, {} idempotency keys", deletedTokens, deletedKeys)
     }
 
     companion object {

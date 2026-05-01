@@ -4,6 +4,45 @@ schema "vault" {}
 
 schema "auth" {}
 
+table "idempotency_key" {
+  schema = schema.public
+  column "key" {
+    null = false
+    type = varchar(255)
+  }
+  column "scope" {
+    null = false
+    type = varchar(50)
+  }
+  column "request_path" {
+    null = false
+    type = varchar(500)
+  }
+  column "response_status" {
+    null = true
+    type = integer
+  }
+  column "response_body" {
+    null = true
+    type = text
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "expires_at" {
+    null = false
+    type = timestamptz
+  }
+  primary_key {
+    columns = [column.key, column.scope]
+  }
+  index "idx_idempotency_key_expires_at" {
+    columns = [column.expires_at]
+  }
+}
+
 table "user" {
   schema = schema.public
   column "id" {
