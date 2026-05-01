@@ -9,13 +9,13 @@ import com.example.application.outport.security.RevokedTokenRepository
 import com.example.application.outport.security.TokenIssuer
 import com.example.application.outport.time.Clock
 import com.example.application.outport.user.UserRepository
-import com.example.application.readmodel.RefreshedSession
-import com.example.application.readmodel.UserReadModel
+import com.example.application.readmodel.AuthenticatedUser
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
+import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.UnauthorizedException
 import com.example.domain.exception.ValidationException
 import io.micrometer.core.annotation.Counted
@@ -43,7 +43,7 @@ class UserApplicationService(
         email: String,
         username: String,
         password: String,
-    ): Long {
+    ): AuthenticatedUser {
         val errors = mutableMapOf<String, List<String>>()
 
         val emailVo = parseEmail(email, errors)
@@ -74,14 +74,16 @@ class UserApplicationService(
             )
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
-        return userId.value
+        val tokens = tokenIssuer.issue(userId)
+        val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
+        return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
     @Timed("user.login")
     override fun login(
         email: String,
         password: String,
-    ): Long {
+    ): AuthenticatedUser {
         val emailVo = runCatching { Email(email) }.getOrNull()
         val credentials = emailVo?.let { userRepository.findCredentialsByEmail(it) }
 
@@ -100,7 +102,10 @@ class UserApplicationService(
             throw UnauthorizedException("Invalid email or password")
         }
 
-        return credentials!!.userId.value
+        val userId = credentials!!.userId
+        val tokens = tokenIssuer.issue(userId)
+        val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
+        return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
     private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
@@ -113,33 +118,13 @@ class UserApplicationService(
         password: String?,
         bio: String?,
         image: String?,
-    ): Long {
+    ): AuthenticatedUser {
         val typedUserId = UserId(userId)
         val user =
             userRepository.findById(typedUserId)
                 ?: throw UnauthorizedException("User not found")
 
-        val errors = mutableMapOf<String, List<String>>()
-
-        val emailVo = email?.let { parseEmail(it, errors) }
-        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
-            errors["email"] = listOf("is already taken")
-        }
-
-        val usernameVo = username?.let { parseUsername(it, errors) }
-        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
-            errors["username"] = listOf("is already taken")
-        }
-
-        password?.let {
-            if (it.length < MIN_PASSWORD_LENGTH) {
-                errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
-            }
-        }
-
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
-        }
+        val (emailVo, usernameVo) = validateUserUpdate(email, username, password, user)
 
         val now = clock.now()
         var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
@@ -149,8 +134,13 @@ class UserApplicationService(
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
-        val saved = userRepository.update(updatedUser)
-        return saved.id.value
+        userRepository.update(updatedUser)
+        val readModel = userRepository.findById(userId) ?: throw NotFoundException("User not found")
+        return AuthenticatedUser(
+            user = readModel,
+            accessToken = tokenIssuer.issueAccessToken(typedUserId),
+            refreshToken = "",
+        )
     }
 
     @Transactional
@@ -162,7 +152,7 @@ class UserApplicationService(
     }
 
     @Transactional
-    override fun refresh(refreshToken: String): RefreshedSession {
+    override fun refresh(refreshToken: String): AuthenticatedUser {
         val tokenHash = crypto.hmacRefreshToken(refreshToken)
         val stored =
             refreshTokenRepository.findByHash(tokenHash)
@@ -180,7 +170,8 @@ class UserApplicationService(
         // Issue new tokens in the same transaction so revoke + issue are atomic.
         // If either step fails the whole transaction rolls back, leaving the old token intact.
         val tokens = tokenIssuer.issue(stored.userId)
-        return RefreshedSession(userId = stored.userId.value, tokens = tokens)
+        val readModel = userRepository.findById(stored.userId.value) ?: throw NotFoundException("User not found")
+        return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
     @Transactional
@@ -197,7 +188,36 @@ class UserApplicationService(
         }
     }
 
-    override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)
+    override fun getUserById(id: Long): AuthenticatedUser? {
+        val readModel = userRepository.findById(id) ?: return null
+        return AuthenticatedUser(
+            user = readModel,
+            accessToken = tokenIssuer.issueAccessToken(UserId(id)),
+            refreshToken = "",
+        )
+    }
+
+    private fun validateUserUpdate(
+        email: String?,
+        username: String?,
+        password: String?,
+        current: User,
+    ): Pair<Email?, Username?> {
+        val errors = mutableMapOf<String, List<String>>()
+        val emailVo = email?.let { parseEmail(it, errors) }
+        if (emailVo != null && emailVo != current.email && userRepository.existsByEmail(emailVo)) {
+            errors["email"] = listOf("is already taken")
+        }
+        val usernameVo = username?.let { parseUsername(it, errors) }
+        if (usernameVo != null && usernameVo != current.username && userRepository.existsByUsername(usernameVo)) {
+            errors["username"] = listOf("is already taken")
+        }
+        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
+            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
+        }
+        if (errors.isNotEmpty()) throw ValidationException(errors)
+        return emailVo to usernameVo
+    }
 
     private fun parseEmail(
         value: String,

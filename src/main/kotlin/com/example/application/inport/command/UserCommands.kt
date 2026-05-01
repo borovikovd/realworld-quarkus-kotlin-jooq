@@ -1,6 +1,6 @@
 package com.example.application.inport.command
 
-import com.example.application.readmodel.RefreshedSession
+import com.example.application.readmodel.AuthenticatedUser
 import java.util.UUID
 
 interface UserCommands {
@@ -8,12 +8,12 @@ interface UserCommands {
         email: String,
         username: String,
         password: String,
-    ): Long
+    ): AuthenticatedUser
 
     fun login(
         email: String,
         password: String,
-    ): Long
+    ): AuthenticatedUser
 
     fun updateUser(
         userId: Long,
@@ -22,11 +22,11 @@ interface UserCommands {
         password: String?,
         bio: String?,
         image: String?,
-    ): Long
+    ): AuthenticatedUser
 
     fun eraseUser(userId: Long)
 
-    fun refresh(refreshToken: String): RefreshedSession
+    fun refresh(refreshToken: String): AuthenticatedUser
 
     fun logout(
         refreshToken: String,

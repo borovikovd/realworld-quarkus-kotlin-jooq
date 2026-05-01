@@ -10,9 +10,7 @@ import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.inport.command.UserCommands
 import com.example.application.inport.query.UserQueries
 import com.example.application.outport.security.CurrentUser
-import com.example.application.outport.security.TokenIssuer
-import com.example.application.readmodel.UserReadModel
-import com.example.domain.aggregate.user.UserId
+import com.example.application.readmodel.AuthenticatedUser
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -23,27 +21,22 @@ import com.example.api.model.User as ApiUser
 class UserAndAuthenticationResource(
     private val userCommands: UserCommands,
     private val userQueries: UserQueries,
-    private val tokenIssuer: TokenIssuer,
     private val currentUser: CurrentUser,
 ) : UserAndAuthenticationApi {
     @ResponseStatus(201)
     override fun createUser(body: CreateUserRequest): Login200Response {
         val newUser = body.user
-        val userId = userCommands.register(newUser.email, newUser.username, newUser.password)
-        return Login200Response().user(loadUserWithFreshTokens(userId))
+        val result = userCommands.register(newUser.email, newUser.username, newUser.password)
+        return Login200Response().user(result.toApiUser())
     }
 
     override fun login(body: LoginRequest): Login200Response {
         val loginUser = body.user
-        val userId = userCommands.login(loginUser.email, loginUser.password)
-        return Login200Response().user(loadUserWithFreshTokens(userId))
+        return Login200Response().user(userCommands.login(loginUser.email, loginUser.password).toApiUser())
     }
 
-    override fun refreshToken(body: RefreshTokenPayload): Login200Response {
-        val result = userCommands.refresh(body.refreshToken)
-        val user = userQueries.getUserById(result.userId) ?: throw NotFoundException("User not found")
-        return Login200Response().user(user.toDto(result.tokens.accessToken, result.tokens.refreshToken))
-    }
+    override fun refreshToken(body: RefreshTokenPayload): Login200Response =
+        Login200Response().user(userCommands.refresh(body.refreshToken).toApiUser())
 
     @RolesAllowed("user")
     @ResponseStatus(204)
@@ -54,13 +47,14 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
         val userId = currentUser.require().value
-        return Login200Response().user(loadUserAccessOnly(userId))
+        val result = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
+        return Login200Response().user(result.toApiUser())
     }
 
     @RolesAllowed("user")
     override fun updateCurrentUser(body: UpdateCurrentUserRequest): Login200Response {
         val updateUser = body.user
-        val userId =
+        val result =
             userCommands.updateUser(
                 userId = currentUser.require().value,
                 email = updateUser.email,
@@ -69,7 +63,7 @@ class UserAndAuthenticationResource(
                 bio = updateUser.bio,
                 image = updateUser.image,
             )
-        return Login200Response().user(loadUserAccessOnly(userId))
+        return Login200Response().user(result.toApiUser())
     }
 
     @RolesAllowed("user")
@@ -78,26 +72,12 @@ class UserAndAuthenticationResource(
         userCommands.eraseUser(currentUser.require().value)
     }
 
-    private fun loadUserWithFreshTokens(userId: Long): ApiUser {
-        val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
-        val tokens = tokenIssuer.issue(UserId(userId))
-        return user.toDto(tokens.accessToken, tokens.refreshToken)
-    }
-
-    private fun loadUserAccessOnly(userId: Long): ApiUser {
-        val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
-        return user.toDto(tokenIssuer.issue(UserId(userId)).accessToken, refreshToken = "")
-    }
-
-    private fun UserReadModel.toDto(
-        accessToken: String,
-        refreshToken: String,
-    ): ApiUser =
+    private fun AuthenticatedUser.toApiUser(): ApiUser =
         ApiUser()
-            .email(email.value)
+            .email(user.email.value)
             .token(accessToken)
             .refreshToken(refreshToken)
-            .username(username.value)
-            .bio(bio)
-            .image(image)
+            .username(user.username.value)
+            .bio(user.bio)
+            .image(user.image)
 }

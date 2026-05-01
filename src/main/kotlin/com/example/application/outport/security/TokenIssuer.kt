@@ -5,4 +5,6 @@ import com.example.domain.aggregate.user.UserId
 
 interface TokenIssuer {
     fun issue(userId: UserId): IssuedTokens
+
+    fun issueAccessToken(userId: UserId): String
 }
