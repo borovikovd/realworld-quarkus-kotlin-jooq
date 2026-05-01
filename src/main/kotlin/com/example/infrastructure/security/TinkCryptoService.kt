@@ -23,9 +23,9 @@ import java.util.Locale
 class TinkCryptoService(
     @param:ConfigProperty(name = "quarkus.vault.url") private val vaultUrl: String,
     @param:ConfigProperty(name = "quarkus.vault.authentication.client-token") private val vaultToken: String,
-    @param:ConfigProperty(name = "app.tink.aead-keyset") private val wrappedAead: String,
-    @param:ConfigProperty(name = "app.tink.mac-keyset") private val wrappedMac: String,
-    @param:ConfigProperty(name = "app.tink.token-mac-keyset") private val wrappedTokenMac: String,
+    @param:ConfigProperty(name = "app.tink.aead.keyset") private val wrappedAead: String,
+    @param:ConfigProperty(name = "app.tink.mac.keyset") private val wrappedMac: String,
+    @param:ConfigProperty(name = "app.tink.token.mac.keyset") private val wrappedTokenMac: String,
 ) : CryptoService {
     private val aead: Aead
     private val mac: Mac
@@ -34,6 +34,12 @@ class TinkCryptoService(
     init {
         AeadConfig.register()
         MacConfig.register()
+        log.info(
+            "TinkCryptoService init: vaultUrl={} aeadKeysetLen={} aeadKeysetPrefix={}",
+            vaultUrl,
+            wrappedAead.length,
+            wrappedAead.take(LOG_PREFIX_LEN),
+        )
         val config = RegistryConfiguration.get()
         val transit =
             VaultClient
@@ -103,5 +109,7 @@ class TinkCryptoService(
 
     companion object {
         private const val KEYSET_KEK = "app-keyset-kek"
+        private const val LOG_PREFIX_LEN = 20
+        private val log = org.slf4j.LoggerFactory.getLogger(TinkCryptoService::class.java)
     }
 }

@@ -62,9 +62,9 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
         return mapOf(
             "quarkus.vault.url" to url,
             "quarkus.vault.authentication.client-token" to TOKEN,
-            "app.tink.aead-keyset" to wrappedAead,
-            "app.tink.mac-keyset" to wrappedMac,
-            "app.tink.token-mac-keyset" to wrappedTokenMac,
+            "app.tink.aead.keyset" to wrappedAead,
+            "app.tink.mac.keyset" to wrappedMac,
+            "app.tink.token.mac.keyset" to wrappedTokenMac,
         )
     }
 
