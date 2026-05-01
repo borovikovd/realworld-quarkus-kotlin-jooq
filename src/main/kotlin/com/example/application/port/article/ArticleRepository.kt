@@ -1,6 +1,6 @@
 package com.example.application.port.article
 
-import com.example.application.port.Repository
+import com.example.application.port.persistence.Repository
 import com.example.application.readmodel.ArticleReadModel
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
