@@ -197,7 +197,7 @@ class UserApplicationService(
         val tokenHash = crypto.hmacRefreshToken(refreshToken)
         refreshTokenRepository.revokeByHash(tokenHash, clock.now())
         if (jti != null && userId != null) {
-            val expiry = clock.now().plusMinutes(ACCESS_TOKEN_EXPIRY_MINUTES)
+            val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
             revokedTokenRepository.insert(jti, userId, expiry)
         }
     }
@@ -250,7 +250,6 @@ class UserApplicationService(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
-        private const val ACCESS_TOKEN_EXPIRY_MINUTES = 16L
         private val logger = LoggerFactory.getLogger(UserApplicationService::class.java)
     }
 }
