@@ -34,6 +34,11 @@ repositories {
     mavenCentral()
 }
 
+// CVE-2026-42198: force postgresql JDBC to patched version; Quarkus BOM still ships 42.7.10
+configurations.all {
+    resolutionStrategy.force("org.postgresql:postgresql:42.7.11")
+}
+
 // ============================================
 // Dependencies
 // ============================================
