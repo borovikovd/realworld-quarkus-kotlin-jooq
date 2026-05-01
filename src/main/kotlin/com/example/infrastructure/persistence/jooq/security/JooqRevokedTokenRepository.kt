@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.auth
+package com.example.infrastructure.persistence.jooq.security
 
 import com.example.application.outport.security.RevokedTokenRepository
 import com.example.jooq.auth.tables.references.REVOKED_TOKEN

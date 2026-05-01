@@ -7,7 +7,7 @@ import com.example.api.model.GetArticleComments200Response
 import com.example.api.model.Profile
 import com.example.application.inport.command.CommentCommands
 import com.example.application.inport.query.CommentQueries
-import com.example.application.outport.user.CurrentUser
+import com.example.application.outport.security.CurrentUser
 import com.example.application.readmodel.CommentReadModel
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.exception.NotFoundException

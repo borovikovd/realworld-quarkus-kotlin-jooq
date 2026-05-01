@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.auth
+package com.example.infrastructure.security
 
 import com.example.application.inport.command.MaintenanceCommands
 import io.quarkus.scheduler.Scheduled

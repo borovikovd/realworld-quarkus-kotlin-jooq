@@ -3,7 +3,7 @@ package com.example.application.service
 import com.example.application.inport.command.ProfileCommands
 import com.example.application.inport.query.ProfileQueries
 import com.example.application.outport.profile.ProfileRepository
-import com.example.application.outport.user.CurrentUser
+import com.example.application.outport.security.CurrentUser
 import com.example.application.outport.user.UserRepository
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.exception.BadRequestException

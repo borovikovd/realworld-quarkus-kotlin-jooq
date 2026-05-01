@@ -3,8 +3,8 @@ package com.example.application.service
 import com.example.application.inport.command.ArticleCommands
 import com.example.application.inport.query.ArticleQueries
 import com.example.application.outport.article.ArticleRepository
+import com.example.application.outport.security.CurrentUser
 import com.example.application.outport.time.Clock
-import com.example.application.outport.user.CurrentUser
 import com.example.application.readmodel.ArticleReadModel
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.Body

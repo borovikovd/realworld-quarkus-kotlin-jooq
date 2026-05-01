@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.auth
+package com.example.infrastructure.persistence.jooq.security
 
 import com.example.application.outport.security.RefreshTokenRepository
 import com.example.application.readmodel.StoredRefreshToken

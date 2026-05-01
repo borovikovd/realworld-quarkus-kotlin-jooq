@@ -1,10 +1,10 @@
 @file:Suppress("TooGenericExceptionCaught")
 
-package com.example.infrastructure.idempotency
+package com.example.infrastructure.rest
 
 import com.example.application.outport.idempotency.IdempotencyRepository
+import com.example.application.outport.security.CurrentUser
 import com.example.application.outport.time.Clock
-import com.example.application.outport.user.CurrentUser
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.enterprise.context.ApplicationScoped
