@@ -125,3 +125,17 @@ CREATE TABLE "auth"."refresh_token" (
   CONSTRAINT "refresh_token_user_id_fkey"   FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
 );
 CREATE INDEX "idx_refresh_token_user_id" ON "auth"."refresh_token" ("user_id");
+
+-- idempotency keys
+
+CREATE TABLE "public"."idempotency_key" (
+  "key"             varchar(255) NOT NULL,
+  "scope"           varchar(50)  NOT NULL,
+  "request_path"    varchar(500) NOT NULL,
+  "response_status" integer      NULL,
+  "response_body"   text         NULL,
+  "created_at"      timestamptz  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "expires_at"      timestamptz  NOT NULL,
+  PRIMARY KEY ("key", "scope")
+);
+CREATE INDEX "idx_idempotency_key_expires_at" ON "public"."idempotency_key" ("expires_at");
