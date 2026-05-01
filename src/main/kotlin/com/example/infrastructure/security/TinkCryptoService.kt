@@ -34,12 +34,6 @@ class TinkCryptoService(
     init {
         AeadConfig.register()
         MacConfig.register()
-        log.info(
-            "TinkCryptoService init: vaultUrl={} aeadKeysetLen={} aeadKeysetPrefix={}",
-            vaultUrl,
-            wrappedAead.length,
-            wrappedAead.take(LOG_PREFIX_LEN),
-        )
         val config = RegistryConfiguration.get()
         val transit =
             VaultClient
@@ -109,7 +103,5 @@ class TinkCryptoService(
 
     companion object {
         private const val KEYSET_KEK = "app-keyset-kek"
-        private const val LOG_PREFIX_LEN = 20
-        private val log = org.slf4j.LoggerFactory.getLogger(TinkCryptoService::class.java)
     }
 }
