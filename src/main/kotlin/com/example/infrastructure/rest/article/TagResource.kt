@@ -2,7 +2,7 @@ package com.example.infrastructure.rest.article
 
 import com.example.api.TagsApi
 import com.example.api.model.GetTags200Response
-import com.example.application.usecase.ArticleQueries
+import com.example.application.usecase.article.ArticleQueries
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped

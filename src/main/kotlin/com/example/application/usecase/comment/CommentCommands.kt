@@ -1,4 +1,4 @@
-package com.example.application.usecase
+package com.example.application.usecase.comment
 
 interface CommentCommands {
     fun addComment(

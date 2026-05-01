@@ -1,6 +1,6 @@
 package com.example.infrastructure.security
 
-import com.example.application.usecase.MaintenanceCommands
+import com.example.application.usecase.maintenance.MaintenanceCommands
 import io.quarkus.scheduler.Scheduled
 import jakarta.enterprise.context.ApplicationScoped
 import org.slf4j.LoggerFactory

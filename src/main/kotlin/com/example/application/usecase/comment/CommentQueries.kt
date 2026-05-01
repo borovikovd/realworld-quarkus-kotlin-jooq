@@ -1,4 +1,4 @@
-package com.example.application.usecase
+package com.example.application.usecase.comment
 
 import com.example.application.readmodel.CommentReadModel
 

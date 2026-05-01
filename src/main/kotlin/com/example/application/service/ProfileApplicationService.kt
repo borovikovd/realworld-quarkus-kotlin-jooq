@@ -4,8 +4,8 @@ import com.example.application.port.profile.ProfileRepository
 import com.example.application.port.security.CurrentUser
 import com.example.application.port.user.UserRepository
 import com.example.application.readmodel.ProfileReadModel
-import com.example.application.usecase.ProfileCommands
-import com.example.application.usecase.ProfileQueries
+import com.example.application.usecase.profile.ProfileCommands
+import com.example.application.usecase.profile.ProfileQueries
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
 import jakarta.enterprise.context.ApplicationScoped

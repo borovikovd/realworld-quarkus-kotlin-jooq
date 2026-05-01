@@ -4,7 +4,7 @@ import com.example.application.port.idempotency.IdempotencyRepository
 import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.time.Clock
-import com.example.application.usecase.MaintenanceCommands
+import com.example.application.usecase.maintenance.MaintenanceCommands
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import java.time.temporal.ChronoUnit
