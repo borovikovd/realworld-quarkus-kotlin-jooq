@@ -2,7 +2,7 @@ package com.example.application.service
 
 import com.example.application.inport.command.MaintenanceCommands
 import com.example.application.outport.Clock
-import com.example.application.outport.IdempotencyRepository
+import com.example.application.outport.IdempotencyWriteRepository
 import com.example.application.outport.RefreshTokenRepository
 import com.example.application.outport.RevokedTokenRepository
 import jakarta.enterprise.context.ApplicationScoped
@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit
 @ApplicationScoped
 class MaintenanceApplicationService(
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val idempotencyRepository: IdempotencyRepository,
+    private val idempotencyWriteRepository: IdempotencyWriteRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
     private val clock: Clock,
 ) : MaintenanceCommands {
@@ -23,7 +23,7 @@ class MaintenanceApplicationService(
     }
 
     @Transactional
-    override fun cleanupExpiredIdempotencyKeys(): Int = idempotencyRepository.deleteExpiredBefore(clock.now())
+    override fun cleanupExpiredIdempotencyKeys(): Int = idempotencyWriteRepository.deleteExpiredBefore(clock.now())
 
     @Transactional
     override fun cleanupExpiredRevokedTokens(): Int = revokedTokenRepository.deleteExpiredBefore(clock.now())
