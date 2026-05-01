@@ -2,7 +2,6 @@ package com.example.infrastructure.security
 
 import com.example.application.outport.RevokedTokenRepository
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.core.Response
@@ -12,13 +11,10 @@ import java.util.UUID
 
 @Provider
 @ApplicationScoped
-class RevokedTokenFilter : ContainerRequestFilter {
-    @Inject
-    lateinit var jwt: JsonWebToken
-
-    @Inject
-    lateinit var revokedTokenRepository: RevokedTokenRepository
-
+class RevokedTokenFilter(
+    private val jwt: JsonWebToken,
+    private val revokedTokenRepository: RevokedTokenRepository,
+) : ContainerRequestFilter {
     override fun filter(requestContext: ContainerRequestContext) {
         val jti = resolveJti(requestContext) ?: return
         if (revokedTokenRepository.isRevoked(jti)) {
