@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.allopen") version "2.3.21"
     id("io.quarkus")
-    id("org.openapi.generator") version "7.21.0"
+    id("org.openapi.generator") version "7.22.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("nu.studer.jooq") version "10.2.1"
@@ -146,8 +146,8 @@ sourceSets {
 // OpenAPI Generator
 openApiGenerate {
     generatorName = "jaxrs-spec"
-    inputSpec = "$rootDir/src/main/resources/openapi.yaml"
-    outputDir = layout.buildDirectory.dir("generated/openapi").get().asFile.path
+    inputSpec.set("$rootDir/src/main/resources/openapi.yaml")
+    outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.path)
     apiPackage = "com.example.api"
     modelPackage = "com.example.api.model"
     invokerPackage = "com.example.api.invoker"
