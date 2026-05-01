@@ -214,6 +214,9 @@ table "refresh_token" {
   index "idx_refresh_token_user_id" {
     columns = [column.user_id]
   }
+  index "idx_refresh_token_expires_at" {
+    columns = [column.expires_at]
+  }
 }
 
 table "revoked_token" {
@@ -270,6 +273,9 @@ table "followers" {
   }
   index "idx_followers_followee_id" {
     columns = [column.followee_id]
+  }
+  index "idx_followers_follower_id" {
+    columns = [column.follower_id]
   }
 }
 
@@ -416,6 +422,9 @@ table "favorites" {
   }
   index "idx_favorites_article_id" {
     columns = [column.article_id]
+  }
+  index "idx_favorites_user_id" {
+    columns = [column.user_id]
   }
 }
 

@@ -4,6 +4,8 @@ import com.example.application.outport.ArticleReadRepository
 import com.example.application.outport.CryptoService
 import com.example.application.readmodel.ArticleReadModel
 import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
+import com.example.jooq.public.tables.Favorites
+import com.example.jooq.public.tables.Followers
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -15,6 +17,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.SelectJoinStep
+import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
@@ -24,6 +28,9 @@ class JooqArticleReadRepository(
     private val dsl: DSLContext,
     private val crypto: CryptoService,
 ) : ArticleReadRepository {
+    private val favByViewer: Favorites = FAVORITES.`as`("fav_by_viewer")
+    private val folByViewer: Followers = FOLLOWERS.`as`("fol_by_viewer")
+
     override fun findById(
         id: Long,
         viewerId: Long?,
@@ -33,6 +40,7 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .applyViewerJoins(viewerId)
             .where(ARTICLES.ID.eq(id))
             .fetchOne()
             ?.toArticleReadModel()
@@ -46,6 +54,7 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .applyViewerJoins(viewerId)
             .where(ARTICLES.SLUG.eq(slug))
             .fetchOne()
             ?.toArticleReadModel()
@@ -63,6 +72,7 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .applyViewerJoins(viewerId)
             .where(buildConditions(tag, author, favorited))
             .orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -80,6 +90,7 @@ class JooqArticleReadRepository(
             .from(ARTICLES)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
+            .applyViewerJoins(viewerId)
             .where(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
@@ -169,31 +180,27 @@ class JooqArticleReadRepository(
         return conditions
     }
 
+    private fun <R : Record> SelectJoinStep<R>.applyViewerJoins(viewerId: Long?): SelectJoinStep<R> {
+        viewerId ?: return this
+        return leftJoin(favByViewer)
+            .on(favByViewer.ARTICLE_ID.eq(ARTICLES.ID).and(favByViewer.USER_ID.eq(viewerId)))
+            .leftJoin(folByViewer)
+            .on(folByViewer.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId)))
+    }
+
     private fun articleFields(viewerId: Long?): List<Field<*>> {
         val favoritedField =
             if (viewerId != null) {
-                select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                    .and(FAVORITES.USER_ID.eq(viewerId))
-                    .asField<Int>("favorited")
+                DSL.`when`(favByViewer.USER_ID.isNotNull, 1).otherwise(0).`as`("favorited")
             } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("favorited")
+                DSL.`val`(0).`as`("favorited")
             }
 
         val followingField =
             if (viewerId != null) {
-                select(count())
-                    .from(FOLLOWERS)
-                    .where(FOLLOWERS.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
-                    .asField<Int>("following")
+                DSL.`when`(folByViewer.FOLLOWER_ID.isNotNull, 1).otherwise(0).`as`("following")
             } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("following")
+                DSL.`val`(0).`as`("following")
             }
 
         return listOf(

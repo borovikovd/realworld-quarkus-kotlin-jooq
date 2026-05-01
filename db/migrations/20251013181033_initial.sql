@@ -65,6 +65,7 @@ CREATE TABLE "public"."favorites" (
   CONSTRAINT "favorites_user_id_fkey"    FOREIGN KEY ("user_id")    REFERENCES "public"."user"     ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE INDEX "idx_favorites_article_id" ON "public"."favorites" ("article_id");
+CREATE INDEX "idx_favorites_user_id"    ON "public"."favorites" ("user_id");
 
 CREATE TABLE "public"."followers" (
   "follower_id" bigint NOT NULL,
@@ -74,6 +75,7 @@ CREATE TABLE "public"."followers" (
   CONSTRAINT "followers_follower_id_fkey" FOREIGN KEY ("follower_id") REFERENCES "public"."user" ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE INDEX "idx_followers_followee_id" ON "public"."followers" ("followee_id");
+CREATE INDEX "idx_followers_follower_id" ON "public"."followers" ("follower_id");
 
 -- vault schema
 
@@ -124,7 +126,8 @@ CREATE TABLE "auth"."refresh_token" (
   CONSTRAINT "refresh_token_token_hash_key" UNIQUE ("token_hash"),
   CONSTRAINT "refresh_token_user_id_fkey"   FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
 );
-CREATE INDEX "idx_refresh_token_user_id" ON "auth"."refresh_token" ("user_id");
+CREATE INDEX "idx_refresh_token_user_id"   ON "auth"."refresh_token" ("user_id");
+CREATE INDEX "idx_refresh_token_expires_at" ON "auth"."refresh_token" ("expires_at");
 
 CREATE TABLE "auth"."revoked_token" (
   "jti"        uuid        NOT NULL,
