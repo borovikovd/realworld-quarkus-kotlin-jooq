@@ -1,5 +1,6 @@
 package com.example.infrastructure.rest.exception
 
+import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.ExceptionMapper
 import jakarta.ws.rs.ext.Provider
@@ -14,6 +15,7 @@ class UnhandledExceptionMapper : ExceptionMapper<Exception> {
     }
 
     override fun toResponse(exception: Exception): Response {
+        if (exception is WebApplicationException) return exception.response
         logger.error("Unhandled exception", exception)
         return Response
             .status(Response.Status.INTERNAL_SERVER_ERROR)
