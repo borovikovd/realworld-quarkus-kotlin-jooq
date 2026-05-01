@@ -1,3 +1,5 @@
+# ![RealWorld Example App](https://raw.githubusercontent.com/realworld-apps/realworld/main/assets/media/realworld.png)
+
 # Realworld Backend — Quarkus + Kotlin + jOOQ
 
 > A production-grade REST API implementing the [RealWorld](https://github.com/gothinkster/realworld) spec, built with the kind of engineering rigour you'd expect at a fintech. Hexagonal architecture, field-level encryption, idempotency keys, envelope encryption with Vault + Tink, Argon2id, single-use refresh tokens, ArchUnit-enforced layer boundaries.
