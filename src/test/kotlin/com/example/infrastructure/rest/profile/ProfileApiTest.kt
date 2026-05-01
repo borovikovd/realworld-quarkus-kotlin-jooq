@@ -98,15 +98,15 @@ class ProfileApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `should return 400 when following yourself`() {
+    fun `should return 422 when following yourself`() {
         val user = ApiTestFixtures.registerUser()
 
         ApiTestFixtures.authenticatedRequest(user.token)
             .`when`()
             .post("/api/profiles/${user.username}/follow")
             .then()
-            .statusCode(400)
-            .body("errors.body[0]", equalTo("Cannot follow yourself"))
+            .statusCode(422)
+            .body("errors.username[0]", equalTo("cannot follow yourself"))
     }
 
     @Test

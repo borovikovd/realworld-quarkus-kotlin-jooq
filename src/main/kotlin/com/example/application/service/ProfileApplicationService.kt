@@ -6,8 +6,8 @@ import com.example.application.port.user.UserRepository
 import com.example.application.readmodel.ProfileReadModel
 import com.example.application.usecase.ProfileCommands
 import com.example.application.usecase.ProfileQueries
-import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
+import com.example.domain.exception.ValidationException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 
@@ -26,7 +26,7 @@ class ProfileApplicationService(
                 ?: throw NotFoundException("User not found")
 
         if (followeeId == followerId) {
-            throw BadRequestException("Cannot follow yourself")
+            throw ValidationException(mapOf("username" to listOf("cannot follow yourself")))
         }
 
         profileRepository.follow(followerId, followeeId)
