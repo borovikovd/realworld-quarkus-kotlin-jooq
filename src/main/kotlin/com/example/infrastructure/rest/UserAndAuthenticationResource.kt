@@ -1,4 +1,4 @@
-package com.example.infrastructure.rest.user
+package com.example.infrastructure.rest
 
 import com.example.api.UserAndAuthenticationApi
 import com.example.api.model.CreateUserRequest
