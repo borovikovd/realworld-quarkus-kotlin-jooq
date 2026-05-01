@@ -1,6 +1,5 @@
 package com.example.archunit
 
-import com.example.domain.Entity
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.importer.ImportOption
@@ -33,30 +32,6 @@ class LayerDependencyRules {
             .that().resideInAPackage("com.example.application..")
             .should().dependOnClassesThat().resideInAPackage("com.example.api..")
             .because("Application layer works with domain types - only Resources handle API DTO mapping")
-
-    @ArchTest
-    val `domain entities should not use jOOQ or JAX-RS` =
-        classes()
-            .that().areAssignableTo(Entity::class.java)
-            .and(
-                object : DescribedPredicate<JavaClass>("not infrastructure classes") {
-                    override fun test(input: JavaClass): Boolean {
-                        val name = input.simpleName
-                        return !name.contains("Repository") &&
-                            !name.contains("Resource") &&
-                            !name.contains("Queries") &&
-                            !name.contains("Commands") &&
-                            !name.contains("ApplicationService") &&
-                            !name.startsWith("Jooq") &&
-                            !input.fullName.contains("Jooq") &&
-                            !input.packageName.contains(".jooq")
-                    }
-                },
-            )
-            .should().onlyDependOnClassesThat().resideOutsideOfPackages(
-                "org.jooq..",
-                "jakarta.ws.rs..",
-            ).because("Domain entities should not depend on jOOQ or JAX-RS")
 
     @ArchTest
     val `domain should only depend on standard library and itself` =

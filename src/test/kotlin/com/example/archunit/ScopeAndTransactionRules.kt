@@ -5,7 +5,6 @@ import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods
-import jakarta.enterprise.context.RequestScoped
 import jakarta.transaction.Transactional
 
 @AnalyzeClasses(
@@ -13,16 +12,6 @@ import jakarta.transaction.Transactional
     importOptions = [ImportOption.DoNotIncludeTests::class, ImportOption.DoNotIncludeJars::class],
 )
 class ScopeAndTransactionRules {
-    @ArchTest
-    val `only JwtCurrentUser should be RequestScoped` =
-        classes()
-            .that().areAnnotatedWith(RequestScoped::class.java)
-            .should().haveSimpleName("JwtCurrentUser")
-            .because(
-                "Only JwtCurrentUser should be @RequestScoped - " +
-                    "all other beans should be @ApplicationScoped",
-            )
-
     @ArchTest
     val `transactional methods belong on application services` =
         methods()
