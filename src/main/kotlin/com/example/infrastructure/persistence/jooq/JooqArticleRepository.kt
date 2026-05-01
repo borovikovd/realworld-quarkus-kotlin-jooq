@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.article
+package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.ArticleRepository
 import com.example.application.port.security.CryptoService

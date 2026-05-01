@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.profile
+package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.ProfileRepository
 import com.example.application.port.security.CryptoService

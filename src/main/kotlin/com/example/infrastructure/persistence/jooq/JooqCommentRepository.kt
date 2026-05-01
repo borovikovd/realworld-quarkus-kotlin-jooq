@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.comment
+package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.CommentRepository
 import com.example.application.port.security.CryptoService

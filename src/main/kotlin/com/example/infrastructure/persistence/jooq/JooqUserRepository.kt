@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.user
+package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.Clock
 import com.example.application.port.UserRepository

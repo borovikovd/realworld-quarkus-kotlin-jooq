@@ -1,4 +1,4 @@
-package com.example.infrastructure.persistence.jooq.idempotency
+package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
