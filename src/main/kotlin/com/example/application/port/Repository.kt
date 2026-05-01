@@ -1,4 +1,4 @@
-package com.example.application.port.persistence
+package com.example.application.port
 
 import com.example.domain.Entity
 

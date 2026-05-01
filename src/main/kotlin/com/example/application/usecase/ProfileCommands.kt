@@ -1,4 +1,4 @@
-package com.example.application.usecase.profile
+package com.example.application.usecase
 
 interface ProfileCommands {
     fun followUser(username: String)

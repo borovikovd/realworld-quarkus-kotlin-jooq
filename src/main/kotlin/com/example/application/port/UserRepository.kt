@@ -1,6 +1,6 @@
-package com.example.application.port.user
+package com.example.application.port
 
-import com.example.application.port.persistence.Repository
+import com.example.application.port.Repository
 import com.example.application.readmodel.LoginCredentials
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email

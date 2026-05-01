@@ -1,11 +1,11 @@
 package com.example.application.service
 
-import com.example.application.port.article.ArticleRepository
-import com.example.application.port.comment.CommentRepository
+import com.example.application.port.ArticleRepository
+import com.example.application.port.CommentRepository
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.CommentReadModel
-import com.example.application.usecase.comment.CommentCommands
-import com.example.application.usecase.comment.CommentQueries
+import com.example.application.usecase.CommentCommands
+import com.example.application.usecase.CommentQueries
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId

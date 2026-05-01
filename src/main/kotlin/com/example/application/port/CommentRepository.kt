@@ -1,6 +1,6 @@
-package com.example.application.port.comment
+package com.example.application.port
 
-import com.example.application.port.persistence.Repository
+import com.example.application.port.Repository
 import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment

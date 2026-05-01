@@ -5,8 +5,8 @@ import com.example.api.model.GetProfileByUsername200Response
 import com.example.api.model.Profile
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ProfileReadModel
-import com.example.application.usecase.profile.ProfileCommands
-import com.example.application.usecase.profile.ProfileQueries
+import com.example.application.usecase.ProfileCommands
+import com.example.application.usecase.ProfileQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

@@ -1,4 +1,4 @@
-package com.example.application.port.profile
+package com.example.application.port
 
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId

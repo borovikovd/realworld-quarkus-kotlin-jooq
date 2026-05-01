@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.profile
 
-import com.example.application.port.profile.ProfileRepository
+import com.example.application.port.ProfileRepository
 import com.example.application.port.security.CryptoService
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId

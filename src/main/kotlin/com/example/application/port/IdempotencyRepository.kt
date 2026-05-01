@@ -1,4 +1,4 @@
-package com.example.application.port.idempotency
+package com.example.application.port
 
 import com.example.application.readmodel.StoredIdempotencyKey
 import java.time.OffsetDateTime

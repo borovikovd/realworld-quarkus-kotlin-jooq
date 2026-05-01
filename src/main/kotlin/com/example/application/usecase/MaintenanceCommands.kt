@@ -1,4 +1,4 @@
-package com.example.application.usecase.maintenance
+package com.example.application.usecase
 
 interface MaintenanceCommands {
     fun cleanupExpiredRefreshTokens(): Int

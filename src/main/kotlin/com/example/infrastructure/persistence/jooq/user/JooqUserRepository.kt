@@ -1,8 +1,8 @@
 package com.example.infrastructure.persistence.jooq.user
 
+import com.example.application.port.Clock
+import com.example.application.port.UserRepository
 import com.example.application.port.security.CryptoService
-import com.example.application.port.time.Clock
-import com.example.application.port.user.UserRepository
 import com.example.application.readmodel.LoginCredentials
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email

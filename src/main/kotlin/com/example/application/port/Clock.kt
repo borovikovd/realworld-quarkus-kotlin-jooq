@@ -1,4 +1,4 @@
-package com.example.application.port.time
+package com.example.application.port
 
 import java.time.OffsetDateTime
 

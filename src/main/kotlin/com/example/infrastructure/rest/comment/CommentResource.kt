@@ -8,8 +8,8 @@ import com.example.api.model.Profile
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.CommentReadModel
 import com.example.application.readmodel.ProfileReadModel
-import com.example.application.usecase.comment.CommentCommands
-import com.example.application.usecase.comment.CommentQueries
+import com.example.application.usecase.CommentCommands
+import com.example.application.usecase.CommentQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

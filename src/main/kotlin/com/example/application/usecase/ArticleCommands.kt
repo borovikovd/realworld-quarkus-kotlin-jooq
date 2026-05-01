@@ -1,4 +1,4 @@
-package com.example.application.usecase.article
+package com.example.application.usecase
 
 interface ArticleCommands {
     fun createArticle(

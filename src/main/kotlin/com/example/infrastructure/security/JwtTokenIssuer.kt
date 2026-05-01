@@ -1,9 +1,9 @@
 package com.example.infrastructure.security
 
+import com.example.application.port.Clock
 import com.example.application.port.security.CryptoService
 import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.port.security.TokenIssuer
-import com.example.application.port.time.Clock
 import com.example.application.readmodel.IssuedTokens
 import com.example.domain.aggregate.user.UserId
 import io.smallrye.jwt.build.Jwt

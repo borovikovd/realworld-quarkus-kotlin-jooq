@@ -9,8 +9,8 @@ import com.example.api.model.RefreshTokenPayload
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.AuthenticatedUser
-import com.example.application.usecase.user.UserCommands
-import com.example.application.usecase.user.UserQueries
+import com.example.application.usecase.UserCommands
+import com.example.application.usecase.UserQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

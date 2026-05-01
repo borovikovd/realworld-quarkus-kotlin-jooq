@@ -1,6 +1,6 @@
 package com.example.archunit
 
-import com.example.application.port.persistence.Repository
+import com.example.application.port.Repository
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest

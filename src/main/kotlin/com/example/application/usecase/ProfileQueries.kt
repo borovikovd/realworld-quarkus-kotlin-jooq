@@ -1,4 +1,4 @@
-package com.example.application.usecase.profile
+package com.example.application.usecase
 
 import com.example.application.readmodel.ProfileReadModel
 
