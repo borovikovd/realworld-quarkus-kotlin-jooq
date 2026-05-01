@@ -86,10 +86,7 @@ class UserAndAuthenticationResource(
 
     private fun loadUserAccessOnly(userId: Long): ApiUser {
         val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
-        // refreshToken is required by the schema; clients holding a still-valid refresh token
-        // must keep using it. We return an empty placeholder so the contract holds without
-        // minting a new refresh token (and DB row) on every authenticated request.
-        return user.toDto(tokenIssuer.issueAccessToken(UserId(userId)), refreshToken = "")
+        return user.toDto(tokenIssuer.issue(UserId(userId)).accessToken, refreshToken = "")
     }
 
     private fun UserReadModel.toDto(

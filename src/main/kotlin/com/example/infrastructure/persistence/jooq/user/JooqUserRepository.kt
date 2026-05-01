@@ -11,6 +11,8 @@ import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 import com.example.jooq.auth.tables.references.PASSWORD
+import com.example.jooq.public.tables.references.ARTICLES
+import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USER
@@ -143,6 +145,10 @@ class JooqUserRepository(
             .where(FOLLOWERS.FOLLOWER_ID.eq(id.value).or(FOLLOWERS.FOLLOWEE_ID.eq(id.value)))
             .execute()
         dsl.deleteFrom(FAVORITES).where(FAVORITES.USER_ID.eq(id.value)).execute()
+        // Delete comments by this user on other users' articles (own-article comments cascade below)
+        dsl.deleteFrom(COMMENTS).where(COMMENTS.AUTHOR_ID.eq(id.value)).execute()
+        // Delete articles; cascades article_tags, favorites, and comments on those articles
+        dsl.deleteFrom(ARTICLES).where(ARTICLES.AUTHOR_ID.eq(id.value)).execute()
         dsl
             .update(USER)
             .set(USER.DELETED_AT, now)

@@ -11,7 +11,7 @@ import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.article.Tag
 import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.user.UserId
-import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
+import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
 import com.example.jooq.public.tables.Favorites
 import com.example.jooq.public.tables.Followers
 import com.example.jooq.public.tables.references.ARTICLES

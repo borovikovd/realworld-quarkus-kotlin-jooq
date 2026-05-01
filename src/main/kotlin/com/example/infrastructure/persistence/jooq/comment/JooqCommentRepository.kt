@@ -7,7 +7,7 @@ import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
-import com.example.infrastructure.persistence.jooq.decryptAuthorProfile
+import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
