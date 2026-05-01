@@ -3,11 +3,11 @@ package com.example.infrastructure.rest.article
 import com.example.api.FavoritesApi
 import com.example.api.model.CreateArticle201Response
 import com.example.api.model.Profile
-import com.example.application.inport.command.ArticleCommands
-import com.example.application.inport.query.ArticleQueries
-import com.example.application.outport.security.CurrentUser
+import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ArticleReadModel
 import com.example.application.readmodel.ProfileReadModel
+import com.example.application.usecase.ArticleCommands
+import com.example.application.usecase.ArticleQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

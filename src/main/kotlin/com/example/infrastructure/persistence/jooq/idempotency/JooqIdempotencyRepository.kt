@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.idempotency
 
-import com.example.application.outport.idempotency.IdempotencyRepository
+import com.example.application.port.idempotency.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.example.jooq.public.tables.references.IDEMPOTENCY_KEY
 import jakarta.enterprise.context.ApplicationScoped

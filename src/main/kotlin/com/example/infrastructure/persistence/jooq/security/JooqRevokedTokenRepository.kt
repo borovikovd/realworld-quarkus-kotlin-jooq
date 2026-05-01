@@ -1,6 +1,6 @@
 package com.example.infrastructure.persistence.jooq.security
 
-import com.example.application.outport.security.RevokedTokenRepository
+import com.example.application.port.security.RevokedTokenRepository
 import com.example.jooq.auth.tables.references.REVOKED_TOKEN
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

@@ -1,11 +1,11 @@
 package com.example.application.service
 
-import com.example.application.inport.command.ProfileCommands
-import com.example.application.inport.query.ProfileQueries
-import com.example.application.outport.profile.ProfileRepository
-import com.example.application.outport.security.CurrentUser
-import com.example.application.outport.user.UserRepository
+import com.example.application.port.profile.ProfileRepository
+import com.example.application.port.security.CurrentUser
+import com.example.application.port.user.UserRepository
 import com.example.application.readmodel.ProfileReadModel
+import com.example.application.usecase.ProfileCommands
+import com.example.application.usecase.ProfileQueries
 import com.example.domain.exception.BadRequestException
 import com.example.domain.exception.NotFoundException
 import jakarta.enterprise.context.ApplicationScoped

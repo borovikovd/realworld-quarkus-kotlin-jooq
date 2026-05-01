@@ -7,10 +7,10 @@ import com.example.api.model.LoginRequest
 import com.example.api.model.LogoutPayload
 import com.example.api.model.RefreshTokenPayload
 import com.example.api.model.UpdateCurrentUserRequest
-import com.example.application.inport.command.UserCommands
-import com.example.application.inport.query.UserQueries
-import com.example.application.outport.security.CurrentUser
+import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.AuthenticatedUser
+import com.example.application.usecase.UserCommands
+import com.example.application.usecase.UserQueries
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped

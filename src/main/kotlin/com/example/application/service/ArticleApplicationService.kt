@@ -1,11 +1,11 @@
 package com.example.application.service
 
-import com.example.application.inport.command.ArticleCommands
-import com.example.application.inport.query.ArticleQueries
-import com.example.application.outport.article.ArticleRepository
-import com.example.application.outport.security.CurrentUser
-import com.example.application.outport.time.Clock
+import com.example.application.port.article.ArticleRepository
+import com.example.application.port.security.CurrentUser
+import com.example.application.port.time.Clock
 import com.example.application.readmodel.ArticleReadModel
+import com.example.application.usecase.ArticleCommands
+import com.example.application.usecase.ArticleQueries
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.Body
 import com.example.domain.aggregate.article.Description

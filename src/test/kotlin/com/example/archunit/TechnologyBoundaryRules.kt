@@ -62,7 +62,7 @@ class TechnologyBoundaryRules {
             .should().dependOnClassesThat().resideInAPackage("com.example.infrastructure.security..")
             .because(
                 "Adapters outside infrastructure.security must use CryptoService and PasswordHashing " +
-                    "outports — not the concrete implementations",
+                    "ports — not the concrete implementations",
             )
 
     @ArchTest

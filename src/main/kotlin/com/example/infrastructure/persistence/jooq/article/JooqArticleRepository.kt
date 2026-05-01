@@ -1,7 +1,7 @@
 package com.example.infrastructure.persistence.jooq.article
 
-import com.example.application.outport.article.ArticleRepository
-import com.example.application.outport.security.CryptoService
+import com.example.application.port.article.ArticleRepository
+import com.example.application.port.security.CryptoService
 import com.example.application.readmodel.ArticleReadModel
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId

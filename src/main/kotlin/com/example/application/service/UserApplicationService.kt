@@ -1,15 +1,15 @@
 package com.example.application.service
 
-import com.example.application.inport.command.UserCommands
-import com.example.application.inport.query.UserQueries
-import com.example.application.outport.security.CryptoService
-import com.example.application.outport.security.PasswordHashing
-import com.example.application.outport.security.RefreshTokenRepository
-import com.example.application.outport.security.RevokedTokenRepository
-import com.example.application.outport.security.TokenIssuer
-import com.example.application.outport.time.Clock
-import com.example.application.outport.user.UserRepository
+import com.example.application.port.security.CryptoService
+import com.example.application.port.security.PasswordHashing
+import com.example.application.port.security.RefreshTokenRepository
+import com.example.application.port.security.RevokedTokenRepository
+import com.example.application.port.security.TokenIssuer
+import com.example.application.port.time.Clock
+import com.example.application.port.user.UserRepository
 import com.example.application.readmodel.AuthenticatedUser
+import com.example.application.usecase.UserCommands
+import com.example.application.usecase.UserQueries
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User

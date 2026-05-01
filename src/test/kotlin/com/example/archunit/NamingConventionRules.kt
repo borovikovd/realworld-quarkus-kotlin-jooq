@@ -1,6 +1,6 @@
 package com.example.archunit
 
-import com.example.application.outport.Repository
+import com.example.application.port.Repository
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
@@ -29,22 +29,22 @@ class NamingConventionRules {
             .because("REST resource classes should be @ApplicationScoped CDI beans")
 
     @ArchTest
-    val `inbound command ports should be interfaces ending with Commands` =
+    val `use case command ports should be interfaces ending with Commands` =
         classes()
-            .that().resideInAPackage("..application.inport.command..")
+            .that().resideInAPackage("..application.usecase..")
             .and().areTopLevelClasses()
+            .and().haveSimpleNameEndingWith("Commands")
             .should().beInterfaces()
-            .andShould().haveSimpleNameEndingWith("Commands")
-            .because("Inbound command ports are contracts — interfaces named *Commands")
+            .because("Use case command ports are contracts — interfaces named *Commands")
 
     @ArchTest
-    val `inbound query ports should be interfaces ending with Queries` =
+    val `use case query ports should be interfaces ending with Queries` =
         classes()
-            .that().resideInAPackage("..application.inport.query")
+            .that().resideInAPackage("..application.usecase..")
             .and().areTopLevelClasses()
+            .and().haveSimpleNameEndingWith("Queries")
             .should().beInterfaces()
-            .andShould().haveSimpleNameEndingWith("Queries")
-            .because("Inbound query ports are contracts — interfaces named *Queries")
+            .because("Use case query ports are contracts — interfaces named *Queries")
 
     @ArchTest
     val `application services should be concrete and end with ApplicationService` =
@@ -58,7 +58,7 @@ class NamingConventionRules {
     @ArchTest
     val `outbound ports should be interfaces` =
         classes()
-            .that().resideInAPackage("..application.outport..")
+            .that().resideInAPackage("..application.port..")
             .and().areTopLevelClasses()
             .should().beInterfaces()
             .because("Outbound ports are contracts implemented by infrastructure adapters")
