@@ -1,7 +1,6 @@
 package com.example.infrastructure.persistence.jooq.idempotency
 
-import com.example.application.outport.IdempotencyReadRepository
-import com.example.application.outport.IdempotencyWriteRepository
+import com.example.application.outport.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.example.jooq.public.tables.references.IDEMPOTENCY_KEY
 import jakarta.enterprise.context.ApplicationScoped
@@ -11,8 +10,7 @@ import java.time.OffsetDateTime
 @ApplicationScoped
 class JooqIdempotencyRepository(
     private val dsl: DSLContext,
-) : IdempotencyReadRepository,
-    IdempotencyWriteRepository {
+) : IdempotencyRepository {
     override fun insertProcessing(
         key: String,
         scope: String,

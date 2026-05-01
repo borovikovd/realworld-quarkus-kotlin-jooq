@@ -1,8 +1,14 @@
 package com.example.application.outport
 
+import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId
 
-interface FollowWriteRepository {
+interface ProfileRepository {
+    fun findByUsername(
+        username: String,
+        viewerId: Long?,
+    ): ProfileReadModel?
+
     fun follow(
         followerId: UserId,
         followeeId: UserId,

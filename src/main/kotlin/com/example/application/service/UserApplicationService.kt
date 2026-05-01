@@ -8,8 +8,7 @@ import com.example.application.outport.PasswordHashing
 import com.example.application.outport.RefreshTokenRepository
 import com.example.application.outport.RevokedTokenRepository
 import com.example.application.outport.TokenIssuer
-import com.example.application.outport.UserReadRepository
-import com.example.application.outport.UserWriteRepository
+import com.example.application.outport.UserRepository
 import com.example.application.readmodel.RefreshedSession
 import com.example.application.readmodel.UserReadModel
 import com.example.domain.aggregate.user.Email
@@ -28,8 +27,7 @@ import java.util.UUID
 
 @ApplicationScoped
 class UserApplicationService(
-    private val userWriteRepository: UserWriteRepository,
-    private val userReadRepository: UserReadRepository,
+    private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
     private val passwordHashing: PasswordHashing,
@@ -49,12 +47,12 @@ class UserApplicationService(
         val errors = mutableMapOf<String, List<String>>()
 
         val emailVo = parseEmail(email, errors)
-        if (emailVo != null && userWriteRepository.existsByEmail(emailVo)) {
+        if (emailVo != null && userRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
         val usernameVo = parseUsername(username, errors)
-        if (usernameVo != null && userWriteRepository.existsByUsername(usernameVo)) {
+        if (usernameVo != null && userRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -66,7 +64,7 @@ class UserApplicationService(
             throw ValidationException(errors)
         }
 
-        val userId = userWriteRepository.nextId()
+        val userId = userRepository.nextId()
         val user =
             User(
                 id = userId,
@@ -74,7 +72,7 @@ class UserApplicationService(
                 username = usernameVo!!,
                 passwordHash = passwordHashing.hash(password),
             )
-        userWriteRepository.create(user)
+        userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
         return userId.value
     }
@@ -85,7 +83,7 @@ class UserApplicationService(
         password: String,
     ): Long {
         val emailVo = runCatching { Email(email) }.getOrNull()
-        val credentials = emailVo?.let { userReadRepository.findCredentialsByEmail(it) }
+        val credentials = emailVo?.let { userRepository.findCredentialsByEmail(it) }
 
         // Always run Argon2 verify, even when the email is unknown or invalid, so that
         // login latency does not leak whether an account exists for that email.
@@ -118,18 +116,18 @@ class UserApplicationService(
     ): Long {
         val typedUserId = UserId(userId)
         val user =
-            userWriteRepository.findById(typedUserId)
+            userRepository.findById(typedUserId)
                 ?: throw UnauthorizedException("User not found")
 
         val errors = mutableMapOf<String, List<String>>()
 
         val emailVo = email?.let { parseEmail(it, errors) }
-        if (emailVo != null && emailVo != user.email && userWriteRepository.existsByEmail(emailVo)) {
+        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
             errors["email"] = listOf("is already taken")
         }
 
         val usernameVo = username?.let { parseUsername(it, errors) }
-        if (usernameVo != null && usernameVo != user.username && userWriteRepository.existsByUsername(usernameVo)) {
+        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
             errors["username"] = listOf("is already taken")
         }
 
@@ -151,7 +149,7 @@ class UserApplicationService(
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
-        val saved = userWriteRepository.update(updatedUser)
+        val saved = userRepository.update(updatedUser)
         return saved.id.value
     }
 
@@ -159,7 +157,7 @@ class UserApplicationService(
     override fun eraseUser(userId: Long) {
         val typedUserId = UserId(userId)
         refreshTokenRepository.revokeAllForUser(typedUserId, clock.now())
-        userWriteRepository.erase(typedUserId)
+        userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
     }
 
@@ -199,7 +197,7 @@ class UserApplicationService(
         }
     }
 
-    override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)
+    override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)
 
     private fun parseEmail(
         value: String,

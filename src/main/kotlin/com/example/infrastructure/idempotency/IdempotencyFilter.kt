@@ -4,8 +4,7 @@ package com.example.infrastructure.idempotency
 
 import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
-import com.example.application.outport.IdempotencyReadRepository
-import com.example.application.outport.IdempotencyWriteRepository
+import com.example.application.outport.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.enterprise.context.ApplicationScoped
@@ -22,8 +21,7 @@ import org.slf4j.LoggerFactory
 @Provider
 @ApplicationScoped
 class IdempotencyFilter(
-    private val idempotencyReadRepository: IdempotencyReadRepository,
-    private val idempotencyWriteRepository: IdempotencyWriteRepository,
+    private val idempotencyRepository: IdempotencyRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
     private val objectMapper: ObjectMapper,
@@ -49,7 +47,7 @@ class IdempotencyFilter(
             handleResponse(key, scope, responseContext)
         } catch (e: Exception) {
             log.warn("Idempotency response storage failed: {}", e.message)
-            idempotencyWriteRepository.deleteByKeyAndScope(key, scope)
+            idempotencyRepository.deleteByKeyAndScope(key, scope)
         }
     }
 
@@ -60,20 +58,20 @@ class IdempotencyFilter(
         val scope = currentUser.id?.value?.toString() ?: ANON_SCOPE
         val path = ctx.uriInfo.requestUri.path
 
-        val existing = idempotencyReadRepository.findByKeyAndScope(key, scope)
+        val existing = idempotencyRepository.findByKeyAndScope(key, scope)
         if (existing != null) {
             ctx.abortWith(responseFor(existing, path))
             return
         }
 
         val expiry = clock.now().plusHours(KEY_EXPIRY_HOURS)
-        val inserted = idempotencyWriteRepository.insertProcessing(key, scope, path, expiry)
+        val inserted = idempotencyRepository.insertProcessing(key, scope, path, expiry)
         if (inserted) {
             ctx.setProperty(KEY_PROP, key)
             ctx.setProperty(SCOPE_PROP, scope)
         } else {
             // Race — another request inserted between our read and insert
-            val raced = idempotencyReadRepository.findByKeyAndScope(key, scope)
+            val raced = idempotencyRepository.findByKeyAndScope(key, scope)
             if (raced != null) ctx.abortWith(responseFor(raced, path))
         }
     }
@@ -85,11 +83,11 @@ class IdempotencyFilter(
     ) {
         val status = responseContext.status
         if (status >= HTTP_SERVER_ERROR) {
-            idempotencyWriteRepository.deleteByKeyAndScope(key, scope)
+            idempotencyRepository.deleteByKeyAndScope(key, scope)
             return
         }
         val body = responseContext.entity?.let { objectMapper.writeValueAsString(it) } ?: ""
-        idempotencyWriteRepository.complete(key, scope, status, body)
+        idempotencyRepository.complete(key, scope, status, body)
     }
 
     private fun responseFor(

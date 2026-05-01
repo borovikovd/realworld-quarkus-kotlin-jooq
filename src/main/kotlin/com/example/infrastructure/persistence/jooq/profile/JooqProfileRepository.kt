@@ -1,8 +1,9 @@
 package com.example.infrastructure.persistence.jooq.profile
 
 import com.example.application.outport.CryptoService
-import com.example.application.outport.ProfileReadRepository
+import com.example.application.outport.ProfileRepository
 import com.example.application.readmodel.ProfileReadModel
+import com.example.domain.aggregate.user.UserId
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USER
 import com.example.jooq.vault.tables.references.PERSON
@@ -12,10 +13,10 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
 @ApplicationScoped
-class JooqProfileReadRepository(
+class JooqProfileRepository(
     private val dsl: DSLContext,
     private val crypto: CryptoService,
-) : ProfileReadRepository {
+) : ProfileRepository {
     override fun findByUsername(
         username: String,
         viewerId: Long?,
@@ -51,5 +52,28 @@ class JooqProfileReadRepository(
                     following = record.get("following", Int::class.java) > 0,
                 )
             }
+    }
+
+    override fun follow(
+        followerId: UserId,
+        followeeId: UserId,
+    ) {
+        dsl
+            .insertInto(FOLLOWERS)
+            .set(FOLLOWERS.FOLLOWER_ID, followerId.value)
+            .set(FOLLOWERS.FOLLOWEE_ID, followeeId.value)
+            .onDuplicateKeyIgnore()
+            .execute()
+    }
+
+    override fun unfollow(
+        followerId: UserId,
+        followeeId: UserId,
+    ) {
+        dsl
+            .deleteFrom(FOLLOWERS)
+            .where(FOLLOWERS.FOLLOWER_ID.eq(followerId.value))
+            .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId.value))
+            .execute()
     }
 }

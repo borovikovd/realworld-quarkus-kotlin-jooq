@@ -1,8 +1,14 @@
 package com.example.application.outport
 
+import com.example.application.readmodel.StoredIdempotencyKey
 import java.time.OffsetDateTime
 
-interface IdempotencyWriteRepository {
+interface IdempotencyRepository {
+    fun findByKeyAndScope(
+        key: String,
+        scope: String,
+    ): StoredIdempotencyKey?
+
     fun insertProcessing(
         key: String,
         scope: String,

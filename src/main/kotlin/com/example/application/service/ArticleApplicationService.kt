@@ -2,8 +2,7 @@ package com.example.application.service
 
 import com.example.application.inport.command.ArticleCommands
 import com.example.application.inport.query.ArticleQueries
-import com.example.application.outport.ArticleReadRepository
-import com.example.application.outport.ArticleWriteRepository
+import com.example.application.outport.ArticleRepository
 import com.example.application.outport.Clock
 import com.example.application.outport.CurrentUser
 import com.example.application.readmodel.ArticleReadModel
@@ -24,8 +23,7 @@ import org.slf4j.LoggerFactory
 
 @ApplicationScoped
 class ArticleApplicationService(
-    private val articleWriteRepository: ArticleWriteRepository,
-    private val articleReadRepository: ArticleReadRepository,
+    private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) : ArticleCommands,
@@ -41,11 +39,11 @@ class ArticleApplicationService(
         validateArticleFields(title, description, body)
 
         val userId = currentUser.require()
-        val articleId = articleWriteRepository.nextId()
+        val articleId = articleRepository.nextId()
         val slug =
             SlugGenerator.generateUniqueSlug(
                 title = title,
-                existingSlugChecker = { candidate -> articleWriteRepository.findBySlug(candidate) != null },
+                existingSlugChecker = { candidate -> articleRepository.findBySlug(candidate) != null },
             )
         val article =
             Article(
@@ -57,7 +55,7 @@ class ArticleApplicationService(
                 authorId = userId,
                 tags = tags.map { Tag(it) }.toSet(),
             )
-        articleWriteRepository.create(article)
+        articleRepository.create(article)
         return articleId.value
     }
 
@@ -70,7 +68,7 @@ class ArticleApplicationService(
     ): Long {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (userId != article.authorId) {
@@ -88,7 +86,7 @@ class ArticleApplicationService(
                 SlugGenerator.generateUniqueSlug(
                     title = title,
                     existingSlugChecker = { candidate ->
-                        val existing = articleWriteRepository.findBySlug(candidate)
+                        val existing = articleRepository.findBySlug(candidate)
                         existing != null && existing.id != article.id
                     },
                 )
@@ -97,7 +95,7 @@ class ArticleApplicationService(
             }
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody, clock.now())
-        articleWriteRepository.update(updatedArticle)
+        articleRepository.update(updatedArticle)
         return article.id.value
     }
 
@@ -105,14 +103,14 @@ class ArticleApplicationService(
     override fun deleteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
         if (!article.canBeDeletedBy(userId)) {
             throw ForbiddenException("You can only delete your own articles")
         }
 
-        articleWriteRepository.deleteById(article.id)
+        articleRepository.deleteById(article.id)
         logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
     }
 
@@ -120,31 +118,31 @@ class ArticleApplicationService(
     override fun favoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
-        articleWriteRepository.favorite(article.id, userId)
+        articleRepository.favorite(article.id, userId)
     }
 
     @Transactional
     override fun unfavoriteArticle(slug: String) {
         val userId = currentUser.require()
         val article =
-            articleWriteRepository.findBySlug(Slug(slug))
+            articleRepository.findBySlug(Slug(slug))
                 ?: throw NotFoundException("Article not found")
 
-        articleWriteRepository.unfavorite(article.id, userId)
+        articleRepository.unfavorite(article.id, userId)
     }
 
     override fun getArticleById(
         id: Long,
         viewerId: Long?,
-    ): ArticleReadModel? = articleReadRepository.findById(id, viewerId)
+    ): ArticleReadModel? = articleRepository.findById(id, viewerId)
 
     override fun getArticleBySlug(
         slug: String,
         viewerId: Long?,
-    ): ArticleReadModel? = articleReadRepository.findBySlug(slug, viewerId)
+    ): ArticleReadModel? = articleRepository.findBySlug(slug, viewerId)
 
     override fun getArticles(
         tag: String?,
@@ -153,23 +151,23 @@ class ArticleApplicationService(
         limit: Int,
         offset: Int,
         viewerId: Long?,
-    ): List<ArticleReadModel> = articleReadRepository.list(tag, author, favorited, limit, offset, viewerId)
+    ): List<ArticleReadModel> = articleRepository.list(tag, author, favorited, limit, offset, viewerId)
 
     override fun getArticlesFeed(
         viewerId: Long,
         limit: Int,
         offset: Int,
-    ): List<ArticleReadModel> = articleReadRepository.listFeed(viewerId, limit, offset)
+    ): List<ArticleReadModel> = articleRepository.listFeed(viewerId, limit, offset)
 
     override fun countArticles(
         tag: String?,
         author: String?,
         favorited: String?,
-    ): Int = articleReadRepository.count(tag, author, favorited)
+    ): Int = articleRepository.count(tag, author, favorited)
 
-    override fun countArticlesFeed(viewerId: Long): Int = articleReadRepository.countFeed(viewerId)
+    override fun countArticlesFeed(viewerId: Long): Int = articleRepository.countFeed(viewerId)
 
-    override fun getAllTags(): List<String> = articleReadRepository.allTags()
+    override fun getAllTags(): List<String> = articleRepository.allTags()
 
     private fun validateArticleFields(
         title: String?,
