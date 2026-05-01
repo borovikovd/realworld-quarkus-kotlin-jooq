@@ -70,7 +70,7 @@ class RefreshTokenApiTest : BaseApiTest() {
 
         given()
             .contentType(ContentType.JSON)
-            .body("""{"refreshToken":"${user.refreshToken}"}""")
+            .body("""{"refreshToken":"${user.refreshToken}","accessToken":"${user.token}"}""")
             .`when`()
             .post("/api/users/logout")
             .then()
@@ -81,6 +81,27 @@ class RefreshTokenApiTest : BaseApiTest() {
             .body("""{"refreshToken":"${user.refreshToken}"}""")
             .`when`()
             .post("/api/users/refresh")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
+    fun `logout revokes the access token (jti blocklist)`() {
+        val user = ApiTestFixtures.registerUser()
+
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${user.refreshToken}","accessToken":"${user.token}"}""")
+            .`when`()
+            .post("/api/users/logout")
+            .then()
+            .statusCode(204)
+
+        // The same access token must now be rejected by RevokedTokenFilter.
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .`when`()
+            .get("/api/user")
             .then()
             .statusCode(401)
     }

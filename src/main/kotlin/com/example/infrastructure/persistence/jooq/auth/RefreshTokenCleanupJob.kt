@@ -13,7 +13,13 @@ class RefreshTokenCleanupJob(
     fun deleteExpired() {
         val deletedTokens = maintenance.cleanupExpiredRefreshTokens()
         val deletedKeys = maintenance.cleanupExpiredIdempotencyKeys()
-        log.info("Maintenance: deleted {} refresh tokens, {} idempotency keys", deletedTokens, deletedKeys)
+        val deletedRevoked = maintenance.cleanupExpiredRevokedTokens()
+        log.info(
+            "Maintenance: deleted {} refresh tokens, {} idempotency keys, {} revoked tokens",
+            deletedTokens,
+            deletedKeys,
+            deletedRevoked,
+        )
     }
 
     companion object {

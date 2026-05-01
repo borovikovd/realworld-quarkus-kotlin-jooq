@@ -6,6 +6,7 @@ import com.example.application.outport.Clock
 import com.example.application.outport.CryptoService
 import com.example.application.outport.PasswordHashing
 import com.example.application.outport.RefreshTokenRepository
+import com.example.application.outport.RevokedTokenRepository
 import com.example.application.outport.TokenIssuer
 import com.example.application.outport.UserReadRepository
 import com.example.application.outport.UserWriteRepository
@@ -23,12 +24,14 @@ import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 @ApplicationScoped
 class UserApplicationService(
     private val userWriteRepository: UserWriteRepository,
     private val userReadRepository: UserReadRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
+    private val revokedTokenRepository: RevokedTokenRepository,
     private val passwordHashing: PasswordHashing,
     private val crypto: CryptoService,
     private val clock: Clock,
@@ -183,12 +186,42 @@ class UserApplicationService(
     }
 
     @Transactional
-    override fun logout(refreshToken: String) {
+    override fun logout(
+        refreshToken: String,
+        accessToken: String,
+    ) {
         val tokenHash = crypto.hmacRefreshToken(refreshToken)
         refreshTokenRepository.revokeByHash(tokenHash, clock.now())
+        val jti = parseJti(accessToken) ?: return
+        val userId = parseUserId(accessToken) ?: return
+        val expiry = clock.now().plusMinutes(ACCESS_TOKEN_EXPIRY_MINUTES)
+        revokedTokenRepository.insert(jti, userId, expiry)
     }
 
     override fun getUserById(id: Long): UserReadModel? = userReadRepository.findById(id)
+
+    private fun parseJti(accessToken: String): UUID? =
+        runCatching {
+            val payload = accessToken.split(".")[1]
+            val decoded =
+                java.util.Base64
+                    .getUrlDecoder()
+                    .decode(payload)
+            val json = String(decoded, Charsets.UTF_8)
+            val jtiValue = json.substringAfter("\"jti\":\"").substringBefore("\"")
+            UUID.fromString(jtiValue)
+        }.getOrNull()
+
+    private fun parseUserId(accessToken: String): Long? =
+        runCatching {
+            val payload = accessToken.split(".")[1]
+            val decoded =
+                java.util.Base64
+                    .getUrlDecoder()
+                    .decode(payload)
+            val json = String(decoded, Charsets.UTF_8)
+            json.substringAfter("\"sub\":\"").substringBefore("\"").toLong()
+        }.getOrNull()
 
     private fun parseEmail(
         value: String,
@@ -220,6 +253,7 @@ class UserApplicationService(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
+        private const val ACCESS_TOKEN_EXPIRY_MINUTES = 16L
         private val logger = LoggerFactory.getLogger(UserApplicationService::class.java)
     }
 }

@@ -126,6 +126,16 @@ CREATE TABLE "auth"."refresh_token" (
 );
 CREATE INDEX "idx_refresh_token_user_id" ON "auth"."refresh_token" ("user_id");
 
+CREATE TABLE "auth"."revoked_token" (
+  "jti"        uuid        NOT NULL,
+  "user_id"    bigint      NOT NULL,
+  "expires_at" timestamptz NOT NULL,
+  PRIMARY KEY ("jti"),
+  CONSTRAINT "revoked_token_user_id_fkey"
+    FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE
+);
+CREATE INDEX "idx_revoked_token_expires_at" ON "auth"."revoked_token" ("expires_at");
+
 -- idempotency keys
 
 CREATE TABLE "public"."idempotency_key" (

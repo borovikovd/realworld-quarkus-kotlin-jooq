@@ -27,5 +27,8 @@ interface UserCommands {
 
     fun refresh(refreshToken: String): RefreshedSession
 
-    fun logout(refreshToken: String)
+    fun logout(
+        refreshToken: String,
+        accessToken: String,
+    )
 }

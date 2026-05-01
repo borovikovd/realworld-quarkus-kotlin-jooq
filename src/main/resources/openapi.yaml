@@ -72,10 +72,10 @@ paths:
       tags:
         - User and Authentication
       summary: Logout
-      description: Revoke the presented refresh token.
+      description: Revoke the presented refresh and access tokens.
       operationId: Logout
       requestBody:
-        $ref: '#/components/requestBodies/RefreshTokenRequest'
+        $ref: '#/components/requestBodies/LogoutRequest'
       responses:
         '204':
           description: Refresh token revoked
@@ -522,6 +522,16 @@ components:
       properties:
         refreshToken:
           type: string
+    LogoutPayload:
+      required:
+        - refreshToken
+        - accessToken
+      type: object
+      properties:
+        refreshToken:
+          type: string
+        accessToken:
+          type: string
     UpdateUser:
       type: object
       properties:
@@ -852,11 +862,18 @@ components:
                 $ref: '#/components/schemas/UpdateArticle'
     RefreshTokenRequest:
       required: true
-      description: Refresh token to exchange or revoke
+      description: Refresh token to exchange
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/RefreshTokenPayload'
+    LogoutRequest:
+      required: true
+      description: Refresh token and access token to revoke
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LogoutPayload'
     NewCommentRequest:
       required: true
       description: Comment you want to create

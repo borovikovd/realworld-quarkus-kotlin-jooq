@@ -216,6 +216,33 @@ table "refresh_token" {
   }
 }
 
+table "revoked_token" {
+  schema = schema.auth
+  column "jti" {
+    null = false
+    type = uuid
+  }
+  column "user_id" {
+    null = false
+    type = bigint
+  }
+  column "expires_at" {
+    null = false
+    type = timestamptz
+  }
+  primary_key {
+    columns = [column.jti]
+  }
+  foreign_key "revoked_token_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.user.column.id]
+    on_delete   = CASCADE
+  }
+  index "idx_revoked_token_expires_at" {
+    columns = [column.expires_at]
+  }
+}
+
 table "followers" {
   schema = schema.public
   column "follower_id" {

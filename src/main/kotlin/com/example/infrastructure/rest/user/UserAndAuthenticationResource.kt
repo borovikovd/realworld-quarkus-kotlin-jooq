@@ -4,6 +4,7 @@ import com.example.api.UserAndAuthenticationApi
 import com.example.api.model.CreateUserRequest
 import com.example.api.model.Login200Response
 import com.example.api.model.LoginRequest
+import com.example.api.model.LogoutPayload
 import com.example.api.model.RefreshTokenPayload
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.inport.command.UserCommands
@@ -45,8 +46,8 @@ class UserAndAuthenticationResource(
     }
 
     @ResponseStatus(204)
-    override fun logout(body: RefreshTokenPayload) {
-        userCommands.logout(body.refreshToken)
+    override fun logout(body: LogoutPayload) {
+        userCommands.logout(body.refreshToken, body.accessToken)
     }
 
     @RolesAllowed("user")

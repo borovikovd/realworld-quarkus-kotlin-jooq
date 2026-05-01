@@ -23,6 +23,7 @@ abstract class BaseApiTest {
                 vault.person,
                 auth.password,
                 public.idempotency_key,
+                auth.revoked_token,
                 public.article_tags,
                 public.favorites,
                 public.followers,

@@ -40,6 +40,7 @@ class TechnologyBoundaryRules {
         noClasses()
             .that().doNotHaveSimpleName("JwtCurrentUser")
             .and().doNotHaveSimpleName("JwtTokenIssuer")
+            .and().doNotHaveSimpleName("RevokedTokenFilter")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "org.eclipse.microprofile.jwt..",
                 "io.smallrye.jwt..",
