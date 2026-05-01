@@ -1,4 +1,4 @@
-package com.example.infrastructure.rest
+package com.example.infrastructure.rest.filter
 
 import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ResourceInfo

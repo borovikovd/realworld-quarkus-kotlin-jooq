@@ -1,6 +1,6 @@
 @file:Suppress("TooGenericExceptionCaught")
 
-package com.example.infrastructure.rest
+package com.example.infrastructure.rest.filter
 
 import com.example.application.port.idempotency.IdempotencyRepository
 import com.example.application.port.security.CurrentUser
