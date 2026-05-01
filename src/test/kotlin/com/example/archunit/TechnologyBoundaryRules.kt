@@ -40,13 +40,11 @@ class TechnologyBoundaryRules {
     @ArchTest
     val `only infrastructure security adapters can import JWT` =
         noClasses()
-            .that().doNotHaveSimpleName("JwtCurrentUser")
-            .and().doNotHaveSimpleName("JwtTokenIssuer")
-            .and().doNotHaveSimpleName("RevokedTokenFilter")
+            .that().resideOutsideOfPackage("com.example.infrastructure.security..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "org.eclipse.microprofile.jwt..",
                 "io.smallrye.jwt..",
-            ).because("JWT token handling belongs to the infrastructure.security adapters only")
+            ).because("JWT token handling belongs to the infrastructure.security package only")
 
     @ArchTest
     val `only Jooq adapters can inject DSLContext` =
