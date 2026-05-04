@@ -156,7 +156,7 @@ class UserService(
     ) {
         val typedUserId = UserId(userId)
         tokenIssuer.revokeAllRefreshTokens(typedUserId)
-        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
+        if (jti != null) tokenIssuer.revokeAccessToken(jti, typedUserId)
         userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
     }
@@ -190,7 +190,7 @@ class UserService(
         userId: Long?,
     ) {
         tokenIssuer.revokeRefreshToken(refreshToken)
-        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
+        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, UserId(userId))
     }
 
     override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)

@@ -53,8 +53,8 @@ class JwtTokenIssuer(
 
     override fun revokeAccessToken(
         jti: UUID,
-        userId: Long,
-    ) = revokedTokenRepository.insert(jti, userId, clock.now().plus(accessTokenExpiry))
+        userId: UserId,
+    ) = revokedTokenRepository.insert(jti, userId.value, clock.now().plus(accessTokenExpiry))
 
     override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
         refreshTokenRepository.deleteExpiredBefore(before)

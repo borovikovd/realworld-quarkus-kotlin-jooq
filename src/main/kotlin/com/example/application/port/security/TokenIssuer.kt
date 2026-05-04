@@ -19,7 +19,7 @@ interface TokenIssuer {
 
     fun revokeAccessToken(
         jti: UUID,
-        userId: Long,
+        userId: UserId,
     )
 
     fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int
