@@ -45,15 +45,10 @@ class JwtTokenIssuer(
     override fun findRefreshToken(token: String): StoredRefreshToken? =
         refreshTokenRepository.findByHash(crypto.hmacRefreshToken(token))
 
-    override fun revokeRefreshToken(
-        token: String,
-        at: OffsetDateTime,
-    ): Boolean = refreshTokenRepository.revokeByHash(crypto.hmacRefreshToken(token), at)
+    override fun revokeRefreshToken(token: String): Boolean =
+        refreshTokenRepository.revokeByHash(crypto.hmacRefreshToken(token), clock.now())
 
-    override fun revokeAllRefreshTokens(
-        userId: UserId,
-        at: OffsetDateTime,
-    ) = refreshTokenRepository.revokeAllForUser(userId, at)
+    override fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
 
     override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
         refreshTokenRepository.deleteExpiredBefore(before)

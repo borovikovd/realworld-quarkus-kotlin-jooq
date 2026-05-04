@@ -145,7 +145,7 @@ class UserService(
         }
 
         userRepository.update(updatedUser)
-        tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
+        tokenIssuer.revokeAllRefreshTokens(typedUserId)
         val tokens = tokenIssuer.issueTokens(typedUserId)
         val readModel = userRepository.findById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
@@ -157,10 +157,10 @@ class UserService(
         jti: UUID?,
     ) {
         val typedUserId = UserId(userId)
-        val now = clock.now()
-        tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
+        tokenIssuer.revokeAllRefreshTokens(typedUserId)
         if (jti != null) {
-            revokedTokenRepository.insert(jti, userId, now.plus(tokenIssuer.accessTokenExpiry()))
+            val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
+            revokedTokenRepository.insert(jti, userId, expiry)
         }
         userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
@@ -178,7 +178,7 @@ class UserService(
         }
 
         // false means a concurrent request already won the UPDATE race — token already used.
-        if (!tokenIssuer.revokeRefreshToken(refreshToken, now)) {
+        if (!tokenIssuer.revokeRefreshToken(refreshToken)) {
             throw UnauthorizedException("Invalid refresh token")
         }
         // Issue new tokens in the same transaction so revoke + issue are atomic.
@@ -194,7 +194,7 @@ class UserService(
         jti: UUID?,
         userId: Long?,
     ) {
-        tokenIssuer.revokeRefreshToken(refreshToken, clock.now())
+        tokenIssuer.revokeRefreshToken(refreshToken)
         if (jti != null && userId != null) {
             val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
             revokedTokenRepository.insert(jti, userId, expiry)

@@ -15,15 +15,9 @@ interface TokenIssuer {
     fun findRefreshToken(token: String): StoredRefreshToken?
 
     /** Returns false if the token was already revoked or not found. */
-    fun revokeRefreshToken(
-        token: String,
-        at: OffsetDateTime,
-    ): Boolean
+    fun revokeRefreshToken(token: String): Boolean
 
-    fun revokeAllRefreshTokens(
-        userId: UserId,
-        at: OffsetDateTime,
-    )
+    fun revokeAllRefreshTokens(userId: UserId)
 
     fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int
 }
