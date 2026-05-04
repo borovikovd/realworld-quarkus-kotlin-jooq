@@ -31,16 +31,8 @@ class JwtTokenIssuer(
 
     override fun accessTokenExpiry(): Duration = accessTokenExpiry
 
-    private fun issueAccessToken(userId: UserId): String =
-        Jwt
-            .issuer(issuer)
-            .subject(userId.value.toString())
-            .groups(setOf("user"))
-            .expiresAt(clock.now().toInstant().plus(accessTokenExpiry))
-            .sign()
-
     override fun issueTokens(userId: UserId): IssuedTokens {
-        val accessToken = issueAccessToken(userId)
+        val accessToken = generateAccessToken(userId)
         val refreshToken = generateRefreshToken()
         refreshTokenRepository.store(
             userId = userId,
@@ -65,6 +57,14 @@ class JwtTokenIssuer(
 
     override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
         refreshTokenRepository.deleteExpiredBefore(before)
+
+    private fun generateAccessToken(userId: UserId): String =
+        Jwt
+            .issuer(issuer)
+            .subject(userId.value.toString())
+            .groups(setOf("user"))
+            .expiresAt(clock.now().toInstant().plus(accessTokenExpiry))
+            .sign()
 
     private fun generateRefreshToken(): String {
         val bytes = ByteArray(REFRESH_TOKEN_BYTES).also { secureRandom.nextBytes(it) }
