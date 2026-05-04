@@ -73,6 +73,7 @@ class UserService(
     }
 
     @Timed("user.login")
+    @Transactional
     override fun login(
         email: String,
         password: String,
