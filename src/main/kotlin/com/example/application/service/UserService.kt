@@ -140,17 +140,14 @@ class UserService(
         var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
 
         password?.let {
-            tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
         userRepository.update(updatedUser)
+        tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
+        val tokens = tokenIssuer.issueTokens(typedUserId)
         val readModel = userRepository.findById(userId) ?: throw NotFoundException("User not found")
-        return AuthenticatedUser(
-            user = readModel,
-            accessToken = tokenIssuer.issueAccessToken(typedUserId),
-            refreshToken = "",
-        )
+        return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
     @Transactional
