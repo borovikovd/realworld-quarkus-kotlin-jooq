@@ -9,7 +9,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("nu.studer.jooq") version "10.2.1"
-    id("com.github.spotbugs") version "6.5.1"
+    id("com.github.spotbugs") version "6.5.4"
     // Pinned to 12.1.9 — 12.2.1 introduced a ConcurrentModificationException regression
     // when iterating configurations that interacts badly with Quarkus's dynamic config
     // registration. Track fix at https://github.com/dependency-check/dependency-check-gradle/issues/500
