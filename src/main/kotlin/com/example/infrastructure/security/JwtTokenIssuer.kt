@@ -3,6 +3,7 @@ package com.example.infrastructure.security
 import com.example.application.port.Clock
 import com.example.application.port.security.CryptoService
 import com.example.application.port.security.RefreshTokenRepository
+import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.readmodel.IssuedTokens
 import com.example.application.readmodel.StoredRefreshToken
@@ -14,6 +15,7 @@ import java.security.SecureRandom
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.Base64
+import java.util.UUID
 
 @ApplicationScoped
 class JwtTokenIssuer(
@@ -21,6 +23,7 @@ class JwtTokenIssuer(
     @param:ConfigProperty(name = "app.token.access-expiry-seconds") private val accessExpirySeconds: Long,
     @param:ConfigProperty(name = "app.token.refresh-expiry-days") private val refreshExpiryDays: Long,
     private val refreshTokenRepository: RefreshTokenRepository,
+    private val revokedTokenRepository: RevokedTokenRepository,
     private val crypto: CryptoService,
     private val clock: Clock,
 ) : TokenIssuer {
@@ -50,8 +53,16 @@ class JwtTokenIssuer(
 
     override fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
 
+    override fun revokeAccessToken(
+        jti: UUID,
+        userId: Long,
+    ) = revokedTokenRepository.insert(jti, userId, clock.now().plus(accessTokenExpiry))
+
     override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
         refreshTokenRepository.deleteExpiredBefore(before)
+
+    override fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int =
+        revokedTokenRepository.deleteExpiredBefore(before)
 
     private fun generateAccessToken(userId: UserId): String =
         Jwt

@@ -2,7 +2,6 @@ package com.example.application.service
 
 import com.example.application.port.Clock
 import com.example.application.port.IdempotencyRepository
-import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.usecase.MaintenanceCommands
 import jakarta.enterprise.context.ApplicationScoped
@@ -13,7 +12,6 @@ import java.time.temporal.ChronoUnit
 class MaintenanceService(
     private val tokenIssuer: TokenIssuer,
     private val idempotencyRepository: IdempotencyRepository,
-    private val revokedTokenRepository: RevokedTokenRepository,
     private val clock: Clock,
 ) : MaintenanceCommands {
     @Transactional
@@ -26,5 +24,5 @@ class MaintenanceService(
     override fun cleanupExpiredIdempotencyKeys(): Int = idempotencyRepository.deleteExpiredBefore(clock.now())
 
     @Transactional
-    override fun cleanupExpiredRevokedTokens(): Int = revokedTokenRepository.deleteExpiredBefore(clock.now())
+    override fun cleanupExpiredRevokedTokens(): Int = tokenIssuer.purgeExpiredAccessTokenRevocations(clock.now())
 }

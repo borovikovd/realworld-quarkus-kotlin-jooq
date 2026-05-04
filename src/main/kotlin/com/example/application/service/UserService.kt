@@ -3,7 +3,6 @@ package com.example.application.service
 import com.example.application.port.Clock
 import com.example.application.port.UserRepository
 import com.example.application.port.security.PasswordHashing
-import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.readmodel.AuthenticatedUser
 import com.example.application.readmodel.UserReadModel
@@ -27,7 +26,6 @@ import java.util.UUID
 @ApplicationScoped
 class UserService(
     private val userRepository: UserRepository,
-    private val revokedTokenRepository: RevokedTokenRepository,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
     private val tokenIssuer: TokenIssuer,
@@ -158,10 +156,7 @@ class UserService(
     ) {
         val typedUserId = UserId(userId)
         tokenIssuer.revokeAllRefreshTokens(typedUserId)
-        if (jti != null) {
-            val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
-            revokedTokenRepository.insert(jti, userId, expiry)
-        }
+        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
     }
@@ -195,10 +190,7 @@ class UserService(
         userId: Long?,
     ) {
         tokenIssuer.revokeRefreshToken(refreshToken)
-        if (jti != null && userId != null) {
-            val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
-            revokedTokenRepository.insert(jti, userId, expiry)
-        }
+        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
 
     override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)

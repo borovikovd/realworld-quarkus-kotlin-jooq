@@ -5,6 +5,7 @@ import com.example.application.readmodel.StoredRefreshToken
 import com.example.domain.aggregate.user.UserId
 import java.time.Duration
 import java.time.OffsetDateTime
+import java.util.UUID
 
 interface TokenIssuer {
     fun accessTokenExpiry(): Duration
@@ -19,5 +20,12 @@ interface TokenIssuer {
 
     fun revokeAllRefreshTokens(userId: UserId)
 
+    fun revokeAccessToken(
+        jti: UUID,
+        userId: Long,
+    )
+
     fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int
+
+    fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int
 }
