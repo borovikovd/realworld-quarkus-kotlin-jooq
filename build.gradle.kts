@@ -13,7 +13,7 @@ plugins {
     // Pinned to 12.1.9 — 12.2.1 introduced a ConcurrentModificationException regression
     // when iterating configurations that interacts badly with Quarkus's dynamic config
     // registration. Track fix at https://github.com/dependency-check/dependency-check-gradle/issues/500
-    id("org.owasp.dependencycheck") version "12.2.1"
+    id("org.owasp.dependencycheck") version "12.2.2"
     id("org.cyclonedx.bom") version "3.2.4"
 }
 
