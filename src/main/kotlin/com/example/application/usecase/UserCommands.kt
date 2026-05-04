@@ -24,7 +24,10 @@ interface UserCommands {
         image: String?,
     ): AuthenticatedUser
 
-    fun eraseUser(userId: Long)
+    fun eraseUser(
+        userId: Long,
+        jti: UUID?,
+    )
 
     fun refresh(refreshToken: String): AuthenticatedUser
 

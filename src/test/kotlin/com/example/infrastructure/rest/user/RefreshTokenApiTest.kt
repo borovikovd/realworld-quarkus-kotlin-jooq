@@ -127,4 +127,23 @@ class RefreshTokenApiTest : BaseApiTest() {
             .then()
             .statusCode(401)
     }
+
+    @Test
+    fun `erase revokes the access token (jti blocklist)`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/user")
+            .then()
+            .statusCode(204)
+
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .`when`()
+            .get("/api/user")
+            .then()
+            .statusCode(401)
+    }
 }

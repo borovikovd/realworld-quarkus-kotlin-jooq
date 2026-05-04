@@ -70,7 +70,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     @ResponseStatus(204)
     override fun deleteCurrentUser() {
-        userCommands.eraseUser(currentUser.require().value)
+        userCommands.eraseUser(currentUser.require().value, currentUser.jti)
     }
 
     private fun AuthenticatedUser.toApiUser(): ApiUser =

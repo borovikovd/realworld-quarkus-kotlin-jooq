@@ -152,9 +152,16 @@ class UserService(
     }
 
     @Transactional
-    override fun eraseUser(userId: Long) {
+    override fun eraseUser(
+        userId: Long,
+        jti: UUID?,
+    ) {
         val typedUserId = UserId(userId)
-        tokenIssuer.revokeAllRefreshTokens(typedUserId, clock.now())
+        val now = clock.now()
+        tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
+        if (jti != null) {
+            revokedTokenRepository.insert(jti, userId, now.plus(tokenIssuer.accessTokenExpiry()))
+        }
         userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
     }
