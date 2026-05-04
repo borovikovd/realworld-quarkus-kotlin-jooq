@@ -3,13 +3,10 @@ package com.example.application.port.security
 import com.example.application.readmodel.IssuedTokens
 import com.example.application.readmodel.StoredRefreshToken
 import com.example.domain.aggregate.user.UserId
-import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.UUID
 
 interface TokenIssuer {
-    fun accessTokenExpiry(): Duration
-
     /** Issues a full token pair (access + refresh). Use after login, register, or token rotation. */
     fun issueTokens(userId: UserId): IssuedTokens
 

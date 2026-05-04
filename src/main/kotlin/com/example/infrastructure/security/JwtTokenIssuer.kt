@@ -32,8 +32,6 @@ class JwtTokenIssuer(
     private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
-    override fun accessTokenExpiry(): Duration = accessTokenExpiry
-
     override fun issueTokens(userId: UserId): IssuedTokens {
         val accessToken = generateAccessToken(userId)
         val refreshToken = generateRefreshToken()
