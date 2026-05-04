@@ -31,7 +31,7 @@ class JwtTokenIssuer(
 
     override fun accessTokenExpiry(): Duration = accessTokenExpiry
 
-    override fun issueAccessToken(userId: UserId): String =
+    private fun issueAccessToken(userId: UserId): String =
         Jwt
             .issuer(issuer)
             .subject(userId.value.toString())

@@ -1,7 +1,7 @@
 package com.example.application.usecase
 
-import com.example.application.readmodel.AuthenticatedUser
+import com.example.application.readmodel.UserReadModel
 
 interface UserQueries {
-    fun getUserById(id: Long): AuthenticatedUser?
+    fun getUserById(id: Long): UserReadModel?
 }

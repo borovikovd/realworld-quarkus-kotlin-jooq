@@ -7,6 +7,7 @@ import java.util.UUID
 interface CurrentUser {
     val id: UserId?
     val jti: UUID?
+    val rawToken: String?
 
     fun require(): UserId = id ?: throw UnauthorizedException("Authentication required")
 }

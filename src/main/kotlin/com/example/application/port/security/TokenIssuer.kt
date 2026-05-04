@@ -7,8 +7,6 @@ import java.time.Duration
 import java.time.OffsetDateTime
 
 interface TokenIssuer {
-    fun issueAccessToken(userId: UserId): String
-
     fun accessTokenExpiry(): Duration
 
     /** Issues a full token pair (access + refresh). Use after login, register, or token rotation. */

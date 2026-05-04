@@ -6,6 +6,7 @@ import com.example.application.port.security.PasswordHashing
 import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.readmodel.AuthenticatedUser
+import com.example.application.readmodel.UserReadModel
 import com.example.application.usecase.UserCommands
 import com.example.application.usecase.UserQueries
 import com.example.domain.aggregate.user.Email
@@ -193,14 +194,7 @@ class UserService(
         }
     }
 
-    override fun getUserById(id: Long): AuthenticatedUser? {
-        val readModel = userRepository.findById(id) ?: return null
-        return AuthenticatedUser(
-            user = readModel,
-            accessToken = tokenIssuer.issueAccessToken(UserId(id)),
-            refreshToken = "",
-        )
-    }
+    override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)
 
     private fun validatePassword(
         password: String?,

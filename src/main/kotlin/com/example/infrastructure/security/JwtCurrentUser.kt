@@ -15,4 +15,7 @@ class JwtCurrentUser(
 
     override val jti: UUID?
         get() = jwt.tokenID?.let { runCatching { UUID.fromString(it) }.getOrNull() }
+
+    override val rawToken: String?
+        get() = jwt.rawToken
 }

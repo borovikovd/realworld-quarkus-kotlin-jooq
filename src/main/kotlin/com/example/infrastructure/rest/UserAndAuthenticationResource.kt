@@ -9,6 +9,7 @@ import com.example.api.model.RefreshTokenPayload
 import com.example.api.model.UpdateCurrentUserRequest
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.AuthenticatedUser
+import com.example.application.readmodel.UserReadModel
 import com.example.application.usecase.UserCommands
 import com.example.application.usecase.UserQueries
 import com.example.domain.exception.NotFoundException
@@ -47,8 +48,8 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
         val userId = currentUser.require().value
-        val result = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
-        return Login200Response().user(result.toApiUser())
+        val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
+        return Login200Response().user(user.toApiUser(accessToken = currentUser.rawToken ?: ""))
     }
 
     @RolesAllowed("user")
@@ -80,4 +81,13 @@ class UserAndAuthenticationResource(
             .username(user.username.value)
             .bio(user.bio)
             .image(user.image)
+
+    private fun UserReadModel.toApiUser(accessToken: String): ApiUser =
+        ApiUser()
+            .email(email.value)
+            .token(accessToken)
+            .refreshToken("")
+            .username(username.value)
+            .bio(bio)
+            .image(image)
 }
