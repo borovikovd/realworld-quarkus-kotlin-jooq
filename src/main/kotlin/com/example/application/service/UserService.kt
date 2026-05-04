@@ -2,9 +2,7 @@ package com.example.application.service
 
 import com.example.application.port.Clock
 import com.example.application.port.UserRepository
-import com.example.application.port.security.CryptoService
 import com.example.application.port.security.PasswordHashing
-import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.port.security.RevokedTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.readmodel.AuthenticatedUser
@@ -28,10 +26,8 @@ import java.util.UUID
 @ApplicationScoped
 class UserService(
     private val userRepository: UserRepository,
-    private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
     private val passwordHashing: PasswordHashing,
-    private val crypto: CryptoService,
     private val clock: Clock,
     private val tokenIssuer: TokenIssuer,
 ) : UserCommands,
@@ -72,7 +68,7 @@ class UserService(
             )
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
-        val tokens = tokenIssuer.issue(userId)
+        val tokens = tokenIssuer.issueTokens(userId)
         val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
@@ -101,7 +97,7 @@ class UserService(
         }
 
         val userId = credentials!!.userId
-        val tokens = tokenIssuer.issue(userId)
+        val tokens = tokenIssuer.issueTokens(userId)
         val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
@@ -144,7 +140,7 @@ class UserService(
         var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
 
         password?.let {
-            refreshTokenRepository.revokeAllForUser(typedUserId, now)
+            tokenIssuer.revokeAllRefreshTokens(typedUserId, now)
             updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
         }
 
@@ -160,16 +156,15 @@ class UserService(
     @Transactional
     override fun eraseUser(userId: Long) {
         val typedUserId = UserId(userId)
-        refreshTokenRepository.revokeAllForUser(typedUserId, clock.now())
+        tokenIssuer.revokeAllRefreshTokens(typedUserId, clock.now())
         userRepository.erase(typedUserId)
         logger.info("User erased: userId={}", userId)
     }
 
     @Transactional
     override fun refresh(refreshToken: String): AuthenticatedUser {
-        val tokenHash = crypto.hmacRefreshToken(refreshToken)
         val stored =
-            refreshTokenRepository.findByHash(tokenHash)
+            tokenIssuer.findRefreshToken(refreshToken)
                 ?: throw UnauthorizedException("Invalid refresh token")
 
         val now = clock.now()
@@ -178,12 +173,12 @@ class UserService(
         }
 
         // false means a concurrent request already won the UPDATE race — token already used.
-        if (!refreshTokenRepository.revokeByHash(tokenHash, now)) {
+        if (!tokenIssuer.revokeRefreshToken(refreshToken, now)) {
             throw UnauthorizedException("Invalid refresh token")
         }
         // Issue new tokens in the same transaction so revoke + issue are atomic.
         // If either step fails the whole transaction rolls back, leaving the old token intact.
-        val tokens = tokenIssuer.issue(stored.userId)
+        val tokens = tokenIssuer.issueTokens(stored.userId)
         val readModel = userRepository.findById(stored.userId.value) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
@@ -194,8 +189,7 @@ class UserService(
         jti: UUID?,
         userId: Long?,
     ) {
-        val tokenHash = crypto.hmacRefreshToken(refreshToken)
-        refreshTokenRepository.revokeByHash(tokenHash, clock.now())
+        tokenIssuer.revokeRefreshToken(refreshToken, clock.now())
         if (jti != null && userId != null) {
             val expiry = clock.now().plus(tokenIssuer.accessTokenExpiry())
             revokedTokenRepository.insert(jti, userId, expiry)

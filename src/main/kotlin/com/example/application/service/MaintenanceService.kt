@@ -2,8 +2,8 @@ package com.example.application.service
 
 import com.example.application.port.Clock
 import com.example.application.port.IdempotencyRepository
-import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.port.security.RevokedTokenRepository
+import com.example.application.port.security.TokenIssuer
 import com.example.application.usecase.MaintenanceCommands
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
 class MaintenanceService(
-    private val refreshTokenRepository: RefreshTokenRepository,
+    private val tokenIssuer: TokenIssuer,
     private val idempotencyRepository: IdempotencyRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
     private val clock: Clock,
@@ -19,7 +19,7 @@ class MaintenanceService(
     @Transactional
     override fun cleanupExpiredRefreshTokens(): Int {
         val cutoff = clock.now().minus(1, ChronoUnit.DAYS)
-        return refreshTokenRepository.deleteExpiredBefore(cutoff)
+        return tokenIssuer.purgeExpiredRefreshTokens(cutoff)
     }
 
     @Transactional

@@ -5,12 +5,14 @@ import com.example.application.port.security.CryptoService
 import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.port.security.TokenIssuer
 import com.example.application.readmodel.IssuedTokens
+import com.example.application.readmodel.StoredRefreshToken
 import com.example.domain.aggregate.user.UserId
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.SecureRandom
 import java.time.Duration
+import java.time.OffsetDateTime
 import java.util.Base64
 
 @ApplicationScoped
@@ -37,7 +39,7 @@ class JwtTokenIssuer(
             .expiresAt(clock.now().toInstant().plus(accessTokenExpiry))
             .sign()
 
-    override fun issue(userId: UserId): IssuedTokens {
+    override fun issueTokens(userId: UserId): IssuedTokens {
         val accessToken = issueAccessToken(userId)
         val refreshToken = generateRefreshToken()
         refreshTokenRepository.store(
@@ -47,6 +49,22 @@ class JwtTokenIssuer(
         )
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
+
+    override fun findRefreshToken(token: String): StoredRefreshToken? =
+        refreshTokenRepository.findByHash(crypto.hmacRefreshToken(token))
+
+    override fun revokeRefreshToken(
+        token: String,
+        at: OffsetDateTime,
+    ): Boolean = refreshTokenRepository.revokeByHash(crypto.hmacRefreshToken(token), at)
+
+    override fun revokeAllRefreshTokens(
+        userId: UserId,
+        at: OffsetDateTime,
+    ) = refreshTokenRepository.revokeAllForUser(userId, at)
+
+    override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
+        refreshTokenRepository.deleteExpiredBefore(before)
 
     private fun generateRefreshToken(): String {
         val bytes = ByteArray(REFRESH_TOKEN_BYTES).also { secureRandom.nextBytes(it) }
