@@ -30,10 +30,19 @@ class IdempotencyFilter(
     override fun filter(requestContext: ContainerRequestContext) {
         val key = requestContext.getHeaderString(IDEMPOTENCY_KEY_HEADER) ?: return
         if (requestContext.method != "POST") return
-        try {
-            handleRequest(requestContext, key)
-        } catch (e: Exception) {
-            log.warn("Idempotency check failed, proceeding without guarantee: {}", e.message)
+        if (currentUser.id == null) {
+            requestContext.abortWith(
+                Response
+                    .status(HTTP_BAD_REQUEST)
+                    .entity(mapOf("errors" to mapOf("idempotencyKey" to listOf(ERR_AUTH_REQUIRED))))
+                    .build(),
+            )
+        } else {
+            try {
+                handleRequest(requestContext, key)
+            } catch (e: Exception) {
+                log.warn("Idempotency check failed, proceeding without guarantee: {}", e.message)
+            }
         }
     }
 
@@ -55,7 +64,7 @@ class IdempotencyFilter(
         ctx: ContainerRequestContext,
         key: String,
     ) {
-        val scope = currentUser.id?.value?.toString() ?: ANON_SCOPE
+        val scope = currentUser.require().value.toString()
         val path = ctx.uriInfo.requestUri.path
 
         val existing = idempotencyRepository.findByKeyAndScope(key, scope)
@@ -120,11 +129,12 @@ class IdempotencyFilter(
         const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
         private const val KEY_PROP = "idempotency.key"
         private const val SCOPE_PROP = "idempotency.scope"
-        private const val ANON_SCOPE = "anon"
         private const val KEY_EXPIRY_HOURS = 24L
+        private const val HTTP_BAD_REQUEST = 400
         private const val HTTP_CONFLICT = 409
         private const val HTTP_UNPROCESSABLE_ENTITY = 422
         private const val HTTP_SERVER_ERROR = 500
+        private const val ERR_AUTH_REQUIRED = "requires an authenticated request"
         private const val ERR_WRONG_ENDPOINT = "was already used for a different endpoint"
         private const val ERR_IN_PROGRESS = "a request with this key is still being processed"
         private val log = LoggerFactory.getLogger(IdempotencyFilter::class.java)
