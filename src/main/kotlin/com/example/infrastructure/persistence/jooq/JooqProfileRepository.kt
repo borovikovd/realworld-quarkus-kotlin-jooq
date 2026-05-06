@@ -4,9 +4,7 @@ import com.example.application.port.ProfileRepository
 import com.example.application.port.security.CryptoService
 import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId
-import com.example.infrastructure.persistence.jooq.shared.FIELD_BIO
-import com.example.infrastructure.persistence.jooq.shared.FIELD_IMAGE
-import com.example.infrastructure.persistence.jooq.shared.FIELD_USERNAME
+import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USER
 import com.example.jooq.vault.tables.references.PERSON
@@ -47,11 +45,9 @@ class JooqProfileRepository(
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->
-                val userId = record.get(USER.ID)!!
-                ProfileReadModel(
-                    username = crypto.decryptField(userId, FIELD_USERNAME, record.get(PERSON.USERNAME_ENC)!!),
-                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
-                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
+                record.decryptAuthorProfile(
+                    crypto = crypto,
+                    userId = record.get(USER.ID),
                     following = record.get("following", Int::class.java) > 0,
                 )
             }
