@@ -11,9 +11,9 @@ class RefreshTokenCleanupJob(
 ) {
     @Scheduled(every = "24h", delayed = "1h")
     fun deleteExpired() {
-        val deletedTokens = maintenance.cleanupExpiredRefreshTokens()
-        val deletedKeys = maintenance.cleanupExpiredIdempotencyKeys()
-        val deletedRevoked = maintenance.cleanupExpiredRevokedTokens()
+        val deletedTokens = runStep("refresh tokens") { maintenance.cleanupExpiredRefreshTokens() }
+        val deletedKeys = runStep("idempotency keys") { maintenance.cleanupExpiredIdempotencyKeys() }
+        val deletedRevoked = runStep("revoked tokens") { maintenance.cleanupExpiredRevokedTokens() }
         log.info(
             "Maintenance: deleted {} refresh tokens, {} idempotency keys, {} revoked tokens",
             deletedTokens,
@@ -21,6 +21,15 @@ class RefreshTokenCleanupJob(
             deletedRevoked,
         )
     }
+
+    private fun runStep(
+        name: String,
+        block: () -> Int,
+    ): Int =
+        runCatching(block).getOrElse {
+            log.error("Maintenance step failed ({}): {}", name, it.message, it)
+            -1
+        }
 
     companion object {
         private val log = LoggerFactory.getLogger(RefreshTokenCleanupJob::class.java)
