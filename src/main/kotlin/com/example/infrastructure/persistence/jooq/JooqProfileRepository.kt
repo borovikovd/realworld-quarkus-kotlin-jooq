@@ -20,7 +20,7 @@ class JooqProfileRepository(
 ) : ProfileRepository {
     override fun findByUsername(
         username: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ProfileReadModel? {
         val usernameHash = crypto.hmacUsername(username)
         return dsl
@@ -33,7 +33,7 @@ class JooqProfileRepository(
                     select(count())
                         .from(FOLLOWERS)
                         .where(FOLLOWERS.FOLLOWEE_ID.eq(PERSON.USER_ID))
-                        .and(FOLLOWERS.FOLLOWER_ID.eq(it))
+                        .and(FOLLOWERS.FOLLOWER_ID.eq(it.value))
                         .asField("following")
                 } ?: org.jooq.impl.DSL
                     .`val`(0)

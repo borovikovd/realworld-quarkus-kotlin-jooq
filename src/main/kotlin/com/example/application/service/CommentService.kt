@@ -10,6 +10,7 @@ import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
@@ -28,7 +29,7 @@ class CommentService(
     override fun addComment(
         articleSlug: String,
         body: String,
-    ): Long {
+    ): CommentId {
         val bodyVo =
             runCatching { Body(body) }
                 .getOrElse { throw ValidationException(mapOf("body" to listOf("must not be blank"))) }
@@ -47,22 +48,21 @@ class CommentService(
                 body = bodyVo,
             )
         commentRepository.create(comment)
-        return commentId.value
+        return commentId
     }
 
     @Transactional
     override fun deleteComment(
         articleSlug: String,
-        commentId: Long,
+        commentId: CommentId,
     ) {
         val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(Slug(articleSlug))
                 ?: throw NotFoundException("Article not found")
 
-        val typedCommentId = CommentId(commentId)
         val comment =
-            commentRepository.findById(typedCommentId)
+            commentRepository.findById(commentId)
                 ?: throw NotFoundException("Comment not found")
 
         if (comment.articleId != article.id) {
@@ -72,18 +72,18 @@ class CommentService(
         if (!comment.canBeDeletedBy(userId)) {
             throw ForbiddenException("You can only delete your own comments")
         }
-        commentRepository.deleteById(typedCommentId)
-        logger.info("Comment deleted: commentId={}", commentId)
+        commentRepository.deleteById(commentId)
+        logger.info("Comment deleted: commentId={}", commentId.value)
     }
 
     override fun getCommentById(
-        id: Long,
-        viewerId: Long?,
+        id: CommentId,
+        viewerId: UserId?,
     ): CommentReadModel? = commentRepository.findById(id, viewerId)
 
     override fun getCommentsBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<CommentReadModel> = commentRepository.findByArticleSlug(slug, viewerId)
 
     companion object {

@@ -42,12 +42,12 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     @ResponseStatus(204)
     override fun logout(body: LogoutPayload) {
-        userCommands.logout(body.refreshToken, currentUser.jti, currentUser.id?.value)
+        userCommands.logout(body.refreshToken, currentUser.jti, currentUser.id)
     }
 
     @RolesAllowed("user")
     override fun getCurrentUser(): Login200Response {
-        val userId = currentUser.require().value
+        val userId = currentUser.require()
         val user = userQueries.getUserById(userId) ?: throw NotFoundException("User not found")
         return Login200Response().user(user.toApiUser(accessToken = currentUser.rawToken ?: ""))
     }
@@ -57,7 +57,7 @@ class UserAndAuthenticationResource(
         val updateUser = body.user
         val result =
             userCommands.updateUser(
-                userId = currentUser.require().value,
+                userId = currentUser.require(),
                 email = updateUser.email,
                 username = updateUser.username,
                 password = updateUser.password,
@@ -70,7 +70,7 @@ class UserAndAuthenticationResource(
     @RolesAllowed("user")
     @ResponseStatus(204)
     override fun deleteCurrentUser() {
-        userCommands.eraseUser(currentUser.require().value, currentUser.jti)
+        userCommands.eraseUser(currentUser.require(), currentUser.jti)
     }
 
     private fun AuthenticatedUser.toApiUser(): ApiUser =

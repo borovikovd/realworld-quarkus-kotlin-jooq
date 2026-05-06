@@ -68,7 +68,7 @@ class UserService(
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
         val tokens = tokenIssuer.issueTokens(userId)
-        val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
+        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -98,7 +98,7 @@ class UserService(
 
         val userId = credentials!!.userId
         val tokens = tokenIssuer.issueTokens(userId)
-        val readModel = userRepository.findById(userId.value) ?: throw NotFoundException("User not found")
+        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -106,16 +106,15 @@ class UserService(
 
     @Transactional
     override fun updateUser(
-        userId: Long,
+        userId: UserId,
         email: String?,
         username: String?,
         password: String?,
         bio: String?,
         image: String?,
     ): AuthenticatedUser {
-        val typedUserId = UserId(userId)
         val user =
-            userRepository.findById(typedUserId)
+            userRepository.findById(userId)
                 ?: throw UnauthorizedException("User not found")
 
         val errors = mutableMapOf<String, List<String>>()
@@ -144,22 +143,21 @@ class UserService(
         }
 
         userRepository.update(updatedUser)
-        tokenIssuer.revokeAllRefreshTokens(typedUserId)
-        val tokens = tokenIssuer.issueTokens(typedUserId)
-        val readModel = userRepository.findById(userId) ?: throw NotFoundException("User not found")
+        tokenIssuer.revokeAllRefreshTokens(userId)
+        val tokens = tokenIssuer.issueTokens(userId)
+        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
     @Transactional
     override fun eraseUser(
-        userId: Long,
+        userId: UserId,
         jti: UUID?,
     ) {
-        val typedUserId = UserId(userId)
-        tokenIssuer.revokeAllRefreshTokens(typedUserId)
-        if (jti != null) tokenIssuer.revokeAccessToken(jti, typedUserId)
-        userRepository.erase(typedUserId)
-        logger.info("User erased: userId={}", userId)
+        tokenIssuer.revokeAllRefreshTokens(userId)
+        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
+        userRepository.erase(userId)
+        logger.info("User erased: userId={}", userId.value)
     }
 
     @Transactional
@@ -180,7 +178,7 @@ class UserService(
         // Issue new tokens in the same transaction so revoke + issue are atomic.
         // If either step fails the whole transaction rolls back, leaving the old token intact.
         val tokens = tokenIssuer.issueTokens(stored.userId)
-        val readModel = userRepository.findById(stored.userId.value) ?: throw NotFoundException("User not found")
+        val readModel = userRepository.findReadModelById(stored.userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -188,13 +186,13 @@ class UserService(
     override fun logout(
         refreshToken: String,
         jti: UUID?,
-        userId: Long?,
+        userId: UserId?,
     ) {
         tokenIssuer.revokeRefreshToken(refreshToken)
-        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, UserId(userId))
+        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
 
-    override fun getUserById(id: Long): UserReadModel? = userRepository.findById(id)
+    override fun getUserById(id: UserId): UserReadModel? = userRepository.findReadModelById(id)
 
     private fun validatePassword(
         password: String?,

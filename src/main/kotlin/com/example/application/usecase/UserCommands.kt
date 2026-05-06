@@ -1,6 +1,7 @@
 package com.example.application.usecase
 
 import com.example.application.readmodel.AuthenticatedUser
+import com.example.domain.aggregate.user.UserId
 import java.util.UUID
 
 interface UserCommands {
@@ -16,7 +17,7 @@ interface UserCommands {
     ): AuthenticatedUser
 
     fun updateUser(
-        userId: Long,
+        userId: UserId,
         email: String?,
         username: String?,
         password: String?,
@@ -25,7 +26,7 @@ interface UserCommands {
     ): AuthenticatedUser
 
     fun eraseUser(
-        userId: Long,
+        userId: UserId,
         jti: UUID?,
     )
 
@@ -34,6 +35,6 @@ interface UserCommands {
     fun logout(
         refreshToken: String,
         jti: UUID?,
-        userId: Long?,
+        userId: UserId?,
     )
 }

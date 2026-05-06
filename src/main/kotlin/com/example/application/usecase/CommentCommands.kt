@@ -1,13 +1,15 @@
 package com.example.application.usecase
 
+import com.example.domain.aggregate.comment.CommentId
+
 interface CommentCommands {
     fun addComment(
         articleSlug: String,
         body: String,
-    ): Long
+    ): CommentId
 
     fun deleteComment(
         articleSlug: String,
-        commentId: Long,
+        commentId: CommentId,
     )
 }

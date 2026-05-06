@@ -10,6 +10,7 @@ import com.example.application.readmodel.CommentReadModel
 import com.example.application.readmodel.ProfileReadModel
 import com.example.application.usecase.CommentCommands
 import com.example.application.usecase.CommentQueries
+import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -28,7 +29,7 @@ class CommentResource(
         slug: String,
         comment: CreateArticleCommentRequest,
     ): CreateArticleComment200Response {
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val newComment = comment.comment
         val commentId = commentCommands.addComment(slug, newComment.body)
 
@@ -45,11 +46,11 @@ class CommentResource(
         slug: String,
         id: Int,
     ) {
-        commentCommands.deleteComment(slug, id.toLong())
+        commentCommands.deleteComment(slug, CommentId(id.toLong()))
     }
 
     override fun getArticleComments(slug: String): GetArticleComments200Response {
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val comments = commentQueries.getCommentsBySlug(slug, viewerId).map { it.toDto() }
 
         return GetArticleComments200Response().comments(comments)

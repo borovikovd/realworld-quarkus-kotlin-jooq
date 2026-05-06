@@ -23,7 +23,7 @@ class FavoriteResource(
     override fun createArticleFavorite(slug: String): CreateArticle201Response {
         articleCommands.favoriteArticle(slug)
 
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articleDto =
             (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()
@@ -35,7 +35,7 @@ class FavoriteResource(
     override fun deleteArticleFavorite(slug: String): CreateArticle201Response {
         articleCommands.unfavoriteArticle(slug)
 
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articleDto =
             (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()

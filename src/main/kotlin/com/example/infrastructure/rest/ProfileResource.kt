@@ -7,6 +7,7 @@ import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ProfileReadModel
 import com.example.application.usecase.ProfileCommands
 import com.example.application.usecase.ProfileQueries
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -18,23 +19,23 @@ class ProfileResource(
     private val currentUser: CurrentUser,
 ) : ProfileApi {
     override fun getProfileByUsername(username: String): GetProfileByUsername200Response =
-        GetProfileByUsername200Response().profile(requireProfile(username, currentUser.id?.value))
+        GetProfileByUsername200Response().profile(requireProfile(username, currentUser.id))
 
     @RolesAllowed("user")
     override fun followUserByUsername(username: String): GetProfileByUsername200Response {
         profileCommands.followUser(username)
-        return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require().value))
+        return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require()))
     }
 
     @RolesAllowed("user")
     override fun unfollowUserByUsername(username: String): GetProfileByUsername200Response {
         profileCommands.unfollowUser(username)
-        return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require().value))
+        return GetProfileByUsername200Response().profile(requireProfile(username, currentUser.require()))
     }
 
     private fun requireProfile(
         username: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): Profile =
         (profileQueries.getProfileByUsername(username, viewerId) ?: throw NotFoundException("Profile not found"))
             .toDto()

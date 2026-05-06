@@ -1,16 +1,18 @@
 package com.example.application.usecase
 
 import com.example.application.readmodel.ArticleReadModel
+import com.example.domain.aggregate.article.ArticleId
+import com.example.domain.aggregate.user.UserId
 
 interface ArticleQueries {
     fun getArticleById(
-        id: Long,
-        viewerId: Long?,
+        id: ArticleId,
+        viewerId: UserId?,
     ): ArticleReadModel?
 
     fun getArticleBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ArticleReadModel?
 
     fun getArticles(
@@ -19,11 +21,11 @@ interface ArticleQueries {
         favorited: String?,
         limit: Int,
         offset: Int,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ArticleReadModel>
 
     fun getArticlesFeed(
-        viewerId: Long,
+        viewerId: UserId,
         limit: Int,
         offset: Int,
     ): List<ArticleReadModel>
@@ -34,7 +36,7 @@ interface ArticleQueries {
         favorited: String?,
     ): Int
 
-    fun countArticlesFeed(viewerId: Long): Int
+    fun countArticlesFeed(viewerId: UserId): Int
 
     fun getAllTags(): List<String>
 }

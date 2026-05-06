@@ -28,13 +28,13 @@ interface ArticleRepository : Repository<Article, ArticleId> {
     ): Boolean
 
     fun findById(
-        id: Long,
-        viewerId: Long?,
+        id: ArticleId,
+        viewerId: UserId?,
     ): ArticleReadModel?
 
     fun findBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ArticleReadModel?
 
     fun list(
@@ -43,11 +43,11 @@ interface ArticleRepository : Repository<Article, ArticleId> {
         favorited: String?,
         limit: Int,
         offset: Int,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ArticleReadModel>
 
     fun listFeed(
-        viewerId: Long,
+        viewerId: UserId,
         limit: Int,
         offset: Int,
     ): List<ArticleReadModel>
@@ -58,7 +58,7 @@ interface ArticleRepository : Repository<Article, ArticleId> {
         favorited: String?,
     ): Int
 
-    fun countFeed(viewerId: Long): Int
+    fun countFeed(viewerId: UserId): Int
 
     fun allTags(): List<String>
 }

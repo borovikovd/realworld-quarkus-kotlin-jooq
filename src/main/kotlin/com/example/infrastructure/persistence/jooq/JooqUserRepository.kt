@@ -161,7 +161,7 @@ class JooqUserRepository(
             .execute()
     }
 
-    override fun findById(id: Long): UserReadModel? =
+    override fun findReadModelById(id: UserId): UserReadModel? =
         dsl
             .select(
                 USER.ID,
@@ -172,7 +172,7 @@ class JooqUserRepository(
             ).from(USER)
             .join(PERSON)
             .on(PERSON.USER_ID.eq(USER.ID))
-            .where(USER.ID.eq(id))
+            .where(USER.ID.eq(id.value))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->

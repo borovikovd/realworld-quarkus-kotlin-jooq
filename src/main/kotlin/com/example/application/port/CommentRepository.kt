@@ -5,6 +5,7 @@ import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
+import com.example.domain.aggregate.user.UserId
 
 interface CommentRepository : Repository<Comment, CommentId> {
     fun findByArticleId(articleId: ArticleId): List<Comment>
@@ -12,12 +13,12 @@ interface CommentRepository : Repository<Comment, CommentId> {
     fun deleteById(id: CommentId)
 
     fun findById(
-        id: Long,
-        viewerId: Long?,
+        id: CommentId,
+        viewerId: UserId?,
     ): CommentReadModel?
 
     fun findByArticleSlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<CommentReadModel>
 }

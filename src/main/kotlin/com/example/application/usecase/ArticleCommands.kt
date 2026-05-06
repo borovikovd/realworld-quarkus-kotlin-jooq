@@ -1,19 +1,21 @@
 package com.example.application.usecase
 
+import com.example.domain.aggregate.article.ArticleId
+
 interface ArticleCommands {
     fun createArticle(
         title: String,
         description: String,
         body: String,
         tags: List<String>,
-    ): Long
+    ): ArticleId
 
     fun updateArticle(
         slug: String,
         title: String?,
         description: String?,
         body: String?,
-    ): Long
+    ): ArticleId
 
     fun deleteArticle(slug: String)
 

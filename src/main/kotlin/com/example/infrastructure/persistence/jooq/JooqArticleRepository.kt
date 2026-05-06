@@ -169,8 +169,8 @@ class JooqArticleRepository(
         )
 
     override fun findById(
-        id: Long,
-        viewerId: Long?,
+        id: ArticleId,
+        viewerId: UserId?,
     ): ArticleReadModel? =
         dsl
             .select(articleFields(viewerId))
@@ -178,13 +178,13 @@ class JooqArticleRepository(
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(ARTICLES.AUTHOR_ID))
             .applyViewerJoins(viewerId)
-            .where(ARTICLES.ID.eq(id))
+            .where(ARTICLES.ID.eq(id.value))
             .fetchOne()
             ?.toArticleReadModel()
 
     override fun findBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ArticleReadModel? =
         dsl
             .select(articleFields(viewerId))
@@ -202,7 +202,7 @@ class JooqArticleRepository(
         favorited: String?,
         limit: Int,
         offset: Int,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ArticleReadModel> =
         dsl
             .select(articleFields(viewerId))
@@ -218,7 +218,7 @@ class JooqArticleRepository(
             .map { it.toArticleReadModel() }
 
     override fun listFeed(
-        viewerId: Long,
+        viewerId: UserId,
         limit: Int,
         offset: Int,
     ): List<ArticleReadModel> =
@@ -232,7 +232,7 @@ class JooqArticleRepository(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
                 ),
             ).orderBy(ARTICLES.CREATED_AT.desc())
             .limit(limit)
@@ -251,7 +251,7 @@ class JooqArticleRepository(
             .where(buildConditions(tag, author, favorited))
             .fetchOne(0, Int::class.java) ?: 0
 
-    override fun countFeed(viewerId: Long): Int =
+    override fun countFeed(viewerId: UserId): Int =
         dsl
             .selectCount()
             .from(ARTICLES)
@@ -259,7 +259,7 @@ class JooqArticleRepository(
                 ARTICLES.AUTHOR_ID.`in`(
                     select(FOLLOWERS.FOLLOWEE_ID)
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId)),
+                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
                 ),
             ).fetchOne(0, Int::class.java) ?: 0
 
@@ -317,15 +317,15 @@ class JooqArticleRepository(
         return conditions
     }
 
-    private fun <R : Record> SelectJoinStep<R>.applyViewerJoins(viewerId: Long?): SelectJoinStep<R> {
+    private fun <R : Record> SelectJoinStep<R>.applyViewerJoins(viewerId: UserId?): SelectJoinStep<R> {
         viewerId ?: return this
         return leftJoin(favByViewer)
-            .on(favByViewer.ARTICLE_ID.eq(ARTICLES.ID).and(favByViewer.USER_ID.eq(viewerId)))
+            .on(favByViewer.ARTICLE_ID.eq(ARTICLES.ID).and(favByViewer.USER_ID.eq(viewerId.value)))
             .leftJoin(folByViewer)
-            .on(folByViewer.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId)))
+            .on(folByViewer.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId.value)))
     }
 
-    private fun articleFields(viewerId: Long?): List<Field<*>> {
+    private fun articleFields(viewerId: UserId?): List<Field<*>> {
         val favoritedField =
             if (viewerId != null) {
                 DSL.`when`(favByViewer.USER_ID.isNotNull, 1).otherwise(0).`as`("favorited")

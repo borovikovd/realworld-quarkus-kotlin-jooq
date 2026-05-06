@@ -36,7 +36,7 @@ class ArticleResource(
                 tags = newArticle.tagList ?: emptyList(),
             )
 
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articleDto =
             (articleQueries.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()
@@ -51,7 +51,7 @@ class ArticleResource(
     }
 
     override fun getArticle(slug: String): CreateArticle201Response {
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articleDto =
             (articleQueries.getArticleBySlug(slug, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()
@@ -67,7 +67,7 @@ class ArticleResource(
         offset: Int?,
         limit: Int?,
     ): GetArticlesFeed200Response {
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articles =
             articleQueries
                 .getArticles(
@@ -90,7 +90,7 @@ class ArticleResource(
         offset: Int?,
         limit: Int?,
     ): GetArticlesFeed200Response {
-        val viewerId = currentUser.require().value
+        val viewerId = currentUser.require()
         val articles =
             articleQueries
                 .getArticlesFeed(viewerId = viewerId, limit = limit ?: 20, offset = offset ?: 0)
@@ -116,7 +116,7 @@ class ArticleResource(
                 body = updateData.body,
             )
 
-        val viewerId = currentUser.id?.value
+        val viewerId = currentUser.id
         val articleDto =
             (articleQueries.getArticleById(articleId, viewerId) ?: throw NotFoundException("Article not found"))
                 .toDto()

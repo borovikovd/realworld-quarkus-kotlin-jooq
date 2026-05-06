@@ -6,7 +6,7 @@ import com.example.domain.aggregate.user.UserId
 interface ProfileRepository {
     fun findByUsername(
         username: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ProfileReadModel?
 
     fun follow(

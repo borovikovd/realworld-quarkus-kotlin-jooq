@@ -7,11 +7,13 @@ import com.example.application.readmodel.ArticleReadModel
 import com.example.application.usecase.ArticleCommands
 import com.example.application.usecase.ArticleQueries
 import com.example.domain.aggregate.article.Article
+import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Body
 import com.example.domain.aggregate.article.Description
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.article.Tag
 import com.example.domain.aggregate.article.Title
+import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.ValidationException
@@ -35,7 +37,7 @@ class ArticleService(
         description: String,
         body: String,
         tags: List<String>,
-    ): Long {
+    ): ArticleId {
         validateArticleFields(title, description, body)
 
         val userId = currentUser.require()
@@ -56,7 +58,7 @@ class ArticleService(
                 tags = tags.map { Tag(it) }.toSet(),
             )
         articleRepository.create(article)
-        return articleId.value
+        return articleId
     }
 
     @Transactional
@@ -65,7 +67,7 @@ class ArticleService(
         title: String?,
         description: String?,
         body: String?,
-    ): Long {
+    ): ArticleId {
         val userId = currentUser.require()
         val article =
             articleRepository.findBySlug(Slug(slug))
@@ -96,7 +98,7 @@ class ArticleService(
 
         val updatedArticle = article.update(updatedSlug, updatedTitle, updatedDescription, updatedBody, clock.now())
         articleRepository.update(updatedArticle)
-        return article.id.value
+        return article.id
     }
 
     @Transactional
@@ -135,13 +137,13 @@ class ArticleService(
     }
 
     override fun getArticleById(
-        id: Long,
-        viewerId: Long?,
+        id: ArticleId,
+        viewerId: UserId?,
     ): ArticleReadModel? = articleRepository.findById(id, viewerId)
 
     override fun getArticleBySlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): ArticleReadModel? = articleRepository.findBySlug(slug, viewerId)
 
     override fun getArticles(
@@ -150,11 +152,11 @@ class ArticleService(
         favorited: String?,
         limit: Int,
         offset: Int,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<ArticleReadModel> = articleRepository.list(tag, author, favorited, limit, offset, viewerId)
 
     override fun getArticlesFeed(
-        viewerId: Long,
+        viewerId: UserId,
         limit: Int,
         offset: Int,
     ): List<ArticleReadModel> = articleRepository.listFeed(viewerId, limit, offset)
@@ -165,7 +167,7 @@ class ArticleService(
         favorited: String?,
     ): Int = articleRepository.count(tag, author, favorited)
 
-    override fun countArticlesFeed(viewerId: Long): Int = articleRepository.countFeed(viewerId)
+    override fun countArticlesFeed(viewerId: UserId): Int = articleRepository.countFeed(viewerId)
 
     override fun getAllTags(): List<String> = articleRepository.allTags()
 

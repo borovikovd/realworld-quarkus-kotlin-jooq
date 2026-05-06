@@ -15,7 +15,7 @@ interface UserRepository : Repository<User, UserId> {
 
     fun erase(id: UserId)
 
-    fun findById(id: Long): UserReadModel?
+    fun findReadModelById(id: UserId): UserReadModel?
 
     fun findCredentialsByEmail(email: Email): LoginCredentials?
 

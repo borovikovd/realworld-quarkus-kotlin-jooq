@@ -85,21 +85,21 @@ class JooqCommentRepository(
     }
 
     override fun findById(
-        id: Long,
-        viewerId: Long?,
+        id: CommentId,
+        viewerId: UserId?,
     ): CommentReadModel? =
         dsl
             .select(commentFields(viewerId))
             .from(COMMENTS)
             .leftJoin(PERSON)
             .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
-            .where(COMMENTS.ID.eq(id))
+            .where(COMMENTS.ID.eq(id.value))
             .fetchOne()
             ?.toCommentReadModel()
 
     override fun findByArticleSlug(
         slug: String,
-        viewerId: Long?,
+        viewerId: UserId?,
     ): List<CommentReadModel> =
         dsl
             .select(commentFields(viewerId))
@@ -113,7 +113,7 @@ class JooqCommentRepository(
             .fetch()
             .map { it.toCommentReadModel() }
 
-    private fun commentFields(viewerId: Long?): List<Field<*>> =
+    private fun commentFields(viewerId: UserId?): List<Field<*>> =
         listOf(
             COMMENTS.ID,
             COMMENTS.BODY,
@@ -127,7 +127,7 @@ class JooqCommentRepository(
                 select(count())
                     .from(FOLLOWERS)
                     .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId))
+                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value))
                     .asField<Int>("following")
             } else {
                 org.jooq.impl.DSL
