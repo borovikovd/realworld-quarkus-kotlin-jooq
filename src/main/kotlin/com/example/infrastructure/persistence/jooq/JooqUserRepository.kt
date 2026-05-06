@@ -10,6 +10,10 @@ import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
+import com.example.infrastructure.persistence.jooq.shared.FIELD_BIO
+import com.example.infrastructure.persistence.jooq.shared.FIELD_EMAIL
+import com.example.infrastructure.persistence.jooq.shared.FIELD_IMAGE
+import com.example.infrastructure.persistence.jooq.shared.FIELD_USERNAME
 import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
@@ -47,12 +51,12 @@ class JooqUserRepository(
         dsl
             .insertInto(PERSON)
             .set(PERSON.USER_ID, userId)
-            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, CryptoService.EMAIL, entity.email.value))
+            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, FIELD_EMAIL, entity.email.value))
             .set(PERSON.EMAIL_HASH, crypto.hmacEmail(entity.email.value))
-            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, CryptoService.USERNAME, entity.username.value))
+            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, FIELD_USERNAME, entity.username.value))
             .set(PERSON.USERNAME_HASH, crypto.hmacUsername(entity.username.value))
-            .set(PERSON.BIO_ENC, entity.bio?.let { crypto.encryptField(userId, CryptoService.BIO, it) })
-            .set(PERSON.IMAGE_ENC, entity.image?.let { crypto.encryptField(userId, CryptoService.IMAGE, it) })
+            .set(PERSON.BIO_ENC, entity.bio?.let { crypto.encryptField(userId, FIELD_BIO, it) })
+            .set(PERSON.IMAGE_ENC, entity.image?.let { crypto.encryptField(userId, FIELD_IMAGE, it) })
             .set(PERSON.CREATED_AT, entity.createdAt)
             .set(PERSON.UPDATED_AT, entity.updatedAt)
             .execute()
@@ -100,12 +104,12 @@ class JooqUserRepository(
 
         dsl
             .update(PERSON)
-            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, CryptoService.EMAIL, entity.email.value))
+            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, FIELD_EMAIL, entity.email.value))
             .set(PERSON.EMAIL_HASH, crypto.hmacEmail(entity.email.value))
-            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, CryptoService.USERNAME, entity.username.value))
+            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, FIELD_USERNAME, entity.username.value))
             .set(PERSON.USERNAME_HASH, crypto.hmacUsername(entity.username.value))
-            .set(PERSON.BIO_ENC, entity.bio?.let { crypto.encryptField(userId, CryptoService.BIO, it) })
-            .set(PERSON.IMAGE_ENC, entity.image?.let { crypto.encryptField(userId, CryptoService.IMAGE, it) })
+            .set(PERSON.BIO_ENC, entity.bio?.let { crypto.encryptField(userId, FIELD_BIO, it) })
+            .set(PERSON.IMAGE_ENC, entity.image?.let { crypto.encryptField(userId, FIELD_IMAGE, it) })
             .set(PERSON.UPDATED_AT, entity.updatedAt)
             .where(PERSON.USER_ID.eq(userId))
             .execute()
@@ -177,10 +181,10 @@ class JooqUserRepository(
                 val usernameEnc = record.get(PERSON.USERNAME_ENC)!!
                 UserReadModel(
                     id = UserId(userId),
-                    email = Email(crypto.decryptField(userId, CryptoService.EMAIL, emailEnc)),
-                    username = Username(crypto.decryptField(userId, CryptoService.USERNAME, usernameEnc)),
-                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, CryptoService.BIO, it) },
-                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, CryptoService.IMAGE, it) },
+                    email = Email(crypto.decryptField(userId, FIELD_EMAIL, emailEnc)),
+                    username = Username(crypto.decryptField(userId, FIELD_USERNAME, usernameEnc)),
+                    bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
+                    image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
                 )
             }
 
@@ -221,11 +225,11 @@ class JooqUserRepository(
         val userId = record.get(USER.ID)!!
         return User(
             id = UserId(userId),
-            email = Email(crypto.decryptField(userId, CryptoService.EMAIL, record.get(PERSON.EMAIL_ENC)!!)),
-            username = Username(crypto.decryptField(userId, CryptoService.USERNAME, record.get(PERSON.USERNAME_ENC)!!)),
+            email = Email(crypto.decryptField(userId, FIELD_EMAIL, record.get(PERSON.EMAIL_ENC)!!)),
+            username = Username(crypto.decryptField(userId, FIELD_USERNAME, record.get(PERSON.USERNAME_ENC)!!)),
             passwordHash = PasswordHash(record.get(PASSWORD.HASH)!!),
-            bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, CryptoService.BIO, it) },
-            image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, CryptoService.IMAGE, it) },
+            bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
+            image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
             createdAt = record.get(USER.CREATED_AT)!!,
             updatedAt = record.get(USER.UPDATED_AT)!!,
         )

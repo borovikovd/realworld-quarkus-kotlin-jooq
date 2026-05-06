@@ -18,11 +18,4 @@ interface CryptoService {
         field: String,
         ciphertext: ByteArray,
     ): String
-
-    companion object Field {
-        const val EMAIL = "email"
-        const val USERNAME = "username"
-        const val BIO = "bio"
-        const val IMAGE = "image"
-    }
 }
