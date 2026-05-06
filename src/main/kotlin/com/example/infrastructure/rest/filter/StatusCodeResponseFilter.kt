@@ -1,5 +1,6 @@
 package com.example.infrastructure.rest.filter
 
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ResourceInfo
 import org.jboss.resteasy.reactive.ResponseStatus
@@ -7,6 +8,7 @@ import org.jboss.resteasy.reactive.server.ServerResponseFilter
 
 private const val OK_STATUS = 200
 
+@ApplicationScoped
 class StatusCodeResponseFilter {
     @Suppress("SpreadOperator")
     @ServerResponseFilter
