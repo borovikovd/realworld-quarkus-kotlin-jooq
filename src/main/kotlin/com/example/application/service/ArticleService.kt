@@ -1,5 +1,6 @@
 package com.example.application.service
 
+import com.example.application.port.ArticleFinder
 import com.example.application.port.ArticleRepository
 import com.example.application.port.Clock
 import com.example.application.port.security.CurrentUser
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory
 @ApplicationScoped
 class ArticleService(
     private val articleRepository: ArticleRepository,
+    private val articleFinder: ArticleFinder,
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) : ArticleCommands,
@@ -139,12 +141,12 @@ class ArticleService(
     override fun getArticleById(
         id: ArticleId,
         viewerId: UserId?,
-    ): ArticleReadModel? = articleRepository.findById(id, viewerId)
+    ): ArticleReadModel? = articleFinder.findById(id, viewerId)
 
     override fun getArticleBySlug(
         slug: String,
         viewerId: UserId?,
-    ): ArticleReadModel? = articleRepository.findBySlug(slug, viewerId)
+    ): ArticleReadModel? = articleFinder.findBySlug(slug, viewerId)
 
     override fun getArticles(
         tag: String?,
@@ -153,23 +155,23 @@ class ArticleService(
         limit: Int,
         offset: Int,
         viewerId: UserId?,
-    ): List<ArticleReadModel> = articleRepository.list(tag, author, favorited, limit, offset, viewerId)
+    ): List<ArticleReadModel> = articleFinder.list(tag, author, favorited, limit, offset, viewerId)
 
     override fun getArticlesFeed(
         viewerId: UserId,
         limit: Int,
         offset: Int,
-    ): List<ArticleReadModel> = articleRepository.listFeed(viewerId, limit, offset)
+    ): List<ArticleReadModel> = articleFinder.listFeed(viewerId, limit, offset)
 
     override fun countArticles(
         tag: String?,
         author: String?,
         favorited: String?,
-    ): Int = articleRepository.count(tag, author, favorited)
+    ): Int = articleFinder.count(tag, author, favorited)
 
-    override fun countArticlesFeed(viewerId: UserId): Int = articleRepository.countFeed(viewerId)
+    override fun countArticlesFeed(viewerId: UserId): Int = articleFinder.countFeed(viewerId)
 
-    override fun getAllTags(): List<String> = articleRepository.allTags()
+    override fun getAllTags(): List<String> = articleFinder.allTags()
 
     private fun validateArticleFields(
         title: String?,

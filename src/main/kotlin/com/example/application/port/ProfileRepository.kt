@@ -1,14 +1,8 @@
 package com.example.application.port
 
-import com.example.application.readmodel.ProfileReadModel
 import com.example.domain.aggregate.user.UserId
 
 interface ProfileRepository {
-    fun findByUsername(
-        username: String,
-        viewerId: UserId?,
-    ): ProfileReadModel?
-
     fun follow(
         followerId: UserId,
         followeeId: UserId,

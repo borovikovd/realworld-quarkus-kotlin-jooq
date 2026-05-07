@@ -1,6 +1,7 @@
 package com.example.application.service
 
 import com.example.application.port.Clock
+import com.example.application.port.UserFinder
 import com.example.application.port.UserRepository
 import com.example.application.port.security.PasswordHashing
 import com.example.application.port.security.TokenIssuer
@@ -26,6 +27,7 @@ import java.util.UUID
 @ApplicationScoped
 class UserService(
     private val userRepository: UserRepository,
+    private val userFinder: UserFinder,
     private val passwordHashing: PasswordHashing,
     private val clock: Clock,
     private val tokenIssuer: TokenIssuer,
@@ -68,7 +70,7 @@ class UserService(
         userRepository.create(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
         val tokens = tokenIssuer.issueTokens(userId)
-        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
+        val readModel = userFinder.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -79,7 +81,7 @@ class UserService(
         password: String,
     ): AuthenticatedUser {
         val emailVo = runCatching { Email(email) }.getOrNull()
-        val credentials = emailVo?.let { userRepository.findCredentialsByEmail(it) }
+        val credentials = emailVo?.let { userFinder.findCredentialsByEmail(it) }
 
         // Always run Argon2 verify, even when the email is unknown or invalid, so that
         // login latency does not leak whether an account exists for that email.
@@ -98,7 +100,7 @@ class UserService(
 
         val userId = credentials!!.userId
         val tokens = tokenIssuer.issueTokens(userId)
-        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
+        val readModel = userFinder.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -145,7 +147,7 @@ class UserService(
         userRepository.update(updatedUser)
         tokenIssuer.revokeAllRefreshTokens(userId)
         val tokens = tokenIssuer.issueTokens(userId)
-        val readModel = userRepository.findReadModelById(userId) ?: throw NotFoundException("User not found")
+        val readModel = userFinder.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -178,7 +180,7 @@ class UserService(
         // Issue new tokens in the same transaction so revoke + issue are atomic.
         // If either step fails the whole transaction rolls back, leaving the old token intact.
         val tokens = tokenIssuer.issueTokens(stored.userId)
-        val readModel = userRepository.findReadModelById(stored.userId) ?: throw NotFoundException("User not found")
+        val readModel = userFinder.findReadModelById(stored.userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
     }
 
@@ -192,7 +194,7 @@ class UserService(
         if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
 
-    override fun getUserById(id: UserId): UserReadModel? = userRepository.findReadModelById(id)
+    override fun getUserById(id: UserId): UserReadModel? = userFinder.findReadModelById(id)
 
     private fun validatePassword(
         password: String?,

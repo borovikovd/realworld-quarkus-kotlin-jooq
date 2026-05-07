@@ -1,7 +1,8 @@
 package com.example.application.service
 
+import com.example.application.port.ProfileFinder
 import com.example.application.port.ProfileRepository
-import com.example.application.port.UserRepository
+import com.example.application.port.UserFinder
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ProfileReadModel
 import com.example.application.usecase.ProfileCommands
@@ -14,8 +15,9 @@ import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class ProfileService(
-    private val userRepository: UserRepository,
     private val profileRepository: ProfileRepository,
+    private val profileFinder: ProfileFinder,
+    private val userFinder: UserFinder,
     private val currentUser: CurrentUser,
 ) : ProfileCommands,
     ProfileQueries {
@@ -23,7 +25,7 @@ class ProfileService(
     override fun followUser(username: String) {
         val followerId = currentUser.require()
         val followeeId =
-            userRepository.findUserIdByUsername(username)
+            userFinder.findUserIdByUsername(username)
                 ?: throw NotFoundException("User not found")
 
         if (followeeId == followerId) {
@@ -37,7 +39,7 @@ class ProfileService(
     override fun unfollowUser(username: String) {
         val followerId = currentUser.require()
         val followeeId =
-            userRepository.findUserIdByUsername(username)
+            userFinder.findUserIdByUsername(username)
                 ?: throw NotFoundException("User not found")
 
         profileRepository.unfollow(followerId, followeeId)
@@ -46,5 +48,5 @@ class ProfileService(
     override fun getProfileByUsername(
         username: String,
         viewerId: UserId?,
-    ): ProfileReadModel? = profileRepository.findByUsername(username, viewerId)
+    ): ProfileReadModel? = profileFinder.findByUsername(username, viewerId)
 }

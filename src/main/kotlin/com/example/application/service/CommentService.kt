@@ -1,6 +1,7 @@
 package com.example.application.service
 
 import com.example.application.port.ArticleRepository
+import com.example.application.port.CommentFinder
 import com.example.application.port.CommentRepository
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.CommentReadModel
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory
 @ApplicationScoped
 class CommentService(
     private val commentRepository: CommentRepository,
+    private val commentFinder: CommentFinder,
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
 ) : CommentCommands,
@@ -79,12 +81,12 @@ class CommentService(
     override fun getCommentById(
         id: CommentId,
         viewerId: UserId?,
-    ): CommentReadModel? = commentRepository.findById(id, viewerId)
+    ): CommentReadModel? = commentFinder.findById(id, viewerId)
 
     override fun getCommentsBySlug(
         slug: String,
         viewerId: UserId?,
-    ): List<CommentReadModel> = commentRepository.findByArticleSlug(slug, viewerId)
+    ): List<CommentReadModel> = commentFinder.findByArticleSlug(slug, viewerId)
 
     companion object {
         private val logger = LoggerFactory.getLogger(CommentService::class.java)

@@ -1,30 +1,19 @@
 package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.CommentRepository
-import com.example.application.port.security.CryptoService
-import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
-import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
-import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
-import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
-import org.jooq.Field
-import org.jooq.Record
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.count
-import org.jooq.impl.DSL.select
 
 @ApplicationScoped
 class JooqCommentRepository(
     private val dsl: DSLContext,
-    private val crypto: CryptoService,
 ) : CommentRepository {
     override fun nextId(): CommentId =
         CommentId(
@@ -69,81 +58,12 @@ class JooqCommentRepository(
         return entity
     }
 
-    override fun findByArticleId(articleId: ArticleId): List<Comment> =
-        dsl
-            .selectFrom(COMMENTS)
-            .where(COMMENTS.ARTICLE_ID.eq(articleId.value))
-            .orderBy(COMMENTS.CREATED_AT.desc())
-            .fetch()
-            .map { toComment(it) }
-
     override fun deleteById(id: CommentId) {
         dsl
             .deleteFrom(COMMENTS)
             .where(COMMENTS.ID.eq(id.value))
             .execute()
     }
-
-    override fun findById(
-        id: CommentId,
-        viewerId: UserId?,
-    ): CommentReadModel? =
-        dsl
-            .select(commentFields(viewerId))
-            .from(COMMENTS)
-            .leftJoin(PERSON)
-            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
-            .where(COMMENTS.ID.eq(id.value))
-            .fetchOne()
-            ?.toCommentReadModel()
-
-    override fun findByArticleSlug(
-        slug: String,
-        viewerId: UserId?,
-    ): List<CommentReadModel> =
-        dsl
-            .select(commentFields(viewerId))
-            .from(COMMENTS)
-            .leftJoin(PERSON)
-            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
-            .join(ARTICLES)
-            .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
-            .where(ARTICLES.SLUG.eq(slug))
-            .orderBy(COMMENTS.CREATED_AT.desc())
-            .fetch()
-            .map { it.toCommentReadModel() }
-
-    private fun commentFields(viewerId: UserId?): List<Field<*>> =
-        listOf(
-            COMMENTS.ID,
-            COMMENTS.BODY,
-            COMMENTS.CREATED_AT,
-            COMMENTS.UPDATED_AT,
-            COMMENTS.AUTHOR_ID,
-            PERSON.USERNAME_ENC,
-            PERSON.BIO_ENC,
-            PERSON.IMAGE_ENC,
-            if (viewerId != null) {
-                select(count())
-                    .from(FOLLOWERS)
-                    .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value))
-                    .asField<Int>("following")
-            } else {
-                org.jooq.impl.DSL
-                    .`val`(0)
-                    .`as`("following")
-            },
-        )
-
-    private fun Record.toCommentReadModel(): CommentReadModel =
-        CommentReadModel(
-            id = get(COMMENTS.ID)!!,
-            body = get(COMMENTS.BODY)!!,
-            createdAt = get(COMMENTS.CREATED_AT)!!,
-            updatedAt = get(COMMENTS.UPDATED_AT)!!,
-            author = decryptAuthorProfile(crypto, get(COMMENTS.AUTHOR_ID), get("following", Int::class.java) > 0),
-        )
 
     private fun toComment(record: com.example.jooq.public.tables.records.CommentsRecord): Comment =
         Comment(
