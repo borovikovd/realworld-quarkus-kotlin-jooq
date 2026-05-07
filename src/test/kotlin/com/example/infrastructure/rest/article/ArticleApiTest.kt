@@ -76,6 +76,39 @@ class ArticleApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `updating title regenerates the slug and the old slug stops resolving`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token, title = TestDataBuilder.uniqueTitle("Original"))
+        val newTitle = TestDataBuilder.uniqueTitle("Renamed")
+
+        val newSlug =
+            ApiTestFixtures.authenticatedRequest(user.token)
+                .body(TestDataBuilder.articleUpdate(title = newTitle))
+                .`when`()
+                .put("/api/articles/${article.slug}")
+                .then()
+                .statusCode(200)
+                .body("article.title", equalTo(newTitle))
+                .extract()
+                .jsonPath()
+                .getString("article.slug")
+
+        assert(newSlug != article.slug) { "expected slug to change after title update, got $newSlug" }
+
+        given()
+            .`when`()
+            .get("/api/articles/$newSlug")
+            .then()
+            .statusCode(200)
+
+        given()
+            .`when`()
+            .get("/api/articles/${article.slug}")
+            .then()
+            .statusCode(404)
+    }
+
+    @Test
     fun `should not allow non-author to update article`() {
         val author = ApiTestFixtures.registerUser()
         val other = ApiTestFixtures.registerUser()
@@ -162,6 +195,26 @@ class ArticleApiTest : BaseApiTest() {
     fun `should favorite article`() {
         val user = ApiTestFixtures.registerUser()
         val article = ApiTestFixtures.createArticle(user.token)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .post("/api/articles/${article.slug}/favorite")
+            .then()
+            .statusCode(200)
+            .body("article.favorited", equalTo(true))
+            .body("article.favoritesCount", equalTo(1))
+    }
+
+    @Test
+    fun `favoriting twice is idempotent and keeps count at 1`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .post("/api/articles/${article.slug}/favorite")
+            .then()
+            .statusCode(200)
 
         ApiTestFixtures.authenticatedRequest(user.token)
             .`when`()

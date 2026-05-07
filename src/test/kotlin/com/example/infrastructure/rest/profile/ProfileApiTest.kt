@@ -121,6 +121,26 @@ class ProfileApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `following twice is idempotent and keeps following true`() {
+        val follower = ApiTestFixtures.registerUser()
+        val target = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(follower.token)
+            .`when`()
+            .post("/api/profiles/${target.username}/follow")
+            .then()
+            .statusCode(200)
+
+        ApiTestFixtures.authenticatedRequest(follower.token)
+            .`when`()
+            .post("/api/profiles/${target.username}/follow")
+            .then()
+            .statusCode(200)
+            .body("profile.username", equalTo(target.username))
+            .body("profile.following", equalTo(true))
+    }
+
+    @Test
     fun `should return 404 when following non-existent user`() {
         val user = ApiTestFixtures.registerUser()
 
