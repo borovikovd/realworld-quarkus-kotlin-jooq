@@ -1,15 +1,15 @@
 package com.example.infrastructure.persistence.jooq
 
-import com.example.application.port.ProfileRepository
+import com.example.application.port.FollowRepository
 import com.example.domain.aggregate.user.UserId
 import com.example.jooq.public.tables.references.FOLLOWERS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 
 @ApplicationScoped
-class JooqProfileRepository(
+class JooqFollowRepository(
     private val dsl: DSLContext,
-) : ProfileRepository {
+) : FollowRepository {
     override fun follow(
         followerId: UserId,
         followeeId: UserId,

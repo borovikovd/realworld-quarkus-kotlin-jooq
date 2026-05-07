@@ -2,7 +2,7 @@ package com.example.application.port
 
 import com.example.domain.aggregate.user.UserId
 
-interface ProfileRepository {
+interface FollowRepository {
     fun follow(
         followerId: UserId,
         followeeId: UserId,

@@ -1,7 +1,7 @@
 package com.example.application.service
 
+import com.example.application.port.FollowRepository
 import com.example.application.port.ProfileFinder
-import com.example.application.port.ProfileRepository
 import com.example.application.port.UserFinder
 import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ProfileReadModel
@@ -15,7 +15,7 @@ import jakarta.transaction.Transactional
 
 @ApplicationScoped
 class ProfileService(
-    private val profileRepository: ProfileRepository,
+    private val followRepository: FollowRepository,
     private val profileFinder: ProfileFinder,
     private val userFinder: UserFinder,
     private val currentUser: CurrentUser,
@@ -32,7 +32,7 @@ class ProfileService(
             throw ValidationException(mapOf("username" to listOf("cannot follow yourself")))
         }
 
-        profileRepository.follow(followerId, followeeId)
+        followRepository.follow(followerId, followeeId)
     }
 
     @Transactional
@@ -42,7 +42,7 @@ class ProfileService(
             userFinder.findUserIdByUsername(username)
                 ?: throw NotFoundException("User not found")
 
-        profileRepository.unfollow(followerId, followeeId)
+        followRepository.unfollow(followerId, followeeId)
     }
 
     override fun getProfileByUsername(
