@@ -20,6 +20,7 @@ import java.net.http.HttpClient
 import java.time.Duration
 
 class VaultTestResource : QuarkusTestResourceLifecycleManager {
+    // withReuse(true) only engages when the dev opts in via ~/.testcontainers.properties.
     private val vault =
         GenericContainer("hashicorp/vault:1.17")
             .withExposedPorts(8200)
@@ -28,7 +29,7 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
             .waitingFor(
                 Wait.forHttp("/v1/sys/health").forPort(8200).forStatusCode(200)
                     .withStartupTimeout(Duration.ofSeconds(30)),
-            )
+            ).withReuse(true)
 
     override fun start(): Map<String, String> {
         // Must register before generateNew() calls below — this resource runs before the
@@ -49,11 +50,18 @@ class VaultTestResource : QuarkusTestResourceLifecycleManager {
                 .build()
 
         val transit = client.secrets().transit()
-        client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
-        transit
-            .createKey(KEYSET_KEK, VaultSecretsTransitCreateKeyParams().setType(VaultSecretsTransitKeyType.AES256_GCM96))
-            .toCompletableFuture()
-            .join()
+        // Both calls are idempotent on reused containers — Vault returns 400 ("path is
+        // already in use") and 204-on-existing respectively. We don't care if they
+        // already exist; we just need them present.
+        runCatching {
+            client.sys().mounts().enable("transit", "transit", null, null, null).toCompletableFuture().join()
+        }
+        runCatching {
+            transit
+                .createKey(KEYSET_KEK, VaultSecretsTransitCreateKeyParams().setType(VaultSecretsTransitKeyType.AES256_GCM96))
+                .toCompletableFuture()
+                .join()
+        }
 
         val wrappedAead = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM))
         val wrappedMac = wrapKeyset(transit, KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
