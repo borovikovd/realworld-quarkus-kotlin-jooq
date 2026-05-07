@@ -44,7 +44,7 @@ jobs:
           path: base
 
       - name: Check for breaking API changes
-        uses: oasdiff/oasdiff-action/breaking@e7609f171f253c3e2be2a2e5c508f749ca476a07 # v0.0.45
+        uses: oasdiff/oasdiff-action/breaking@26ccb332c67a45ca649de9faf60552ef1b8260d9 # v0.0.46
         with:
           base: base/src/main/resources/openapi.yaml
           revision: src/main/resources/openapi.yaml
