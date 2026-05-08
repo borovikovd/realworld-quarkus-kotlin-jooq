@@ -7,6 +7,7 @@ import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.ArticleReadModel
 import com.example.application.usecase.ArticleCommands
 import com.example.application.usecase.ArticleQueries
+import com.example.application.validation.Validation
 import com.example.domain.aggregate.article.Article
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.article.Body
@@ -17,7 +18,6 @@ import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
-import com.example.domain.exception.ValidationException
 import com.example.domain.service.SlugGenerator
 import io.micrometer.core.annotation.Counted
 import jakarta.enterprise.context.ApplicationScoped
@@ -178,11 +178,12 @@ class ArticleService(
         description: String?,
         body: String?,
     ) {
-        val errors = mutableMapOf<String, List<String>>()
-        title?.let { if (it.isBlank()) errors["title"] = listOf("must not be blank") }
-        description?.let { if (it.isBlank()) errors["description"] = listOf("must not be blank") }
-        body?.let { if (it.isBlank()) errors["body"] = listOf("must not be blank") }
-        if (errors.isNotEmpty()) throw ValidationException(errors)
+        Validation()
+            .apply {
+                check("title", title == null || title.isNotBlank()) { "must not be blank" }
+                check("description", description == null || description.isNotBlank()) { "must not be blank" }
+                check("body", body == null || body.isNotBlank()) { "must not be blank" }
+            }.throwIfInvalid()
     }
 
     companion object {

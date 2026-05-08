@@ -7,6 +7,7 @@ import com.example.application.port.security.CurrentUser
 import com.example.application.readmodel.CommentReadModel
 import com.example.application.usecase.CommentCommands
 import com.example.application.usecase.CommentQueries
+import com.example.application.validation.Validation
 import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
@@ -14,7 +15,6 @@ import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
 import com.example.domain.exception.ForbiddenException
 import com.example.domain.exception.NotFoundException
-import com.example.domain.exception.ValidationException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -32,9 +32,10 @@ class CommentService(
         articleSlug: String,
         body: String,
     ): CommentId {
-        val bodyVo =
-            runCatching { Body(body) }
-                .getOrElse { throw ValidationException(mapOf("body" to listOf("must not be blank"))) }
+        Validation()
+            .apply { check("body", body.isNotBlank()) { "must not be blank" } }
+            .throwIfInvalid()
+        val bodyVo = Body(body)
 
         val userId = currentUser.require()
         val article =

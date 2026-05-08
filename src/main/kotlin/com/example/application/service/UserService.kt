@@ -9,6 +9,7 @@ import com.example.application.readmodel.AuthenticatedUser
 import com.example.application.readmodel.UserReadModel
 import com.example.application.usecase.UserCommands
 import com.example.application.usecase.UserQueries
+import com.example.application.validation.Validation
 import com.example.domain.aggregate.user.Email
 import com.example.domain.aggregate.user.PasswordHash
 import com.example.domain.aggregate.user.User
@@ -16,7 +17,6 @@ import com.example.domain.aggregate.user.UserId
 import com.example.domain.aggregate.user.Username
 import com.example.domain.exception.NotFoundException
 import com.example.domain.exception.UnauthorizedException
-import com.example.domain.exception.ValidationException
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
@@ -41,30 +41,26 @@ class UserService(
         username: String,
         password: String,
     ): AuthenticatedUser {
-        val errors = mutableMapOf<String, List<String>>()
-
-        val emailVo = parseEmail(email, errors)
-        if (emailVo != null && userRepository.existsByEmail(emailVo)) {
-            errors["email"] = listOf("is already taken")
+        val v = Validation()
+        val emailRes = v.parse("email") { Email(email) }
+        val usernameRes = v.parse("username") { Username(username) }
+        v.check("password", password.length >= MIN_PASSWORD_LENGTH) {
+            "must be at least $MIN_PASSWORD_LENGTH characters"
         }
-
-        val usernameVo = parseUsername(username, errors)
-        if (usernameVo != null && userRepository.existsByUsername(usernameVo)) {
-            errors["username"] = listOf("is already taken")
+        emailRes.onSuccess {
+            v.check("email", !userRepository.existsByEmail(it)) { "is already taken" }
         }
-
-        validatePassword(password, errors)
-
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
+        usernameRes.onSuccess {
+            v.check("username", !userRepository.existsByUsername(it)) { "is already taken" }
         }
+        v.throwIfInvalid()
 
         val userId = userRepository.nextId()
         val user =
             User(
                 id = userId,
-                email = emailVo!!,
-                username = usernameVo!!,
+                email = emailRes.getOrThrow(),
+                username = usernameRes.getOrThrow(),
                 passwordHash = passwordHashing.hash(password),
             )
         userRepository.create(user)
@@ -93,12 +89,12 @@ class UserService(
                 false
             }
 
-        if (!verified) {
+        if (!verified || credentials == null) {
             logger.info("Login failed: invalid credentials")
             throw UnauthorizedException("Invalid email or password")
         }
 
-        val userId = credentials!!.userId
+        val userId = credentials.userId
         val tokens = tokenIssuer.issueTokens(userId)
         val readModel = userFinder.findReadModelById(userId) ?: throw NotFoundException("User not found")
         return AuthenticatedUser(user = readModel, accessToken = tokens.accessToken, refreshToken = tokens.refreshToken)
@@ -119,30 +115,25 @@ class UserService(
             userRepository.findById(userId)
                 ?: throw UnauthorizedException("User not found")
 
-        val errors = mutableMapOf<String, List<String>>()
-
-        val emailVo = email?.let { parseEmail(it, errors) }
-        if (emailVo != null && emailVo != user.email && userRepository.existsByEmail(emailVo)) {
-            errors["email"] = listOf("is already taken")
+        val v = Validation()
+        val emailVo = email?.let { v.parse("email") { Email(it) }.getOrNull() }
+        val usernameVo = username?.let { v.parse("username") { Username(it) }.getOrNull() }
+        v.check("password", password == null || password.length >= MIN_PASSWORD_LENGTH) {
+            "must be at least $MIN_PASSWORD_LENGTH characters"
         }
-
-        val usernameVo = username?.let { parseUsername(it, errors) }
-        if (usernameVo != null && usernameVo != user.username && userRepository.existsByUsername(usernameVo)) {
-            errors["username"] = listOf("is already taken")
+        if (emailVo != null && emailVo != user.email) {
+            v.check("email", !userRepository.existsByEmail(emailVo)) { "is already taken" }
         }
-
-        validatePassword(password, errors)
-
-        if (errors.isNotEmpty()) {
-            throw ValidationException(errors)
+        if (usernameVo != null && usernameVo != user.username) {
+            v.check("username", !userRepository.existsByUsername(usernameVo)) { "is already taken" }
         }
+        v.throwIfInvalid()
 
         val now = clock.now()
-        var updatedUser = user.updateProfile(now, emailVo, usernameVo, bio, image)
-
-        password?.let {
-            updatedUser = updatedUser.updatePassword(passwordHashing.hash(it), now)
-        }
+        val updatedUser =
+            user
+                .updateProfile(now, emailVo, usernameVo, bio, image)
+                .let { profile -> password?.let { profile.updatePassword(passwordHashing.hash(it), now) } ?: profile }
 
         userRepository.update(updatedUser)
         tokenIssuer.revokeAllRefreshTokens(userId)
@@ -195,43 +186,6 @@ class UserService(
     }
 
     override fun getUserById(id: UserId): UserReadModel? = userFinder.findReadModelById(id)
-
-    private fun validatePassword(
-        password: String?,
-        errors: MutableMap<String, List<String>>,
-    ) {
-        if (password != null && password.length < MIN_PASSWORD_LENGTH) {
-            errors["password"] = listOf("must be at least $MIN_PASSWORD_LENGTH characters")
-        }
-    }
-
-    private fun parseEmail(
-        value: String,
-        errors: MutableMap<String, List<String>>,
-    ): Email? {
-        if (value.isBlank()) {
-            errors["email"] = listOf("must not be blank")
-            return null
-        }
-        return runCatching { Email(value) }
-            .onFailure { errors["email"] = listOf("must be a valid email address") }
-            .getOrNull()
-    }
-
-    private fun parseUsername(
-        value: String,
-        errors: MutableMap<String, List<String>>,
-    ): Username? {
-        if (value.isBlank()) {
-            errors["username"] = listOf("must not be blank")
-            return null
-        }
-        return runCatching { Username(value) }
-            .onFailure {
-                errors["username"] =
-                    listOf("must be between ${Username.MIN_LENGTH} and ${Username.MAX_LENGTH} characters")
-            }.getOrNull()
-    }
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
