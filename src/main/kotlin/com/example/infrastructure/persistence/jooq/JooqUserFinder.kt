@@ -12,6 +12,7 @@ import com.example.infrastructure.persistence.jooq.shared.FIELD_BIO
 import com.example.infrastructure.persistence.jooq.shared.FIELD_EMAIL
 import com.example.infrastructure.persistence.jooq.shared.FIELD_IMAGE
 import com.example.infrastructure.persistence.jooq.shared.FIELD_USERNAME
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.USER
 import com.example.jooq.vault.tables.references.PERSON
@@ -38,13 +39,11 @@ class JooqUserFinder(
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->
-                val userId = record.get(USER.ID)!!
-                val emailEnc = record.get(PERSON.EMAIL_ENC)!!
-                val usernameEnc = record.get(PERSON.USERNAME_ENC)!!
+                val userId = record.req(USER.ID)
                 UserReadModel(
                     id = UserId(userId),
-                    email = Email(crypto.decryptField(userId, FIELD_EMAIL, emailEnc)),
-                    username = Username(crypto.decryptField(userId, FIELD_USERNAME, usernameEnc)),
+                    email = Email(crypto.decryptField(userId, FIELD_EMAIL, record.req(PERSON.EMAIL_ENC))),
+                    username = Username(crypto.decryptField(userId, FIELD_USERNAME, record.req(PERSON.USERNAME_ENC))),
                     bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
                     image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
                 )
@@ -64,8 +63,8 @@ class JooqUserFinder(
             .fetchOne()
             ?.let { record ->
                 LoginCredentials(
-                    userId = UserId(record.get(USER.ID)!!),
-                    passwordHash = PasswordHash(record.get(PASSWORD.HASH)!!),
+                    userId = UserId(record.req(USER.ID)),
+                    passwordHash = PasswordHash(record.req(PASSWORD.HASH)),
                 )
             }
     }
@@ -80,6 +79,6 @@ class JooqUserFinder(
             .where(PERSON.USERNAME_HASH.eq(usernameHash))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
-            ?.let { UserId(it.get(USER.ID)!!) }
+            ?.let { UserId(it.req(USER.ID)) }
     }
 }

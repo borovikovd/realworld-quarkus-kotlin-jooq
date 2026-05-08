@@ -6,6 +6,7 @@ import com.example.domain.aggregate.comment.Body
 import com.example.domain.aggregate.comment.Comment
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.public.tables.references.COMMENTS
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -67,11 +68,11 @@ class JooqCommentRepository(
 
     private fun toComment(record: com.example.jooq.public.tables.records.CommentsRecord): Comment =
         Comment(
-            id = CommentId(record.id!!),
-            articleId = ArticleId(record.articleId!!),
-            authorId = UserId(record.authorId!!),
-            body = Body(record.body!!),
-            createdAt = record.createdAt!!,
-            updatedAt = record.updatedAt!!,
+            id = CommentId(record.req(COMMENTS.ID)),
+            articleId = ArticleId(record.req(COMMENTS.ARTICLE_ID)),
+            authorId = UserId(record.req(COMMENTS.AUTHOR_ID)),
+            body = Body(record.req(COMMENTS.BODY)),
+            createdAt = record.req(COMMENTS.CREATED_AT),
+            updatedAt = record.req(COMMENTS.UPDATED_AT),
         )
 }

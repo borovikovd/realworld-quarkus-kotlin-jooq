@@ -12,6 +12,7 @@ import com.example.infrastructure.persistence.jooq.shared.FIELD_BIO
 import com.example.infrastructure.persistence.jooq.shared.FIELD_EMAIL
 import com.example.infrastructure.persistence.jooq.shared.FIELD_IMAGE
 import com.example.infrastructure.persistence.jooq.shared.FIELD_USERNAME
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
@@ -160,16 +161,16 @@ class JooqUserRepository(
     }
 
     private fun toUser(record: org.jooq.Record): User {
-        val userId = record.get(USER.ID)!!
+        val userId = record.req(USER.ID)
         return User(
             id = UserId(userId),
-            email = Email(crypto.decryptField(userId, FIELD_EMAIL, record.get(PERSON.EMAIL_ENC)!!)),
-            username = Username(crypto.decryptField(userId, FIELD_USERNAME, record.get(PERSON.USERNAME_ENC)!!)),
-            passwordHash = PasswordHash(record.get(PASSWORD.HASH)!!),
+            email = Email(crypto.decryptField(userId, FIELD_EMAIL, record.req(PERSON.EMAIL_ENC))),
+            username = Username(crypto.decryptField(userId, FIELD_USERNAME, record.req(PERSON.USERNAME_ENC))),
+            passwordHash = PasswordHash(record.req(PASSWORD.HASH)),
             bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
             image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
-            createdAt = record.get(USER.CREATED_AT)!!,
-            updatedAt = record.get(USER.UPDATED_AT)!!,
+            createdAt = record.req(USER.CREATED_AT),
+            updatedAt = record.req(USER.UPDATED_AT),
         )
     }
 }

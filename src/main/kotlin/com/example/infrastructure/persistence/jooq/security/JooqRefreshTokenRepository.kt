@@ -3,6 +3,7 @@ package com.example.infrastructure.persistence.jooq.security
 import com.example.application.port.security.RefreshTokenRepository
 import com.example.application.readmodel.StoredRefreshToken
 import com.example.domain.aggregate.user.UserId
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.auth.tables.references.REFRESH_TOKEN
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -33,8 +34,8 @@ class JooqRefreshTokenRepository(
             .fetchOne()
             ?.let {
                 StoredRefreshToken(
-                    userId = UserId(it.get(REFRESH_TOKEN.USER_ID)!!),
-                    expiresAt = it.get(REFRESH_TOKEN.EXPIRES_AT)!!,
+                    userId = UserId(it.req(REFRESH_TOKEN.USER_ID)),
+                    expiresAt = it.req(REFRESH_TOKEN.EXPIRES_AT),
                     revokedAt = it.get(REFRESH_TOKEN.REVOKED_AT),
                 )
             }

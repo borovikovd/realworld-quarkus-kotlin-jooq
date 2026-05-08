@@ -6,6 +6,7 @@ import com.example.application.readmodel.CommentReadModel
 import com.example.domain.aggregate.comment.CommentId
 import com.example.domain.aggregate.user.UserId
 import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
@@ -75,10 +76,10 @@ class JooqCommentFinder(
 
     private fun Record.toCommentReadModel(): CommentReadModel =
         CommentReadModel(
-            id = get(COMMENTS.ID)!!,
-            body = get(COMMENTS.BODY)!!,
-            createdAt = get(COMMENTS.CREATED_AT)!!,
-            updatedAt = get(COMMENTS.UPDATED_AT)!!,
-            author = decryptAuthorProfile(crypto, get(COMMENTS.AUTHOR_ID), get("following", Int::class.java) > 0),
+            id = req(COMMENTS.ID),
+            body = req(COMMENTS.BODY),
+            createdAt = req(COMMENTS.CREATED_AT),
+            updatedAt = req(COMMENTS.UPDATED_AT),
+            author = decryptAuthorProfile(crypto, req(COMMENTS.AUTHOR_ID), req("following", Int::class.java) > 0),
         )
 }

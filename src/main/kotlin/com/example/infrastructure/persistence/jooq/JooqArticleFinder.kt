@@ -6,6 +6,7 @@ import com.example.application.readmodel.ArticleReadModel
 import com.example.domain.aggregate.article.ArticleId
 import com.example.domain.aggregate.user.UserId
 import com.example.infrastructure.persistence.jooq.shared.decryptAuthorProfile
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.public.tables.Favorites
 import com.example.jooq.public.tables.Followers
 import com.example.jooq.public.tables.references.ARTICLES
@@ -235,17 +236,17 @@ class JooqArticleFinder(
 
     private fun Record.toArticleReadModel(): ArticleReadModel =
         ArticleReadModel(
-            slug = get(ARTICLES.SLUG)!!,
-            title = get(ARTICLES.TITLE)!!,
-            description = get(ARTICLES.DESCRIPTION)!!,
-            body = get(ARTICLES.BODY)!!,
+            slug = req(ARTICLES.SLUG),
+            title = req(ARTICLES.TITLE),
+            description = req(ARTICLES.DESCRIPTION),
+            body = req(ARTICLES.BODY),
             tagList =
                 @Suppress("UNCHECKED_CAST")
                 (get("tags") as? List<String> ?: emptyList()),
-            createdAt = get(ARTICLES.CREATED_AT)!!,
-            updatedAt = get(ARTICLES.UPDATED_AT)!!,
-            favorited = get("favorited", Int::class.java) > 0,
-            favoritesCount = get("favoritesCount", Int::class.java),
-            author = decryptAuthorProfile(crypto, get(ARTICLES.AUTHOR_ID), get("following", Int::class.java) > 0),
+            createdAt = req(ARTICLES.CREATED_AT),
+            updatedAt = req(ARTICLES.UPDATED_AT),
+            favorited = req("favorited", Int::class.java) > 0,
+            favoritesCount = req("favoritesCount", Int::class.java),
+            author = decryptAuthorProfile(crypto, req(ARTICLES.AUTHOR_ID), req("following", Int::class.java) > 0),
         )
 }

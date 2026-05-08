@@ -2,6 +2,7 @@ package com.example.infrastructure.persistence.jooq
 
 import com.example.application.port.IdempotencyRepository
 import com.example.application.readmodel.StoredIdempotencyKey
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.public.tables.references.IDEMPOTENCY_KEY
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -40,7 +41,7 @@ class JooqIdempotencyRepository(
             .fetchOne()
             ?.let {
                 StoredIdempotencyKey(
-                    requestPath = it.get(IDEMPOTENCY_KEY.REQUEST_PATH)!!,
+                    requestPath = it.req(IDEMPOTENCY_KEY.REQUEST_PATH),
                     responseStatus = it.get(IDEMPOTENCY_KEY.RESPONSE_STATUS),
                     responseBody = it.get(IDEMPOTENCY_KEY.RESPONSE_BODY),
                 )

@@ -9,6 +9,7 @@ import com.example.domain.aggregate.article.Slug
 import com.example.domain.aggregate.article.Tag
 import com.example.domain.aggregate.article.Title
 import com.example.domain.aggregate.user.UserId
+import com.example.infrastructure.persistence.jooq.shared.req
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -162,7 +163,7 @@ class JooqArticleRepository(
                 .from(TAGS)
                 .where(TAGS.NAME.`in`(tags.map { it.value }))
                 .fetch()
-                .associate { it.value2()!! to it.value1()!! }
+                .associate { it.req(TAGS.NAME) to it.req(TAGS.ID) }
 
         val articleTagInserts =
             tags.mapNotNull { tag ->
@@ -181,21 +182,19 @@ class JooqArticleRepository(
     }
 
     private fun toArticle(result: org.jooq.Record): Article {
-        val record = result.into(ARTICLES)
-
         @Suppress("UNCHECKED_CAST")
         val tags = result.get("tags") as? List<String> ?: emptyList()
 
         return Article(
-            id = ArticleId(record.id!!),
-            slug = Slug(record.slug!!),
-            title = Title(record.title!!),
-            description = Description(record.description!!),
-            body = Body(record.body!!),
-            authorId = UserId(record.authorId!!),
+            id = ArticleId(result.req(ARTICLES.ID)),
+            slug = Slug(result.req(ARTICLES.SLUG)),
+            title = Title(result.req(ARTICLES.TITLE)),
+            description = Description(result.req(ARTICLES.DESCRIPTION)),
+            body = Body(result.req(ARTICLES.BODY)),
+            authorId = UserId(result.req(ARTICLES.AUTHOR_ID)),
             tags = tags.map { Tag(it) }.toSet(),
-            createdAt = record.createdAt!!,
-            updatedAt = record.updatedAt!!,
+            createdAt = result.req(ARTICLES.CREATED_AT),
+            updatedAt = result.req(ARTICLES.UPDATED_AT),
         )
     }
 }
