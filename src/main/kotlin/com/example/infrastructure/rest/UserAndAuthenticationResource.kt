@@ -79,8 +79,8 @@ class UserAndAuthenticationResource(
             .token(accessToken)
             .refreshToken(refreshToken)
             .username(user.username.value)
-            .bio(user.bio)
-            .image(user.image)
+            .bio(user.bio.orEmpty())
+            .image(user.image.orEmpty())
 
     private fun UserReadModel.toApiUser(accessToken: String): ApiUser =
         ApiUser()
@@ -88,6 +88,6 @@ class UserAndAuthenticationResource(
             .token(accessToken)
             .refreshToken("")
             .username(username.value)
-            .bio(bio)
-            .image(image)
+            .bio(bio.orEmpty())
+            .image(image.orEmpty())
 }

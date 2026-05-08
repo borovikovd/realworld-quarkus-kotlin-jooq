@@ -60,6 +60,6 @@ private fun ArticleReadModel.toDto(): ApiArticle =
 private fun ProfileReadModel.toDto(): Profile =
     Profile()
         .username(username)
-        .bio(bio)
-        .image(image)
+        .bio(bio.orEmpty())
+        .image(image.orEmpty())
         .following(following)

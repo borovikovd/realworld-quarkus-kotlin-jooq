@@ -27,8 +27,8 @@ class UserAuthApiTest : BaseApiTest() {
             .body("user.email", equalTo(email))
             .body("user.username", equalTo(username))
             .body("user.token", notNullValue())
-            .body("user.bio", equalTo(null))
-            .body("user.image", equalTo(null))
+            .body("user.bio", equalTo(""))
+            .body("user.image", equalTo(""))
     }
 
     @Test
