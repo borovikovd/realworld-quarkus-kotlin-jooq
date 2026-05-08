@@ -15,6 +15,7 @@ import com.example.jooq.public.tables.references.ARTICLE_TAGS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.TAGS
 import jakarta.enterprise.context.ApplicationScoped
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 
@@ -48,49 +49,28 @@ class JooqArticleRepository(
         return entity
     }
 
-    override fun findById(id: ArticleId): Article? {
-        val result =
-            dsl
-                .select(
-                    ARTICLES.asterisk(),
-                    DSL
-                        .multiset(
-                            dsl
-                                .select(TAGS.NAME)
-                                .from(TAGS)
-                                .join(ARTICLE_TAGS)
-                                .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                                .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                        ).`as`("tags")
-                        .convertFrom { it.map { r -> r.value1() } },
-                ).from(ARTICLES)
-                .where(ARTICLES.ID.eq(id.value))
-                .fetchOne() ?: return null
+    override fun findById(id: ArticleId): Article? = selectArticleWhere(ARTICLES.ID.eq(id.value))
 
-        return toArticle(result)
-    }
+    override fun findBySlug(slug: Slug): Article? = selectArticleWhere(ARTICLES.SLUG.eq(slug.value))
 
-    override fun findBySlug(slug: Slug): Article? {
-        val result =
-            dsl
-                .select(
-                    ARTICLES.asterisk(),
-                    DSL
-                        .multiset(
-                            dsl
-                                .select(TAGS.NAME)
-                                .from(TAGS)
-                                .join(ARTICLE_TAGS)
-                                .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                                .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-                        ).`as`("tags")
-                        .convertFrom { it.map { r -> r.value1() } },
-                ).from(ARTICLES)
-                .where(ARTICLES.SLUG.eq(slug.value))
-                .fetchOne() ?: return null
-
-        return toArticle(result)
-    }
+    private fun selectArticleWhere(condition: Condition): Article? =
+        dsl
+            .select(
+                ARTICLES.asterisk(),
+                DSL
+                    .multiset(
+                        dsl
+                            .select(TAGS.NAME)
+                            .from(TAGS)
+                            .join(ARTICLE_TAGS)
+                            .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                            .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                    ).`as`("tags")
+                    .convertFrom { it.map { r -> r.value1() } },
+            ).from(ARTICLES)
+            .where(condition)
+            .fetchOne()
+            ?.let(::toArticle)
 
     override fun update(entity: Article): Article {
         dsl
