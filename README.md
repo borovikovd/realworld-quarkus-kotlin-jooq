@@ -32,28 +32,34 @@ A production-grade REST API implementing the RealWorld spec, built with the kind
 
 ```
 com.example/
-├── domain/                  # pure business model — zero framework imports
-│   ├── aggregate/<agg>/     # aggregates with value objects (Email, Slug, …)
-│   ├── exception/           # domain exceptions (NotFound, Forbidden, …)
-│   └── service/             # stateless domain services
+├── domain/                       # pure business model — zero framework imports
+│   ├── aggregate/<agg>/          # aggregates with value objects (Email, Slug, …)
+│   ├── event/                    # domain events
+│   ├── exception/                # domain exceptions (NotFound, Forbidden, …)
+│   └── service/                  # stateless domain services
 │
-├── application/             # use cases and ports
-│   ├── inport/command/      # XCommands — inbound write ports
-│   ├── inport/query/        # XQueries  — inbound read ports
-│   ├── outport/             # driven ports: repositories, Clock, CryptoService, …
-│   ├── readmodel/           # use-case projections returned by query ports
-│   └── service/             # XApplicationService implements XCommands + XQueries
+├── application/                  # use cases and ports
+│   ├── usecase/                  # XCommands (write) + XQueries (read) — inbound ports
+│   ├── port/                     # outbound ports: XRepository (writes) + XFinder (reads), Clock, IdempotencyRepository
+│   │   └── security/             # CryptoService, CurrentUser, PasswordHashing, TokenIssuer
+│   ├── readmodel/                # use-case projections returned by query ports
+│   ├── service/                  # XService implements both XCommands and XQueries
+│   └── validation/               # Validation accumulator used by services
 │
-└── infrastructure/          # adapters (depends on application, never on domain directly)
-    ├── rest/                # JAX-RS resources + exception mappers
-    ├── persistence/jooq/    # jOOQ repository implementations
-    ├── security/            # TinkCryptoService, JwtTokenIssuer, Argon2PasswordHashing
-    ├── idempotency/         # IdempotencyFilter (request + response)
-    ├── ratelimit/           # in-process rate limiter
-    └── logging/             # MDC filter (requestId, userId)
+└── infrastructure/               # adapters (depends on application, never on domain directly)
+    ├── rest/                     # JAX-RS resources
+    │   ├── exception/            # exception → HTTP mappers
+    │   └── filter/               # IdempotencyFilter, StatusCodeResponseFilter
+    ├── persistence/jooq/         # jOOQ repository + finder implementations
+    ├── security/                 # TinkCryptoService, JwtTokenIssuer, Argon2PasswordHashing, RevokedTokenFilter
+    ├── ratelimit/                # in-process rate limiter
+    ├── logging/                  # MDC filter (requestId, userId)
+    └── time/                     # SystemClock
 ```
 
 Dependency rule: `infrastructure → application → domain`. Enforced by ArchUnit at build time.
+
+The CQRS-lite split shows up at *two* levels: inbound (`XCommands` vs `XQueries` interfaces in `usecase/`) and outbound (`XRepository` for aggregate writes vs `XFinder` for read-model projections in `port/`).
 
 ## Highlights
 
