@@ -7,6 +7,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.eclipse.microprofile.openapi.annotations.media.Schema
 
 data class AuthenticatedUser(
     val email: String,
@@ -48,10 +49,15 @@ data class UpdateUserRequest(
 )
 
 data class UpdateUser(
+    @field:Schema(implementation = String::class)
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val email: Patch<String> = Patch.Absent,
+    @field:Schema(implementation = String::class)
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val username: Patch<String> = Patch.Absent,
+    @field:Schema(implementation = String::class)
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val password: Patch<String> = Patch.Absent,
+    @field:Schema(implementation = String::class, nullable = true)
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val bio: Patch<String> = Patch.Absent,
+    @field:Schema(implementation = String::class, nullable = true)
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val image: Patch<String> = Patch.Absent,
 )
 

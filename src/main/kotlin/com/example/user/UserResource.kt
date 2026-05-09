@@ -13,6 +13,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.ResponseStatus
 
 @ApplicationScoped
@@ -26,6 +27,7 @@ class UserResource(
     @POST
     @Path("/users")
     @ResponseStatus(201)
+    @APIResponse(responseCode = "201", description = "Created")
     fun createUser(
         @Valid body: NewUserRequest,
     ): UserEnvelope {
@@ -50,6 +52,7 @@ class UserResource(
     @Path("/users/logout")
     @RolesAllowed("user")
     @ResponseStatus(204)
+    @APIResponse(responseCode = "204", description = "No Content")
     fun logout(body: LogoutPayload) {
         userService.logout(body.refreshToken, currentUser.jti, currentUser.id)
     }

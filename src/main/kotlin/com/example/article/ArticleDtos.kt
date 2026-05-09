@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType
+import org.eclipse.microprofile.openapi.annotations.media.Schema
 import java.time.OffsetDateTime
 
 data class ArticleDto(
@@ -75,5 +77,10 @@ data class ArticlePatch(
     @field:Size(min = 1, max = 256) val title: String? = null,
     @field:Size(min = 1, max = 1024) val description: String? = null,
     @field:Size(min = 1) val body: String? = null,
+    @field:Schema(type = SchemaType.ARRAY, implementation = String::class)
     @field:JsonDeserialize(using = ListStringPatchDeserializer::class) val tagList: Patch<List<String>> = Patch.Absent,
+)
+
+data class TagsResponse(
+    val tags: List<String>,
 )

@@ -1,6 +1,5 @@
 package com.example.article
 
-import com.example.article.ArticleService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
@@ -14,5 +13,5 @@ class TagResource(
     private val articleService: ArticleService,
 ) {
     @GET
-    fun getTags(): Map<String, List<String>> = mapOf("tags" to articleService.allTags())
+    fun getTags(): TagsResponse = TagsResponse(articleService.allTags())
 }

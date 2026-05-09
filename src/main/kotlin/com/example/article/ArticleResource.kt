@@ -15,6 +15,8 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.ResponseStatus
 
 @ApplicationScoped
@@ -27,6 +29,7 @@ class ArticleResource(
     @POST
     @RolesAllowed("user")
     @ResponseStatus(201)
+    @APIResponse(responseCode = "201", description = "Created")
     fun createArticle(
         @Valid body: NewArticleRequest,
     ): ArticleEnvelope {
@@ -36,11 +39,11 @@ class ArticleResource(
 
     @GET
     fun getArticles(
-        @QueryParam("tag") tag: String?,
-        @QueryParam("author") author: String?,
-        @QueryParam("favorited") favorited: String?,
-        @QueryParam("limit") @DefaultValue("20") limit: Int,
-        @QueryParam("offset") @DefaultValue("0") offset: Int,
+        @Parameter(required = false) @QueryParam("tag") tag: String?,
+        @Parameter(required = false) @QueryParam("author") author: String?,
+        @Parameter(required = false) @QueryParam("favorited") favorited: String?,
+        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") limit: Int,
+        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") offset: Int,
     ): ArticleListEnvelope {
         val filter = ArticleFilter(tag, author, favorited)
         val page = Page(limit, offset)
@@ -54,8 +57,8 @@ class ArticleResource(
     @Path("/feed")
     @RolesAllowed("user")
     fun getArticlesFeed(
-        @QueryParam("limit") @DefaultValue("20") limit: Int,
-        @QueryParam("offset") @DefaultValue("0") offset: Int,
+        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") limit: Int,
+        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") offset: Int,
     ): ArticleListEnvelope {
         val page = Page(limit, offset)
         return ArticleListEnvelope(

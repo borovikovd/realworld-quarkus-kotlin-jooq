@@ -11,6 +11,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.jboss.resteasy.reactive.ResponseStatus
 
 @ApplicationScoped
@@ -23,6 +24,7 @@ class CommentResource(
     @POST
     @RolesAllowed("user")
     @ResponseStatus(201)
+    @APIResponse(responseCode = "201", description = "Created")
     fun createArticleComment(
         @PathParam("slug") slug: String,
         @Valid body: NewCommentRequest,
