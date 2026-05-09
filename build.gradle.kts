@@ -22,10 +22,6 @@ plugins {
 group = "com.example"
 version = "1.0.0"
 
-val quarkusPlatformGroupId: String by project
-val quarkusPlatformArtifactId: String by project
-val quarkusPlatformVersion: String by project
-
 // ============================================
 // Repositories
 // ============================================
@@ -38,7 +34,7 @@ repositories {
 // ============================================
 dependencies {
     // Quarkus BOM
-    implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.2"))
 
     // Quarkus extensions (versions managed by BOM)
     implementation("io.quarkus:quarkus-rest")
