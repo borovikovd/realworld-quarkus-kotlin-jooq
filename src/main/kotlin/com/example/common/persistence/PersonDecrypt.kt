@@ -19,8 +19,8 @@ fun Record.decryptAuthorProfile(
     val usernameEnc = checkNotNull(get(PERSON.USERNAME_ENC)) { "Author PERSON record missing for userId=$userId" }
     return ProfileDto(
         username = crypto.decryptField(userId, FIELD_USERNAME, usernameEnc),
-        bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) }.orEmpty(),
-        image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) }.orEmpty(),
+        bio = get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
+        image = get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
         following = following,
     )
 }

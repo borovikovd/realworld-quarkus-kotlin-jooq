@@ -8,16 +8,16 @@ import jakarta.validation.constraints.Size
 data class AuthenticatedUser(
     val email: String,
     val username: String,
-    val bio: String,
-    val image: String,
+    val bio: String?,
+    val image: String?,
     val token: String,
     val refreshToken: String,
 )
 
 data class ProfileDto(
     val username: String,
-    val bio: String,
-    val image: String,
+    val bio: String?,
+    val image: String?,
     val following: Boolean,
 )
 

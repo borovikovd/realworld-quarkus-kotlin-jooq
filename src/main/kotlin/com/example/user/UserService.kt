@@ -5,6 +5,7 @@ import com.example.common.security.PasswordHash
 import com.example.common.security.PasswordHashing
 import com.example.common.security.TokenIssuer
 import com.example.common.time.Clock
+import com.example.common.web.ConflictException
 import com.example.common.web.NotFoundException
 import com.example.common.web.UnauthorizedException
 import com.example.common.web.Validation
@@ -32,9 +33,12 @@ class UserService(
         v.check("password", password.length >= MIN_PASSWORD_LENGTH) {
             "must be at least $MIN_PASSWORD_LENGTH characters"
         }
-        v.check("email", !userRepository.existsByEmail(email)) { "is already taken" }
-        v.check("username", !userRepository.existsByUsername(username)) { "is already taken" }
         v.throwIfInvalid()
+
+        val conflicts = mutableMapOf<String, List<String>>()
+        if (userRepository.existsByEmail(email)) conflicts["email"] = listOf("is already taken")
+        if (userRepository.existsByUsername(username)) conflicts["username"] = listOf("is already taken")
+        if (conflicts.isNotEmpty()) throw ConflictException(conflicts)
 
         val userId = userRepository.nextId()
         val now = clock.now()
@@ -54,8 +58,8 @@ class UserService(
         return AuthenticatedUser(
             email = user.email,
             username = user.username,
-            bio = user.bio.orEmpty(),
-            image = user.image.orEmpty(),
+            bio = user.bio,
+            image = user.image,
             token = tokens.accessToken,
             refreshToken = tokens.refreshToken,
         )

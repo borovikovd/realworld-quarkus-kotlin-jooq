@@ -8,6 +8,7 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 
 @QuarkusTest
@@ -27,8 +28,8 @@ class UserAuthApiTest : BaseApiTest() {
             .body("user.email", equalTo(email))
             .body("user.username", equalTo(username))
             .body("user.token", notNullValue())
-            .body("user.bio", equalTo(""))
-            .body("user.image", equalTo(""))
+            .body("user.bio", nullValue())
+            .body("user.image", nullValue())
     }
 
     @Test
@@ -42,7 +43,7 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users")
             .then()
-            .statusCode(422)
+            .statusCode(409)
             .body("errors.email[0]", equalTo("is already taken"))
     }
 
@@ -57,7 +58,7 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users")
             .then()
-            .statusCode(422)
+            .statusCode(409)
             .body("errors.username[0]", equalTo("is already taken"))
     }
 
@@ -237,21 +238,20 @@ class UserAuthApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `should return all validation errors at once on register`() {
+    fun `should return 409 with all conflict fields when both email and username are taken`() {
         val takenEmail = TestDataBuilder.uniqueEmail()
         val takenUsername = TestDataBuilder.uniqueUsername()
         ApiTestFixtures.registerUser(email = takenEmail, username = takenUsername)
 
         given()
             .contentType(ContentType.JSON)
-            .body(TestDataBuilder.userRegistration(email = takenEmail, username = takenUsername, password = "short"))
+            .body(TestDataBuilder.userRegistration(email = takenEmail, username = takenUsername))
             .`when`()
             .post("/api/users")
             .then()
-            .statusCode(422)
+            .statusCode(409)
             .body("errors.email[0]", equalTo("is already taken"))
             .body("errors.username[0]", equalTo("is already taken"))
-            .body("errors.password[0]", equalTo("must be at least 8 characters"))
     }
 
     @Test
