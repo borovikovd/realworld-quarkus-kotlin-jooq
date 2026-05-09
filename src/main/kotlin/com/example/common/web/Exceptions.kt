@@ -20,3 +20,5 @@ class ValidationException(
 class ConflictException(
     val errors: Map<String, List<String>>,
 ) : RuntimeException("Conflict")
+
+class InvalidCredentialsException : RuntimeException("Invalid credentials")

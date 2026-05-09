@@ -100,7 +100,7 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users/login")
             .then()
-            .statusCode(422)
+            .statusCode(401)
             .body("errors.credentials[0]", equalTo("invalid"))
     }
 
@@ -114,7 +114,7 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users/login")
             .then()
-            .statusCode(422)
+            .statusCode(401)
             .body("errors.credentials[0]", equalTo("invalid"))
     }
 

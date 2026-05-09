@@ -31,7 +31,7 @@ class ArticleResource(
         @Valid body: NewArticleRequest,
     ): ArticleEnvelope {
         val a = body.article
-        return ArticleEnvelope(articleService.create(a.title, a.description, a.body, a.tagList))
+        return ArticleEnvelope(articleService.create(a.title, a.description, a.body, a.tagList ?: emptyList()))
     }
 
     @GET

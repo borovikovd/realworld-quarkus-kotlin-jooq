@@ -61,7 +61,7 @@ data class NewArticle(
     @field:NotBlank @field:Size(max = 256) val title: String,
     @field:NotBlank @field:Size(max = 1024) val description: String,
     @field:NotBlank val body: String,
-    val tagList: List<String> = emptyList(),
+    val tagList: List<String>? = null,
 )
 
 data class UpdateArticleRequest(

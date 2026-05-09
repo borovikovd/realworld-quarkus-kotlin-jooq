@@ -1,5 +1,8 @@
 package com.example.user
 
+import com.example.common.web.Patch
+import com.example.common.web.StringPatchDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
@@ -45,11 +48,11 @@ data class UpdateUserRequest(
 )
 
 data class UpdateUser(
-    @field:Email @field:Size(max = 200) val email: String?,
-    @field:Size(max = 100) val username: String?,
-    val password: String?,
-    val bio: String?,
-    val image: String?,
+    @field:Email @field:Size(max = 200) val email: String? = null,
+    @field:Size(max = 100) val username: String? = null,
+    val password: String? = null,
+    @field:JsonDeserialize(using = StringPatchDeserializer::class) val bio: Patch<String> = Patch.Absent,
+    @field:JsonDeserialize(using = StringPatchDeserializer::class) val image: Patch<String> = Patch.Absent,
 )
 
 data class LogoutPayload(

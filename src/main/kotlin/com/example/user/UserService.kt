@@ -6,7 +6,9 @@ import com.example.common.security.PasswordHashing
 import com.example.common.security.TokenIssuer
 import com.example.common.time.Clock
 import com.example.common.web.ConflictException
+import com.example.common.web.InvalidCredentialsException
 import com.example.common.web.NotFoundException
+import com.example.common.web.Patch
 import com.example.common.web.UnauthorizedException
 import com.example.common.web.Validation
 import com.example.common.web.ValidationException
@@ -84,7 +86,7 @@ class UserService(
 
         if (!verified || found == null) {
             logger.info("Login failed: invalid credentials")
-            throw ValidationException(mapOf("credentials" to listOf("invalid")))
+            throw InvalidCredentialsException()
         }
 
         val tokens = tokenIssuer.issueTokens(found.id)
@@ -105,8 +107,8 @@ class UserService(
         email: String?,
         username: String?,
         password: String?,
-        bio: String?,
-        image: String?,
+        bio: Patch<String>,
+        image: Patch<String>,
     ): AuthenticatedUser {
         val user = userRepository.findById(userId) ?: throw UnauthorizedException("User not found")
 
@@ -128,8 +130,16 @@ class UserService(
                 email = email ?: user.email,
                 username = username ?: user.username,
                 passwordHash = if (password != null) passwordHashing.hash(password) else user.passwordHash,
-                bio = if (bio != null) bio.ifBlank { null } else user.bio,
-                image = if (image != null) image.ifBlank { null } else user.image,
+                bio =
+                    when (bio) {
+                        is Patch.Absent -> user.bio
+                        is Patch.Present -> bio.value?.ifBlank { null }
+                    },
+                image =
+                    when (image) {
+                        is Patch.Absent -> user.image
+                        is Patch.Present -> image.value?.ifBlank { null }
+                    },
                 updatedAt = now,
             )
 

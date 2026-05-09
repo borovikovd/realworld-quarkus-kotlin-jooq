@@ -55,6 +55,15 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
 }
 
 @Provider
+class InvalidCredentialsExceptionMapper : ExceptionMapper<InvalidCredentialsException> {
+    override fun toResponse(exception: InvalidCredentialsException): Response =
+        Response
+            .status(Response.Status.UNAUTHORIZED)
+            .entity(mapOf("errors" to mapOf("credentials" to listOf("invalid"))))
+            .build()
+}
+
+@Provider
 class ConflictExceptionMapper : ExceptionMapper<ConflictException> {
     override fun toResponse(exception: ConflictException): Response =
         Response
