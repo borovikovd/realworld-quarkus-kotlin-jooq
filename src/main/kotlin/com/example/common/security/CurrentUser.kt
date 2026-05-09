@@ -6,24 +6,18 @@ import jakarta.enterprise.context.RequestScoped
 import org.eclipse.microprofile.jwt.JsonWebToken
 import java.util.UUID
 
-interface CurrentUser {
-    val id: UserId?
-    val jti: UUID?
-    val rawToken: String?
-
-    fun require(): UserId = id ?: throw UnauthorizedException("Authentication required")
-}
-
 @RequestScoped
-class JwtCurrentUser(
+class CurrentUser(
     private val jwt: JsonWebToken,
-) : CurrentUser {
-    override val id: UserId?
+) {
+    val id: UserId?
         get() = jwt.subject?.toLongOrNull()?.let { UserId(it) }
 
-    override val jti: UUID?
+    val jti: UUID?
         get() = jwt.tokenID?.let { runCatching { UUID.fromString(it) }.getOrNull() }
 
-    override val rawToken: String?
+    val rawToken: String?
         get() = jwt.rawToken
+
+    fun require(): UserId = id ?: throw UnauthorizedException("Authentication required")
 }

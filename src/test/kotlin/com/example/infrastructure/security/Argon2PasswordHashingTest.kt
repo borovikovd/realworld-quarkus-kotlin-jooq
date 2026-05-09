@@ -5,8 +5,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-class Argon2PasswordHashingTest {
-    private val passwordHashing = Argon2PasswordHashing()
+class PasswordHashingTest {
+    private val passwordHashing = PasswordHashing()
 
     @Test
     fun `should hash password`() {

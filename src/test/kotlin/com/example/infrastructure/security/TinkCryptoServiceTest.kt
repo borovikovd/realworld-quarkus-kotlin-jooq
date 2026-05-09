@@ -21,9 +21,9 @@ import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class TinkCryptoServiceTest {
+class CryptoServiceTest {
     companion object {
-        private lateinit var service: TinkCryptoService
+        private lateinit var service: CryptoService
 
         @BeforeAll
         @JvmStatic
@@ -76,7 +76,7 @@ class TinkCryptoServiceTest {
             val wrappedMac = wrap(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
             val wrappedTokenMac = wrap(KeysetHandle.generateNew(PredefinedMacParameters.HMAC_SHA256_256BITTAG))
 
-            service = TinkCryptoService(url, "test-token", wrappedAead, wrappedMac, wrappedTokenMac)
+            service = CryptoService(url, "test-token", wrappedAead, wrappedMac, wrappedTokenMac)
         }
     }
 

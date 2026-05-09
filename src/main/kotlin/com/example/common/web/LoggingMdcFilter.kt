@@ -6,33 +6,9 @@ import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.container.ContainerResponseContext
 import jakarta.ws.rs.container.ContainerResponseFilter
-import jakarta.ws.rs.container.ResourceInfo
 import jakarta.ws.rs.ext.Provider
-import org.jboss.resteasy.reactive.ResponseStatus
-import org.jboss.resteasy.reactive.server.ServerResponseFilter
 import org.slf4j.MDC
 import java.util.UUID
-
-private const val OK_STATUS = 200
-
-@ApplicationScoped
-class StatusCodeResponseFilter {
-    @Suppress("SpreadOperator")
-    @ServerResponseFilter
-    fun adjustStatusCode(
-        responseContext: ContainerResponseContext,
-        resourceInfo: ResourceInfo,
-    ) {
-        if (responseContext.status != OK_STATUS) return
-        val status =
-            runCatching {
-                resourceInfo.resourceClass
-                    .getMethod(resourceInfo.resourceMethod.name, *resourceInfo.resourceMethod.parameterTypes)
-                    .getAnnotation(ResponseStatus::class.java)
-            }.getOrNull() ?: return
-        responseContext.status = status.value
-    }
-}
 
 @Provider
 @ApplicationScoped

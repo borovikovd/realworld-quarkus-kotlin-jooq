@@ -11,28 +11,8 @@ import java.time.OffsetDateTime
 import java.util.Base64
 import java.util.UUID
 
-interface TokenIssuer {
-    fun issueTokens(userId: UserId): IssuedTokens
-
-    fun findRefreshToken(token: String): StoredRefreshToken?
-
-    /** Returns false if the token was already revoked or not found. */
-    fun revokeRefreshToken(token: String): Boolean
-
-    fun revokeAllRefreshTokens(userId: UserId)
-
-    fun revokeAccessToken(
-        jti: UUID,
-        userId: UserId,
-    )
-
-    fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int
-
-    fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int
-}
-
 @ApplicationScoped
-class JwtTokenIssuer(
+class TokenIssuer(
     @param:ConfigProperty(name = "mp.jwt.verify.issuer") private val issuer: String,
     @param:ConfigProperty(name = "app.token.access-expiry-seconds") private val accessExpirySeconds: Long,
     @param:ConfigProperty(name = "app.token.refresh-expiry-days") private val refreshExpiryDays: Long,
@@ -40,13 +20,13 @@ class JwtTokenIssuer(
     private val revokedTokenRepository: RevokedTokenRepository,
     private val crypto: CryptoService,
     private val clock: Clock,
-) : TokenIssuer {
+) {
     private val secureRandom = SecureRandom()
     private val base64UrlEncoder = Base64.getUrlEncoder().withoutPadding()
     private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
-    override fun issueTokens(userId: UserId): IssuedTokens {
+    fun issueTokens(userId: UserId): IssuedTokens {
         val accessToken = generateAccessToken(userId)
         val refreshToken = generateRefreshToken()
         refreshTokenRepository.store(
@@ -57,23 +37,23 @@ class JwtTokenIssuer(
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
-    override fun findRefreshToken(token: String): StoredRefreshToken? =
+    fun findRefreshToken(token: String): StoredRefreshToken? =
         refreshTokenRepository.findByHash(crypto.hmacRefreshToken(token))
 
-    override fun revokeRefreshToken(token: String): Boolean =
+    /** Returns false if the token was already revoked or not found. */
+    fun revokeRefreshToken(token: String): Boolean =
         refreshTokenRepository.revokeByHash(crypto.hmacRefreshToken(token), clock.now())
 
-    override fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
+    fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
 
-    override fun revokeAccessToken(
+    fun revokeAccessToken(
         jti: UUID,
         userId: UserId,
     ) = revokedTokenRepository.insert(jti, userId.value, clock.now().plus(accessTokenExpiry))
 
-    override fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int =
-        refreshTokenRepository.deleteExpiredBefore(before)
+    fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int = refreshTokenRepository.deleteExpiredBefore(before)
 
-    override fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int =
+    fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int =
         revokedTokenRepository.deleteExpiredBefore(before)
 
     private fun generateAccessToken(userId: UserId): String =

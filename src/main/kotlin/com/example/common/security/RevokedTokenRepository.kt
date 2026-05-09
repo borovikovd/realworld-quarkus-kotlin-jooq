@@ -6,23 +6,11 @@ import org.jooq.DSLContext
 import java.time.OffsetDateTime
 import java.util.UUID
 
-interface RevokedTokenRepository {
-    fun insert(
-        jti: UUID,
-        userId: Long,
-        expiresAt: OffsetDateTime,
-    )
-
-    fun isRevoked(jti: UUID): Boolean
-
-    fun deleteExpiredBefore(before: OffsetDateTime): Int
-}
-
 @ApplicationScoped
-class JooqRevokedTokenRepository(
+class RevokedTokenRepository(
     private val dsl: DSLContext,
-) : RevokedTokenRepository {
-    override fun insert(
+) {
+    fun insert(
         jti: UUID,
         userId: Long,
         expiresAt: OffsetDateTime,
@@ -37,7 +25,7 @@ class JooqRevokedTokenRepository(
             .execute()
     }
 
-    override fun isRevoked(jti: UUID): Boolean =
+    fun isRevoked(jti: UUID): Boolean =
         dsl.fetchExists(
             dsl
                 .selectOne()
@@ -46,6 +34,6 @@ class JooqRevokedTokenRepository(
                 .and(REVOKED_TOKEN.EXPIRES_AT.gt(OffsetDateTime.now())),
         )
 
-    override fun deleteExpiredBefore(before: OffsetDateTime): Int =
+    fun deleteExpiredBefore(before: OffsetDateTime): Int =
         dsl.deleteFrom(REVOKED_TOKEN).where(REVOKED_TOKEN.EXPIRES_AT.lt(before)).execute()
 }

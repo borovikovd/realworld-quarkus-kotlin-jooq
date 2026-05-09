@@ -7,22 +7,13 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
 
-interface PasswordHashing {
-    fun hash(raw: String): PasswordHash
-
-    fun verify(
-        hash: PasswordHash,
-        raw: String,
-    ): Boolean
-}
-
 @ApplicationScoped
-class Argon2PasswordHashing : PasswordHashing {
+class PasswordHashing {
     private val secureRandom = SecureRandom()
     private val base64Encoder = Base64.getEncoder().withoutPadding()
     private val base64Decoder = Base64.getDecoder()
 
-    override fun hash(raw: String): PasswordHash {
+    fun hash(raw: String): PasswordHash {
         val salt = ByteArray(SALT_LENGTH)
         secureRandom.nextBytes(salt)
         val hash = generateHash(raw, salt, ITERATIONS, MEMORY_KB, PARALLELISM)
@@ -31,7 +22,7 @@ class Argon2PasswordHashing : PasswordHashing {
         return PasswordHash("\$argon2id\$v=19\$m=$MEMORY_KB,t=$ITERATIONS,p=$PARALLELISM\$$encodedSalt\$$encodedHash")
     }
 
-    override fun verify(
+    fun verify(
         hash: PasswordHash,
         raw: String,
     ): Boolean {

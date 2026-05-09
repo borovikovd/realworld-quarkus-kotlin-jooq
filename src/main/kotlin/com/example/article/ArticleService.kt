@@ -4,7 +4,6 @@ import com.example.common.security.CurrentUser
 import com.example.common.time.Clock
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
-import io.micrometer.core.annotation.Counted
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -15,7 +14,6 @@ class ArticleService(
     private val currentUser: CurrentUser,
     private val clock: Clock,
 ) {
-    @Counted("article.creation.count")
     @Transactional
     fun create(
         title: String,

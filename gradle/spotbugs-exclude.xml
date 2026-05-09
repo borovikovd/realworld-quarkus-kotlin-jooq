@@ -31,7 +31,7 @@
     <!-- Keyset unwrap in init block throws on bad config at startup — intentional fail-fast behaviour.
          No finalizer on this class; the finalizer-attack vector does not apply. -->
     <Match>
-        <Class name="com.example.common.security.TinkCryptoService"/>
+        <Class name="com.example.common.security.CryptoService"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
 </FindBugsFilter>

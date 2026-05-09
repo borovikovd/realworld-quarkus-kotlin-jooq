@@ -18,34 +18,14 @@ import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.Locale
 
-interface CryptoService {
-    fun hmacEmail(email: String): String
-
-    fun hmacUsername(username: String): String
-
-    fun hmacRefreshToken(token: String): String
-
-    fun encryptField(
-        userId: Long,
-        field: String,
-        plaintext: String,
-    ): ByteArray
-
-    fun decryptField(
-        userId: Long,
-        field: String,
-        ciphertext: ByteArray,
-    ): String
-}
-
 @ApplicationScoped
-class TinkCryptoService(
+class CryptoService(
     @param:ConfigProperty(name = "quarkus.vault.url") private val vaultUrl: String,
     @param:ConfigProperty(name = "quarkus.vault.authentication.client-token") private val vaultToken: String,
     @param:ConfigProperty(name = "app.tink.aead.keyset") private val wrappedAead: String,
     @param:ConfigProperty(name = "app.tink.mac.keyset") private val wrappedMac: String,
     @param:ConfigProperty(name = "app.tink.token.mac.keyset") private val wrappedTokenMac: String,
-) : CryptoService {
+) {
     private val aead: Aead
     private val mac: Mac
     private val tokenMac: Mac
@@ -75,19 +55,19 @@ class TinkCryptoService(
         tokenMac = unwrapKeyset(transit, wrappedTokenMac).getPrimitive(config, Mac::class.java)
     }
 
-    override fun hmacEmail(email: String): String = macTag(mac, email.trim().lowercase(Locale.ROOT))
+    fun hmacEmail(email: String): String = macTag(mac, email.trim().lowercase(Locale.ROOT))
 
-    override fun hmacUsername(username: String): String = macTag(mac, username.trim().lowercase(Locale.ROOT))
+    fun hmacUsername(username: String): String = macTag(mac, username.trim().lowercase(Locale.ROOT))
 
-    override fun hmacRefreshToken(token: String): String = macTag(tokenMac, token)
+    fun hmacRefreshToken(token: String): String = macTag(tokenMac, token)
 
-    override fun encryptField(
+    fun encryptField(
         userId: Long,
         field: String,
         plaintext: String,
     ): ByteArray = aead.encrypt(plaintext.toByteArray(Charsets.UTF_8), fieldAd(userId, field))
 
-    override fun decryptField(
+    fun decryptField(
         userId: Long,
         field: String,
         ciphertext: ByteArray,

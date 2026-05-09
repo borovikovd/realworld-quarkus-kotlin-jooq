@@ -18,7 +18,7 @@ import kotlin.test.assertNotEquals
 
 /**
  * Tests Tink's multi-key keyset rotation contract directly.
- * TinkCryptoService wraps these primitives; rotation behavior is Tink's responsibility.
+ * CryptoService wraps these primitives; rotation behavior is Tink's responsibility.
  */
 class TinkKeysetRotationTest {
     companion object {

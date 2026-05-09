@@ -9,8 +9,6 @@ import com.example.common.web.NotFoundException
 import com.example.common.web.UnauthorizedException
 import com.example.common.web.Validation
 import com.example.common.web.ValidationException
-import io.micrometer.core.annotation.Counted
-import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -24,8 +22,6 @@ class UserService(
     private val clock: Clock,
     private val currentUser: CurrentUser,
 ) {
-    @Timed("user.registration")
-    @Counted("user.registration.count")
     @Transactional
     fun register(
         email: String,
@@ -65,7 +61,6 @@ class UserService(
         )
     }
 
-    @Timed("user.login")
     @Transactional
     fun login(
         email: String,
