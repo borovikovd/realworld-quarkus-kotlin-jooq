@@ -25,12 +25,14 @@ class CommentResource(
     @RolesAllowed("user")
     @ResponseStatus(201)
     @APIResponse(responseCode = "201", description = "Created")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun createArticleComment(
         @PathParam("slug") slug: String,
         @Valid body: NewCommentRequest,
     ): CommentEnvelope = CommentEnvelope(commentService.add(slug, body.comment.body))
 
     @GET
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun getArticleComments(
         @PathParam("slug") slug: String,
     ): CommentListEnvelope = CommentListEnvelope(commentService.listByArticle(slug))
@@ -39,6 +41,7 @@ class CommentResource(
     @Path("/{id}")
     @RolesAllowed("user")
     @ResponseStatus(204)
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun deleteArticleComment(
         @PathParam("slug") slug: String,
         @PathParam("id") id: Int,

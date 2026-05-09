@@ -11,6 +11,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 
 @ApplicationScoped
 @Path("/profiles/{username}")
@@ -20,6 +21,7 @@ class ProfileResource(
     private val currentUser: CurrentUser,
 ) {
     @GET
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun getProfileByUsername(
         @PathParam("username") username: String,
     ): ProfileEnvelope = ProfileEnvelope(requireProfile(username, currentUser.id))
@@ -27,6 +29,7 @@ class ProfileResource(
     @POST
     @Path("/follow")
     @RolesAllowed("user")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun followUserByUsername(
         @PathParam("username") username: String,
     ): ProfileEnvelope {
@@ -37,6 +40,7 @@ class ProfileResource(
     @DELETE
     @Path("/follow")
     @RolesAllowed("user")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun unfollowUserByUsername(
         @PathParam("username") username: String,
     ): ProfileEnvelope {

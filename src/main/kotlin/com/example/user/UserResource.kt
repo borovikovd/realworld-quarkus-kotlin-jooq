@@ -28,6 +28,7 @@ class UserResource(
     @Path("/users")
     @ResponseStatus(201)
     @APIResponse(responseCode = "201", description = "Created")
+    @APIResponse(responseCode = "409", description = "Conflict")
     fun createUser(
         @Valid body: NewUserRequest,
     ): UserEnvelope {

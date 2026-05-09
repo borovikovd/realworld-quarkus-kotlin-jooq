@@ -69,6 +69,7 @@ class ArticleResource(
 
     @GET
     @Path("/{slug}")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun getArticle(
         @PathParam("slug") slug: String,
     ): ArticleEnvelope {
@@ -79,6 +80,7 @@ class ArticleResource(
     @PUT
     @Path("/{slug}")
     @RolesAllowed("user")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun updateArticle(
         @PathParam("slug") slug: String,
         @Valid body: UpdateArticleRequest,
@@ -91,6 +93,7 @@ class ArticleResource(
     @Path("/{slug}")
     @RolesAllowed("user")
     @ResponseStatus(204)
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun deleteArticle(
         @PathParam("slug") slug: String,
     ) {
@@ -100,6 +103,7 @@ class ArticleResource(
     @POST
     @Path("/{slug}/favorite")
     @RolesAllowed("user")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun createArticleFavorite(
         @PathParam("slug") slug: String,
     ): ArticleEnvelope = ArticleEnvelope(articleService.favorite(slug))
@@ -107,6 +111,7 @@ class ArticleResource(
     @DELETE
     @Path("/{slug}/favorite")
     @RolesAllowed("user")
+    @APIResponse(responseCode = "404", description = "Not Found")
     fun deleteArticleFavorite(
         @PathParam("slug") slug: String,
     ): ArticleEnvelope = ArticleEnvelope(articleService.unfavorite(slug))
