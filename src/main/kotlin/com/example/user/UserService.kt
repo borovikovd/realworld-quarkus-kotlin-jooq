@@ -36,8 +36,8 @@ class UserService(
         v.throwIfInvalid()
 
         val conflicts = mutableMapOf<String, List<String>>()
-        if (userRepository.existsByEmail(email)) conflicts["email"] = listOf("is already taken")
-        if (userRepository.existsByUsername(username)) conflicts["username"] = listOf("is already taken")
+        if (userRepository.existsByEmail(email)) conflicts["email"] = listOf("has already been taken")
+        if (userRepository.existsByUsername(username)) conflicts["username"] = listOf("has already been taken")
         if (conflicts.isNotEmpty()) throw ConflictException(conflicts)
 
         val userId = userRepository.nextId()
@@ -84,7 +84,7 @@ class UserService(
 
         if (!verified || found == null) {
             logger.info("Login failed: invalid credentials")
-            throw UnauthorizedException("Invalid email or password")
+            throw ValidationException(mapOf("credentials" to listOf("invalid")))
         }
 
         val tokens = tokenIssuer.issueTokens(found.id)
@@ -95,7 +95,7 @@ class UserService(
         userId: UserId,
         rawToken: String,
     ): AuthenticatedUser {
-        val user = userRepository.findById(userId) ?: throw NotFoundException("User not found")
+        val user = userRepository.findById(userId) ?: throw NotFoundException("user", "User not found")
         return toAuthenticatedUser(user, rawToken, "")
     }
 
@@ -115,10 +115,10 @@ class UserService(
             "must be at least $MIN_PASSWORD_LENGTH characters"
         }
         if (email != null && email != user.email) {
-            v.check("email", !userRepository.existsByEmail(email)) { "is already taken" }
+            v.check("email", !userRepository.existsByEmail(email)) { "has already been taken" }
         }
         if (username != null && username != user.username) {
-            v.check("username", !userRepository.existsByUsername(username)) { "is already taken" }
+            v.check("username", !userRepository.existsByUsername(username)) { "has already been taken" }
         }
         v.throwIfInvalid()
 
@@ -128,8 +128,8 @@ class UserService(
                 email = email ?: user.email,
                 username = username ?: user.username,
                 passwordHash = if (password != null) passwordHashing.hash(password) else user.passwordHash,
-                bio = bio ?: user.bio,
-                image = image ?: user.image,
+                bio = if (bio != null) bio.ifBlank { null } else user.bio,
+                image = if (image != null) image.ifBlank { null } else user.image,
                 updatedAt = now,
             )
 
@@ -167,7 +167,7 @@ class UserService(
         }
 
         val tokens = tokenIssuer.issueTokens(stored.userId)
-        val user = userRepository.findById(stored.userId) ?: throw NotFoundException("User not found")
+        val user = userRepository.findById(stored.userId) ?: throw NotFoundException("user", "User not found")
         return toAuthenticatedUser(user, tokens.accessToken, tokens.refreshToken)
     }
 
@@ -186,7 +186,7 @@ class UserService(
         val followerId = currentUser.require()
         val followeeId =
             userRepository.findUserIdByUsername(username)
-                ?: throw NotFoundException("User not found")
+                ?: throw NotFoundException("profile", "User not found")
         if (followeeId == followerId) {
             throw ValidationException(mapOf("username" to listOf("cannot follow yourself")))
         }
@@ -198,7 +198,7 @@ class UserService(
         val followerId = currentUser.require()
         val followeeId =
             userRepository.findUserIdByUsername(username)
-                ?: throw NotFoundException("User not found")
+                ?: throw NotFoundException("profile", "User not found")
         userRepository.unfollow(followerId, followeeId)
     }
 
@@ -216,8 +216,8 @@ class UserService(
     ) = AuthenticatedUser(
         email = user.email,
         username = user.username,
-        bio = user.bio.orEmpty(),
-        image = user.image.orEmpty(),
+        bio = user.bio,
+        image = user.image,
         token = accessToken,
         refreshToken = refreshToken,
     )

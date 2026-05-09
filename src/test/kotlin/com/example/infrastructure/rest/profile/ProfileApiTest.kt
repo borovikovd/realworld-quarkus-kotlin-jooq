@@ -29,7 +29,7 @@ class ProfileApiTest : BaseApiTest() {
             .get("/api/profiles/nobody-here")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Profile not found"))
+            .body("errors.profile[0]", equalTo("not found"))
     }
 
     @Test
@@ -149,6 +149,6 @@ class ProfileApiTest : BaseApiTest() {
             .post("/api/profiles/nobody-here/follow")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("User not found"))
+            .body("errors.profile[0]", equalTo("not found"))
     }
 }

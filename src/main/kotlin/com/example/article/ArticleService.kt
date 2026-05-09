@@ -50,9 +50,10 @@ class ArticleService(
         title: String?,
         description: String?,
         body: String?,
+        tagList: List<String>? = null,
     ): ArticleDto {
         val userId = currentUser.require()
-        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("Article not found")
+        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
 
         if (userId != article.authorId) throw ForbiddenException("You can only update your own articles")
 
@@ -72,6 +73,7 @@ class ArticleService(
                 title = title ?: article.title,
                 description = description ?: article.description,
                 body = body ?: article.body,
+                tags = tagList?.toSet() ?: article.tags,
                 updatedAt = clock.now(),
             )
 
@@ -84,7 +86,7 @@ class ArticleService(
     @Transactional
     fun delete(slug: String) {
         val userId = currentUser.require()
-        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("Article not found")
+        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
         if (userId != article.authorId) throw ForbiddenException("You can only delete your own articles")
         articleRepository.deleteById(article.id)
         logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
@@ -93,7 +95,7 @@ class ArticleService(
     @Transactional
     fun favorite(slug: String): ArticleDto {
         val userId = currentUser.require()
-        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("Article not found")
+        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
         articleRepository.favorite(article.id, userId)
         return articleRepository.findDtoBySlug(slug, userId)
             ?: error("Article not found after favorite: slug=$slug")
@@ -102,7 +104,7 @@ class ArticleService(
     @Transactional
     fun unfavorite(slug: String): ArticleDto {
         val userId = currentUser.require()
-        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("Article not found")
+        val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
         articleRepository.unfavorite(article.id, userId)
         return articleRepository.findDtoBySlug(slug, userId)
             ?: error("Article not found after unfavorite: slug=$slug")

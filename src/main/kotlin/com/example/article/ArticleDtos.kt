@@ -19,12 +19,37 @@ data class ArticleDto(
     val author: ProfileDto,
 )
 
+data class ArticleListItemDto(
+    val slug: String,
+    val title: String,
+    val description: String,
+    val tagList: List<String>,
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime,
+    val favorited: Boolean,
+    val favoritesCount: Int,
+    val author: ProfileDto,
+)
+
+fun ArticleDto.toListItem() =
+    ArticleListItemDto(
+        slug = slug,
+        title = title,
+        description = description,
+        tagList = tagList,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        favorited = favorited,
+        favoritesCount = favoritesCount,
+        author = author,
+    )
+
 data class ArticleEnvelope(
     val article: ArticleDto,
 )
 
 data class ArticleListEnvelope(
-    val articles: List<ArticleDto>,
+    val articles: List<ArticleListItemDto>,
     val articlesCount: Int,
 )
 
@@ -36,20 +61,8 @@ data class NewArticle(
     @field:NotBlank @field:Size(max = 256) val title: String,
     @field:NotBlank @field:Size(max = 1024) val description: String,
     @field:NotBlank val body: String,
-    val tagList: List<
-        @NotBlank
-        @Size(max = 64)
-        String,
-    > = emptyList(),
-) {
-    init {
-        require(tagList.size <= MAX_TAGS) { "Too many tags" }
-    }
-
-    companion object {
-        private const val MAX_TAGS = 10
-    }
-}
+    val tagList: List<String> = emptyList(),
+)
 
 data class UpdateArticleRequest(
     @field:Valid val article: ArticlePatch,
@@ -59,4 +72,5 @@ data class ArticlePatch(
     @field:Size(min = 1, max = 256) val title: String?,
     @field:Size(min = 1, max = 1024) val description: String?,
     @field:Size(min = 1) val body: String?,
+    val tagList: List<String>? = null,
 )

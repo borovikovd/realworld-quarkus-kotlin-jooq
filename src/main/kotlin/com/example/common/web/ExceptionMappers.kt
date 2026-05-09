@@ -10,11 +10,29 @@ import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
 @Provider
+class SecurityUnauthorizedExceptionMapper : ExceptionMapper<io.quarkus.security.UnauthorizedException> {
+    override fun toResponse(exception: io.quarkus.security.UnauthorizedException): Response =
+        Response
+            .status(Response.Status.UNAUTHORIZED)
+            .entity(mapOf("errors" to mapOf("token" to listOf("is missing"))))
+            .build()
+}
+
+@Provider
+class SecurityForbiddenExceptionMapper : ExceptionMapper<io.quarkus.security.ForbiddenException> {
+    override fun toResponse(exception: io.quarkus.security.ForbiddenException): Response =
+        Response
+            .status(Response.Status.FORBIDDEN)
+            .entity(mapOf("errors" to mapOf("token" to listOf("is missing"))))
+            .build()
+}
+
+@Provider
 class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
     override fun toResponse(exception: NotFoundException): Response =
         Response
             .status(Response.Status.NOT_FOUND)
-            .entity(mapOf("errors" to mapOf("body" to listOf(exception.message))))
+            .entity(mapOf("errors" to mapOf(exception.field to listOf("not found"))))
             .build()
 }
 
@@ -96,7 +114,7 @@ class DataAccessExceptionMapper : ExceptionMapper<DataAccessException> {
         return if (field != null) {
             Response
                 .status(HTTP_UNPROCESSABLE_ENTITY)
-                .entity(mapOf("errors" to mapOf(field to listOf("is already taken"))))
+                .entity(mapOf("errors" to mapOf(field to listOf("has already been taken"))))
                 .build()
         } else {
             logger.error("Unhandled database exception", exception)

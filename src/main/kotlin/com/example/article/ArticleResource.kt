@@ -45,7 +45,7 @@ class ArticleResource(
         val filter = ArticleFilter(tag, author, favorited)
         val page = Page(limit, offset)
         return ArticleListEnvelope(
-            articles = articleService.list(filter, page),
+            articles = articleService.list(filter, page).map { it.toListItem() },
             articlesCount = articleService.count(filter),
         )
     }
@@ -59,7 +59,7 @@ class ArticleResource(
     ): ArticleListEnvelope {
         val page = Page(limit, offset)
         return ArticleListEnvelope(
-            articles = articleService.feed(page),
+            articles = articleService.feed(page).map { it.toListItem() },
             articlesCount = articleService.feedCount(),
         )
     }
@@ -68,7 +68,10 @@ class ArticleResource(
     @Path("/{slug}")
     fun getArticle(
         @PathParam("slug") slug: String,
-    ): ArticleEnvelope = ArticleEnvelope(articleService.getBySlug(slug) ?: throw NotFoundException("Article not found"))
+    ): ArticleEnvelope {
+        val dto = articleService.getBySlug(slug) ?: throw NotFoundException("article", "Article not found")
+        return ArticleEnvelope(dto)
+    }
 
     @PUT
     @Path("/{slug}")
@@ -78,7 +81,7 @@ class ArticleResource(
         @Valid body: UpdateArticleRequest,
     ): ArticleEnvelope {
         val p = body.article
-        return ArticleEnvelope(articleService.update(slug, p.title, p.description, p.body))
+        return ArticleEnvelope(articleService.update(slug, p.title, p.description, p.body, p.tagList))
     }
 
     @DELETE

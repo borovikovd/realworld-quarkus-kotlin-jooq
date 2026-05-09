@@ -44,7 +44,7 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/users")
             .then()
             .statusCode(409)
-            .body("errors.email[0]", equalTo("is already taken"))
+            .body("errors.email[0]", equalTo("has already been taken"))
     }
 
     @Test
@@ -59,7 +59,7 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/users")
             .then()
             .statusCode(409)
-            .body("errors.username[0]", equalTo("is already taken"))
+            .body("errors.username[0]", equalTo("has already been taken"))
     }
 
     @Test
@@ -100,8 +100,8 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users/login")
             .then()
-            .statusCode(401)
-            .body("errors.body[0]", equalTo("Invalid email or password"))
+            .statusCode(422)
+            .body("errors.credentials[0]", equalTo("invalid"))
     }
 
     @Test
@@ -114,8 +114,8 @@ class UserAuthApiTest : BaseApiTest() {
             .`when`()
             .post("/api/users/login")
             .then()
-            .statusCode(401)
-            .body("errors.body[0]", equalTo("Invalid email or password"))
+            .statusCode(422)
+            .body("errors.credentials[0]", equalTo("invalid"))
     }
 
     @Test
@@ -162,7 +162,7 @@ class UserAuthApiTest : BaseApiTest() {
             .put("/api/user")
             .then()
             .statusCode(422)
-            .body("errors.email[0]", equalTo("is already taken"))
+            .body("errors.email[0]", equalTo("has already been taken"))
     }
 
     @Test
@@ -176,7 +176,7 @@ class UserAuthApiTest : BaseApiTest() {
             .put("/api/user")
             .then()
             .statusCode(422)
-            .body("errors.username[0]", equalTo("is already taken"))
+            .body("errors.username[0]", equalTo("has already been taken"))
     }
 
     @Test
@@ -250,8 +250,8 @@ class UserAuthApiTest : BaseApiTest() {
             .post("/api/users")
             .then()
             .statusCode(409)
-            .body("errors.email[0]", equalTo("is already taken"))
-            .body("errors.username[0]", equalTo("is already taken"))
+            .body("errors.email[0]", equalTo("has already been taken"))
+            .body("errors.username[0]", equalTo("has already been taken"))
     }
 
     @Test

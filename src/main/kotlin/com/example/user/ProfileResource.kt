@@ -49,5 +49,5 @@ class ProfileResource(
         viewerId: UserId?,
     ): ProfileDto =
         userService.getProfileByUsername(username, viewerId)
-            ?: throw NotFoundException("Profile not found")
+            ?: throw NotFoundException("profile", "Profile not found")
 }

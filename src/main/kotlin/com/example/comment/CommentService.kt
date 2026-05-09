@@ -22,7 +22,7 @@ class CommentService(
         val userId = currentUser.require()
         val articleId =
             articleRepository.findIdBySlug(articleSlug)
-                ?: throw NotFoundException("Article not found")
+                ?: throw NotFoundException("article", "Article not found")
 
         val commentId = commentRepository.nextId()
         commentRepository.insert(
@@ -46,13 +46,13 @@ class CommentService(
         val userId = currentUser.require()
         val articleId =
             articleRepository.findIdBySlug(articleSlug)
-                ?: throw NotFoundException("Article not found")
+                ?: throw NotFoundException("article", "Article not found")
 
         val comment =
             commentRepository.findById(commentId)
-                ?: throw NotFoundException("Comment not found")
+                ?: throw NotFoundException("comment", "Comment not found")
 
-        if (comment.articleId != articleId) throw NotFoundException("Comment not found for this article")
+        if (comment.articleId != articleId) throw NotFoundException("comment", "Comment not found")
         if (comment.authorId != userId) throw ForbiddenException("You can only delete your own comments")
 
         commentRepository.deleteById(commentId)

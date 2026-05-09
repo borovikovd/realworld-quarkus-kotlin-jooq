@@ -59,7 +59,7 @@ class UserResource(
     @RolesAllowed("user")
     fun getCurrentUser(): UserEnvelope {
         val userId = currentUser.require()
-        val rawToken = currentUser.rawToken ?: throw NotFoundException("Token not present")
+        val rawToken = currentUser.rawToken ?: throw NotFoundException("token", "Token not present")
         return UserEnvelope(userService.getCurrentUser(userId, rawToken))
     }
 

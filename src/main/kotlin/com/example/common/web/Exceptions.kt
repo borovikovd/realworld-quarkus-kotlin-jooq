@@ -1,6 +1,7 @@
 package com.example.common.web
 
 class NotFoundException(
+    val field: String,
     message: String,
 ) : RuntimeException(message)
 

@@ -57,7 +57,7 @@ class ArticleApiTest : BaseApiTest() {
             .get("/api/articles/nonexistent-slug")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -133,7 +133,7 @@ class ArticleApiTest : BaseApiTest() {
             .put("/api/articles/nonexistent-slug")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -188,7 +188,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/nonexistent-slug")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -404,7 +404,7 @@ class ArticleApiTest : BaseApiTest() {
             .post("/api/articles/nonexistent-slug/favorite")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -416,7 +416,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/nonexistent-slug/favorite")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -429,7 +429,7 @@ class ArticleApiTest : BaseApiTest() {
             .post("/api/articles/nonexistent-slug/comments")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Article not found"))
+            .body("errors.article[0]", equalTo("not found"))
     }
 
     @Test
@@ -442,7 +442,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article.slug}/comments/999999")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Comment not found"))
+            .body("errors.comment[0]", equalTo("not found"))
     }
 
     @Test
@@ -457,7 +457,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article2.slug}/comments/${comment.id}")
             .then()
             .statusCode(404)
-            .body("errors.body[0]", equalTo("Comment not found for this article"))
+            .body("errors.comment[0]", equalTo("not found"))
     }
 
     @Test
@@ -470,9 +470,9 @@ class ArticleApiTest : BaseApiTest() {
             .post("/api/articles")
             .then()
             .statusCode(422)
-            .body("errors.title[0]", equalTo("must not be blank"))
-            .body("errors.description[0]", equalTo("must not be blank"))
-            .body("errors.body[0]", equalTo("must not be blank"))
+            .body("errors.title[0]", equalTo("can't be blank"))
+            .body("errors.description[0]", equalTo("can't be blank"))
+            .body("errors.body[0]", equalTo("can't be blank"))
     }
 
     @Test
@@ -501,7 +501,7 @@ class ArticleApiTest : BaseApiTest() {
             .post("/api/articles/${article.slug}/comments")
             .then()
             .statusCode(422)
-            .body("errors.body[0]", equalTo("must not be blank"))
+            .body("errors.body[0]", equalTo("can't be blank"))
     }
 
     @Test
