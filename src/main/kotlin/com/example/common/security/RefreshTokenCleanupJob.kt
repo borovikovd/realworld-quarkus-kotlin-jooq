@@ -1,25 +1,29 @@
 package com.example.common.security
 
+import com.example.common.time.Clock
 import io.quarkus.scheduler.Scheduled
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
 class RefreshTokenCleanupJob(
-    private val maintenance: MaintenanceService,
+    private val tokenIssuer: TokenIssuer,
+    private val clock: Clock,
 ) {
     @Scheduled(every = "24h", delayed = "1h")
     fun deleteExpired() {
-        val deletedTokens = runStep("refresh tokens") { maintenance.cleanupExpiredRefreshTokens() }
-        val deletedKeys = runStep("idempotency keys") { maintenance.cleanupExpiredIdempotencyKeys() }
-        val deletedRevoked = runStep("revoked tokens") { maintenance.cleanupExpiredRevokedTokens() }
-        log.info(
-            "Maintenance: deleted {} refresh tokens, {} idempotency keys, {} revoked tokens",
-            deletedTokens,
-            deletedKeys,
-            deletedRevoked,
-        )
+        val deletedTokens = runStep("refresh tokens") { purgeRefreshTokens() }
+        val deletedRevoked = runStep("revoked tokens") { purgeRevokedTokens() }
+        log.info("Maintenance: deleted {} refresh tokens, {} revoked tokens", deletedTokens, deletedRevoked)
     }
+
+    @Transactional
+    fun purgeRefreshTokens(): Int = tokenIssuer.purgeExpiredRefreshTokens(clock.now().minus(1, ChronoUnit.DAYS))
+
+    @Transactional
+    fun purgeRevokedTokens(): Int = tokenIssuer.purgeExpiredAccessTokenRevocations(clock.now())
 
     private fun runStep(
         name: String,

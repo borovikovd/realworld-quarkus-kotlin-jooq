@@ -69,9 +69,6 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-opentelemetry")
 
-    // Rate limiting
-    implementation("io.quarkus:quarkus-caffeine")
-
     // Scheduled jobs (refresh token cleanup)
     implementation("io.quarkus:quarkus-scheduler")
 
@@ -94,7 +91,6 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.5")
     testImplementation("org.testcontainers:testcontainers:2.0.5")
-    testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
 
