@@ -1,4 +1,4 @@
-package com.example.infrastructure.rest.article
+package com.example.article
 
 import com.example.testsupport.ApiTestFixtures
 import com.example.testsupport.BaseApiTest

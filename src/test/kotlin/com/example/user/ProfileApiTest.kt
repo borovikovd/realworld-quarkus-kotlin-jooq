@@ -1,4 +1,4 @@
-package com.example.infrastructure.rest.profile
+package com.example.user
 
 import com.example.testsupport.ApiTestFixtures
 import com.example.testsupport.BaseApiTest
