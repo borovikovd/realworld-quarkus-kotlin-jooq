@@ -1,5 +1,6 @@
 package com.example.user
 
+import com.example.common.security.CurrentUser
 import com.example.common.security.PasswordHash
 import com.example.common.security.PasswordHashing
 import com.example.common.security.TokenIssuer
@@ -7,6 +8,7 @@ import com.example.common.time.Clock
 import com.example.common.web.NotFoundException
 import com.example.common.web.UnauthorizedException
 import com.example.common.web.Validation
+import com.example.common.web.ValidationException
 import io.micrometer.core.annotation.Counted
 import io.micrometer.core.annotation.Timed
 import jakarta.enterprise.context.ApplicationScoped
@@ -20,6 +22,7 @@ class UserService(
     private val passwordHashing: PasswordHashing,
     private val tokenIssuer: TokenIssuer,
     private val clock: Clock,
+    private val currentUser: CurrentUser,
 ) {
     @Timed("user.registration")
     @Counted("user.registration.count")
@@ -178,6 +181,32 @@ class UserService(
         tokenIssuer.revokeRefreshToken(refreshToken)
         if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
+
+    @Transactional
+    fun followUser(username: String) {
+        val followerId = currentUser.require()
+        val followeeId =
+            userRepository.findUserIdByUsername(username)
+                ?: throw NotFoundException("User not found")
+        if (followeeId == followerId) {
+            throw ValidationException(mapOf("username" to listOf("cannot follow yourself")))
+        }
+        userRepository.follow(followerId, followeeId)
+    }
+
+    @Transactional
+    fun unfollowUser(username: String) {
+        val followerId = currentUser.require()
+        val followeeId =
+            userRepository.findUserIdByUsername(username)
+                ?: throw NotFoundException("User not found")
+        userRepository.unfollow(followerId, followeeId)
+    }
+
+    fun getProfileByUsername(
+        username: String,
+        viewerId: UserId?,
+    ): ProfileDto? = userRepository.findProfile(username, viewerId)
 
     private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
 

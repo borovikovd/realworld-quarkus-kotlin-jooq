@@ -16,7 +16,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/profiles/{username}")
 @Produces(MediaType.APPLICATION_JSON)
 class ProfileResource(
-    private val profileService: ProfileService,
+    private val userService: UserService,
     private val currentUser: CurrentUser,
 ) {
     @GET
@@ -30,7 +30,7 @@ class ProfileResource(
     fun followUserByUsername(
         @PathParam("username") username: String,
     ): ProfileEnvelope {
-        profileService.followUser(username)
+        userService.followUser(username)
         return ProfileEnvelope(requireProfile(username, currentUser.require()))
     }
 
@@ -40,7 +40,7 @@ class ProfileResource(
     fun unfollowUserByUsername(
         @PathParam("username") username: String,
     ): ProfileEnvelope {
-        profileService.unfollowUser(username)
+        userService.unfollowUser(username)
         return ProfileEnvelope(requireProfile(username, currentUser.require()))
     }
 
@@ -48,6 +48,6 @@ class ProfileResource(
         username: String,
         viewerId: UserId?,
     ): ProfileDto =
-        profileService.getProfileByUsername(username, viewerId)
+        userService.getProfileByUsername(username, viewerId)
             ?: throw NotFoundException("Profile not found")
 }
