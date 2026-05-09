@@ -17,10 +17,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: ZAP API scan (spec-only)
+      - name: Set up JDK 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Generate OpenAPI spec
+        run: ./gradlew quarkusBuild -x test --no-daemon
+
+      - name: ZAP API scan
         uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
         with:
-          target: src/main/resources/openapi.yaml
+          target: build/openapi/openapi.yaml
           rules_file_name: .zap/rules.tsv
           fail_action: false
           cmd_options: "-I"
