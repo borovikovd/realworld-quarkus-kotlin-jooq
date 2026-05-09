@@ -48,6 +48,15 @@
         <cpe>cpe:/a:cure53:dompurify</cpe>
     </suppress>
 
+    <!-- CVE-2026-42198: SCRAM-SHA-256 PBKDF2 iteration DoS in postgresql JDBC.
+         Quarkus BOM 3.35.x ships 42.7.10; this app trusts its own PostgreSQL instance.
+         The attack requires a malicious/compromised server, not a network attacker. -->
+    <suppress>
+        <notes>Trusted server; SCRAM DoS vector not applicable. Re-evaluate if BOM upgrades the driver.</notes>
+        <gav regex="true">org\.postgresql:postgresql:.*</gav>
+        <vulnerabilityName>CVE-2026-42198</vulnerabilityName>
+    </suppress>
+
     <!-- CVE-2026-33186: grpc locked to 1.79.0 by Quarkus BOM 3.35.x (no upstream fix yet).
          gRPC is a transitive dep of quarkus-opentelemetry for OTLP export; this app exposes no gRPC server. -->
     <suppress>
