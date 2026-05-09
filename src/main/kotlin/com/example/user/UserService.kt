@@ -106,16 +106,14 @@ class UserService(
         userId: UserId,
         email: Patch<String>,
         username: Patch<String>,
-        password: String?,
+        password: Patch<String>,
         bio: Patch<String>,
         image: Patch<String>,
     ): AuthenticatedUser {
         val user = userRepository.findById(userId) ?: throw UnauthorizedException("User not found")
 
         val v = Validation()
-        v.check("password", password == null || password.length >= MIN_PASSWORD_LENGTH) {
-            "must be at least $MIN_PASSWORD_LENGTH characters"
-        }
+        val resolvedPassword = resolvePassword(password, v)
         val resolvedEmail = resolveEmail(email, user.email, v)
         val resolvedUsername = resolveUsername(username, user.username, v)
         v.throwIfInvalid()
@@ -125,7 +123,8 @@ class UserService(
             user.copy(
                 email = resolvedEmail,
                 username = resolvedUsername,
-                passwordHash = if (password != null) passwordHashing.hash(password) else user.passwordHash,
+                passwordHash =
+                    if (resolvedPassword != null) passwordHashing.hash(resolvedPassword) else user.passwordHash,
                 bio =
                     when (bio) {
                         is Patch.Absent -> user.bio
@@ -212,6 +211,19 @@ class UserService(
         username: String,
         viewerId: UserId?,
     ): ProfileDto? = userRepository.findProfile(username, viewerId)
+
+    private fun resolvePassword(
+        patch: Patch<String>,
+        v: Validation,
+    ): String? {
+        if (patch is Patch.Absent) return null
+        val value = (patch as Patch.Present).value
+        v.check("password", !value.isNullOrBlank()) { "can't be blank" }
+        v.check("password", value == null || value.length >= MIN_PASSWORD_LENGTH) {
+            "must be at least $MIN_PASSWORD_LENGTH characters"
+        }
+        return value
+    }
 
     private fun resolveEmail(
         patch: Patch<String>,

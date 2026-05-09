@@ -5,6 +5,7 @@ import com.example.common.time.Clock
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
+import com.example.common.web.ValidationException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -77,7 +78,9 @@ class ArticleService(
                 tags =
                     when (tagList) {
                         is Patch.Absent -> article.tags
-                        is Patch.Present -> tagList.value?.toSet() ?: article.tags
+                        is Patch.Present ->
+                            tagList.value?.toSet()
+                                ?: throw ValidationException(mapOf("tagList" to listOf("can't be null")))
                     },
                 updatedAt = clock.now(),
             )

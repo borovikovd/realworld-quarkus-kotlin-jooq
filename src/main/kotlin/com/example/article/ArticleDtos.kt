@@ -72,8 +72,8 @@ data class UpdateArticleRequest(
 )
 
 data class ArticlePatch(
-    @field:Size(min = 1, max = 256) val title: String?,
-    @field:Size(min = 1, max = 1024) val description: String?,
-    @field:Size(min = 1) val body: String?,
+    @field:Size(min = 1, max = 256) val title: String? = null,
+    @field:Size(min = 1, max = 1024) val description: String? = null,
+    @field:Size(min = 1) val body: String? = null,
     @field:JsonDeserialize(using = ListStringPatchDeserializer::class) val tagList: Patch<List<String>> = Patch.Absent,
 )

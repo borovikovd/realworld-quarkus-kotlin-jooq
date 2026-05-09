@@ -28,8 +28,5 @@ class ListStringPatchDeserializer : StdDeserializer<Patch<List<String>>>(Patch::
         ctxt: DeserializationContext,
     ): Patch<List<String>> = Patch.Present(p.readValueAs(object : TypeReference<List<String>>() {}))
 
-    // Absent fields and explicit JSON null both land here; treat both as "no change".
-    // Jackson calls this both for absent fields (when KotlinModule can't apply the Kotlin default
-    // because a custom deserializer is registered) and for explicit JSON null tokens.
-    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Absent
+    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Present(null)
 }

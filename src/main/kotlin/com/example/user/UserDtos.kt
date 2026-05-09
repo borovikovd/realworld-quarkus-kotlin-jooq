@@ -50,7 +50,7 @@ data class UpdateUserRequest(
 data class UpdateUser(
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val email: Patch<String> = Patch.Absent,
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val username: Patch<String> = Patch.Absent,
-    val password: String? = null,
+    @field:JsonDeserialize(using = StringPatchDeserializer::class) val password: Patch<String> = Patch.Absent,
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val bio: Patch<String> = Patch.Absent,
     @field:JsonDeserialize(using = StringPatchDeserializer::class) val image: Patch<String> = Patch.Absent,
 )
