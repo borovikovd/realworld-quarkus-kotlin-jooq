@@ -1,4 +1,4 @@
-package com.example.tag
+package com.example.article
 
 import com.example.article.ArticleService
 import jakarta.enterprise.context.ApplicationScoped
