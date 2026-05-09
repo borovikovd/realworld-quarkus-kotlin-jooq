@@ -1,12 +1,21 @@
-# ![RealWorld Example App](https://raw.githubusercontent.com/realworld-apps/realworld/main/assets/media/realworld.png)
+# ![RealWorld Example App](logo.png)
 
-# Realworld Backend — Quarkus + Kotlin + jOOQ
+> ### Quarkus + Kotlin + jOOQ codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
-> A production-grade REST API implementing the [RealWorld](https://github.com/gothinkster/realworld) spec, built with the kind of engineering rigour you'd expect at a fintech. Hexagonal architecture, field-level encryption, idempotency keys, envelope encryption with Vault + Tink, Argon2id, single-use refresh tokens, ArchUnit-enforced layer boundaries.
 
-### [RealWorld spec](https://github.com/gothinkster/realworld)&nbsp;&nbsp;&nbsp;&nbsp;[API docs (Swagger)](http://localhost:8080/swagger-ui/)
+### [Demo](https://demo.realworld.build/)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
 
----
+
+This codebase was created to demonstrate a fully fledged fullstack application built with **Quarkus** including CRUD operations, authentication, routing, pagination, and more.
+
+We've gone to great lengths to adhere to the **Quarkus** community styleguides & best practices.
+
+For more information on how this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
+
+
+# How it works
+
+A production-grade REST API implementing the RealWorld spec, built with the kind of engineering rigour you'd expect at a fintech. Hexagonal architecture, field-level encryption, idempotency keys, envelope encryption with Vault + Tink, Argon2id, single-use refresh tokens, ArchUnit-enforced layer boundaries.
 
 ## Stack
 
@@ -18,28 +27,6 @@
 | Encryption | Google Tink (AES-256-GCM + HMAC-SHA256), HashiCorp Vault Transit |
 | Observability | Micrometer, OpenTelemetry, structured JSON logging |
 | Quality | ArchUnit, ktlint, detekt, SpotBugs + FindSecBugs, OWASP dependency-check |
-
----
-
-## What makes this interesting
-
-**Hexagonal architecture with compile-time enforcement.** Three-layer hexagonal layout (`domain → application → infrastructure`) enforced by ArchUnit. The build fails if a domain class imports jOOQ, a query service gains `@Transactional`, or a resource bypasses the port layer. Not conventions — tests.
-
-**Field-level encryption with zero hot-path Vault calls.** Personal data (`email`, `username`, `bio`, `image`) is encrypted at rest with AES-256-GCM via Google Tink. Two Tink keysets (one AEAD, two MAC) are wrapped at rest by a Vault Transit KEK and unwrapped exactly twice at startup — never on the request path. Lookup hashes use HMAC-SHA256 with a separate keyset from the token MAC keyset, so each can rotate independently. Associated data `AD = userId ∥ len(field) ∥ field` prevents cross-column ciphertext swap attacks.
-
-**Idempotency keys on all POST endpoints.** Clients send an `Idempotency-Key` header; the server stores the response and replays it on duplicate requests. Keys are scoped per user so one user's key can't replay another's response. Concurrent duplicates get 409 + `Retry-After: 1`. Server errors delete the record so the next retry gets a fresh attempt. 24-hour expiry with a daily cleanup job.
-
-**Single-use refresh tokens with optimistic locking.** Refresh tokens are stored as HMAC tags only (never the raw token). Rotation uses a conditional UPDATE (`WHERE revoked_at IS NULL`) — if two concurrent requests race, only one wins and the other gets 401. Revoke + issue happens in a single `@Transactional` boundary so a mid-flight crash can't lock out the user.
-
-**CQRS-lite command/query split.** Inbound ports are split: `XCommands` for mutations, `XQueries` for reads. Command side enforces invariants through the aggregate; query side bypasses the write model entirely and returns use-case-shaped read models. `@Transactional` is declared only on command methods — enforced by ArchUnit.
-
-**jOOQ with multiset.** No ORM, no lazy loading, no N+1. `multiset()` fetches nested collections (tags, favorite counts, author profiles with follow status) in a single SQL query. Query side returns `*ReadModel` data classes built directly from result sets.
-
-**OpenAPI-first contract.** The spec (`openapi.yaml`) is the source of truth. Quarkus generates API interfaces and DTOs at build time. Resources implement the generated interfaces — breaking spec changes surface as compile errors, not runtime surprises.
-
-**Timing equalization on auth flows.** Login always runs Argon2 verification even for unknown emails (using a pre-computed dummy hash) so response latency doesn't leak account existence. The dummy hash is computed eagerly at startup, not lazily on first request.
-
----
 
 ## Architecture
 
@@ -68,9 +55,26 @@ com.example/
 
 Dependency rule: `infrastructure → application → domain`. Enforced by ArchUnit at build time.
 
----
+## Highlights
 
-## Getting started
+**Hexagonal architecture with compile-time enforcement.** Three-layer hexagonal layout (`domain → application → infrastructure`) enforced by ArchUnit. The build fails if a domain class imports jOOQ, a query service gains `@Transactional`, or a resource bypasses the port layer. Not conventions — tests.
+
+**Field-level encryption with zero hot-path Vault calls.** Personal data (`email`, `username`, `bio`, `image`) is encrypted at rest with AES-256-GCM via Google Tink. Two Tink keysets (one AEAD, two MAC) are wrapped at rest by a Vault Transit KEK and unwrapped exactly twice at startup — never on the request path. Lookup hashes use HMAC-SHA256 with a separate keyset from the token MAC keyset, so each can rotate independently. Associated data `AD = userId ∥ len(field) ∥ field` prevents cross-column ciphertext swap attacks.
+
+**Idempotency keys on all POST endpoints.** Clients send an `Idempotency-Key` header; the server stores the response and replays it on duplicate requests. Keys are scoped per user so one user's key can't replay another's response. Concurrent duplicates get 409 + `Retry-After: 1`. Server errors delete the record so the next retry gets a fresh attempt. 24-hour expiry with a daily cleanup job.
+
+**Single-use refresh tokens with optimistic locking.** Refresh tokens are stored as HMAC tags only (never the raw token). Rotation uses a conditional UPDATE (`WHERE revoked_at IS NULL`) — if two concurrent requests race, only one wins and the other gets 401. Revoke + issue happens in a single `@Transactional` boundary so a mid-flight crash can't lock out the user.
+
+**CQRS-lite command/query split.** Inbound ports are split: `XCommands` for mutations, `XQueries` for reads. Command side enforces invariants through the aggregate; query side bypasses the write model entirely and returns use-case-shaped read models. `@Transactional` is declared only on command methods — enforced by ArchUnit.
+
+**jOOQ with multiset.** No ORM, no lazy loading, no N+1. `multiset()` fetches nested collections (tags, favorite counts, author profiles with follow status) in a single SQL query. Query side returns `*ReadModel` data classes built directly from result sets.
+
+**OpenAPI-first contract.** The spec (`openapi.yaml`) is the source of truth. Quarkus generates API interfaces and DTOs at build time. Resources implement the generated interfaces — breaking spec changes surface as compile errors, not runtime surprises.
+
+**Timing equalization on auth flows.** Login always runs Argon2 verification even for unknown emails (using a pre-computed dummy hash) so response latency doesn't leak account existence. The dummy hash is computed eagerly at startup, not lazily on first request.
+
+
+# Getting started
 
 **Prerequisites:** Java 21, Docker, [Atlas CLI](https://atlasgo.io/getting-started)
 
@@ -98,7 +102,7 @@ Swagger UI: http://localhost:8080/swagger-ui/
 ## Tests
 
 ```bash
-./gradlew build                              # compile + tests + lint + spotbugs
+./gradlew build                                  # compile + tests + lint + spotbugs
 ./gradlew test --tests "com.example.archunit.*"  # architecture tests only
 ```
 
