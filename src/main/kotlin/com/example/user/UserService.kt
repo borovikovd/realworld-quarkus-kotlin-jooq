@@ -1,0 +1,201 @@
+package com.example.user
+
+import com.example.common.security.PasswordHash
+import com.example.common.security.PasswordHashing
+import com.example.common.security.TokenIssuer
+import com.example.common.time.Clock
+import com.example.common.web.NotFoundException
+import com.example.common.web.UnauthorizedException
+import com.example.common.web.Validation
+import io.micrometer.core.annotation.Counted
+import io.micrometer.core.annotation.Timed
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
+import java.util.UUID
+
+@ApplicationScoped
+class UserService(
+    private val userRepository: UserRepository,
+    private val passwordHashing: PasswordHashing,
+    private val tokenIssuer: TokenIssuer,
+    private val clock: Clock,
+) {
+    @Timed("user.registration")
+    @Counted("user.registration.count")
+    @Transactional
+    fun register(
+        email: String,
+        username: String,
+        password: String,
+    ): AuthenticatedUser {
+        val v = Validation()
+        v.check("password", password.length >= MIN_PASSWORD_LENGTH) {
+            "must be at least $MIN_PASSWORD_LENGTH characters"
+        }
+        v.check("email", !userRepository.existsByEmail(email)) { "is already taken" }
+        v.check("username", !userRepository.existsByUsername(username)) { "is already taken" }
+        v.throwIfInvalid()
+
+        val userId = userRepository.nextId()
+        val now = clock.now()
+        val user =
+            User(
+                id = userId,
+                email = email,
+                username = username,
+                passwordHash = passwordHashing.hash(password),
+                createdAt = now,
+                updatedAt = now,
+            )
+        userRepository.insert(user)
+        logger.info("User registered: userId={}, username={}", userId.value, username)
+
+        val tokens = tokenIssuer.issueTokens(userId)
+        return AuthenticatedUser(
+            email = user.email,
+            username = user.username,
+            bio = user.bio.orEmpty(),
+            image = user.image.orEmpty(),
+            token = tokens.accessToken,
+            refreshToken = tokens.refreshToken,
+        )
+    }
+
+    @Timed("user.login")
+    @Transactional
+    fun login(
+        email: String,
+        password: String,
+    ): AuthenticatedUser {
+        val found = userRepository.findByEmail(email)
+
+        // Always run Argon2 verify, even when the email is unknown, so that
+        // login latency does not leak whether an account exists for that email.
+        val verified =
+            if (found != null) {
+                passwordHashing.verify(found.passwordHash, password)
+            } else {
+                passwordHashing.verify(dummyHash, password)
+                false
+            }
+
+        if (!verified || found == null) {
+            logger.info("Login failed: invalid credentials")
+            throw UnauthorizedException("Invalid email or password")
+        }
+
+        val tokens = tokenIssuer.issueTokens(found.id)
+        return toAuthenticatedUser(found, tokens.accessToken, tokens.refreshToken)
+    }
+
+    fun getCurrentUser(
+        userId: UserId,
+        rawToken: String,
+    ): AuthenticatedUser {
+        val user = userRepository.findById(userId) ?: throw NotFoundException("User not found")
+        return toAuthenticatedUser(user, rawToken, "")
+    }
+
+    @Transactional
+    fun updateUser(
+        userId: UserId,
+        email: String?,
+        username: String?,
+        password: String?,
+        bio: String?,
+        image: String?,
+    ): AuthenticatedUser {
+        val user = userRepository.findById(userId) ?: throw UnauthorizedException("User not found")
+
+        val v = Validation()
+        v.check("password", password == null || password.length >= MIN_PASSWORD_LENGTH) {
+            "must be at least $MIN_PASSWORD_LENGTH characters"
+        }
+        if (email != null && email != user.email) {
+            v.check("email", !userRepository.existsByEmail(email)) { "is already taken" }
+        }
+        if (username != null && username != user.username) {
+            v.check("username", !userRepository.existsByUsername(username)) { "is already taken" }
+        }
+        v.throwIfInvalid()
+
+        val now = clock.now()
+        val updated =
+            user.copy(
+                email = email ?: user.email,
+                username = username ?: user.username,
+                passwordHash = if (password != null) passwordHashing.hash(password) else user.passwordHash,
+                bio = bio ?: user.bio,
+                image = image ?: user.image,
+                updatedAt = now,
+            )
+
+        userRepository.update(updated)
+        tokenIssuer.revokeAllRefreshTokens(userId)
+        val tokens = tokenIssuer.issueTokens(userId)
+        return toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
+    }
+
+    @Transactional
+    fun eraseUser(
+        userId: UserId,
+        jti: UUID?,
+    ) {
+        tokenIssuer.revokeAllRefreshTokens(userId)
+        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
+        userRepository.erase(userId)
+        logger.info("User erased: userId={}", userId.value)
+    }
+
+    @Transactional
+    fun refresh(refreshToken: String): AuthenticatedUser {
+        val stored =
+            tokenIssuer.findRefreshToken(refreshToken)
+                ?: throw UnauthorizedException("Invalid refresh token")
+
+        val now = clock.now()
+        if (stored.revokedAt != null || stored.expiresAt.isBefore(now)) {
+            throw UnauthorizedException("Invalid refresh token")
+        }
+
+        // false means a concurrent request already won the UPDATE race — token already used.
+        if (!tokenIssuer.revokeRefreshToken(refreshToken)) {
+            throw UnauthorizedException("Invalid refresh token")
+        }
+
+        val tokens = tokenIssuer.issueTokens(stored.userId)
+        val user = userRepository.findById(stored.userId) ?: throw NotFoundException("User not found")
+        return toAuthenticatedUser(user, tokens.accessToken, tokens.refreshToken)
+    }
+
+    @Transactional
+    fun logout(
+        refreshToken: String,
+        jti: UUID?,
+        userId: UserId?,
+    ) {
+        tokenIssuer.revokeRefreshToken(refreshToken)
+        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
+    }
+
+    private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
+
+    private fun toAuthenticatedUser(
+        user: User,
+        accessToken: String,
+        refreshToken: String,
+    ) = AuthenticatedUser(
+        email = user.email,
+        username = user.username,
+        bio = user.bio.orEmpty(),
+        image = user.image.orEmpty(),
+        token = accessToken,
+        refreshToken = refreshToken,
+    )
+
+    companion object {
+        private const val MIN_PASSWORD_LENGTH = 8
+        private val logger = LoggerFactory.getLogger(UserService::class.java)
+    }
+}

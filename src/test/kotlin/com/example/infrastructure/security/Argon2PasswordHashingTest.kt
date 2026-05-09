@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.common.security
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse

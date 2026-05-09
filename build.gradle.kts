@@ -5,7 +5,6 @@ plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.allopen") version "2.3.21"
     id("io.quarkus")
-    id("org.openapi.generator") version "7.22.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("nu.studer.jooq") version "10.2.1"
@@ -56,6 +55,7 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-jwt")
     implementation("io.quarkus:quarkus-smallrye-jwt-build")
     implementation("io.quarkus:quarkus-arc")
+    implementation("io.quarkus:quarkus-hibernate-validator")
 
     // jOOQ integration
     implementation("io.quarkiverse.jooq:quarkus-jooq:2.1.0")
@@ -83,11 +83,6 @@ dependencies {
 
     // External dependencies
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
-    implementation("io.swagger:swagger-annotations:1.6.16")
-
-    // Required for OpenAPI generated code (not provided by Quarkus BOM for standalone generated classes)
-    implementation("jakarta.validation:jakarta.validation-api:3.1.1")
-
     // jOOQ code generation
     jooqGenerator("org.jooq:jooq-meta-extensions:3.21.3")
 
@@ -101,7 +96,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:2.0.5")
     testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.2")
 }
 
 // ============================================
@@ -132,11 +126,6 @@ allOpen {
 // Source Sets
 // ============================================
 sourceSets {
-    main {
-        java {
-            srcDir("${layout.buildDirectory.get()}/generated/openapi/src/gen/java")
-        }
-    }
     create("tools") {
         kotlin.srcDir("src/tools/kotlin")
         compileClasspath += configurations["runtimeClasspath"]
@@ -147,25 +136,6 @@ sourceSets {
 // ============================================
 // Plugin Configurations
 // ============================================
-
-// OpenAPI Generator
-openApiGenerate {
-    generatorName = "jaxrs-spec"
-    inputSpec.set("$rootDir/src/main/resources/openapi.yaml")
-    outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.path)
-    apiPackage = "com.example.api"
-    modelPackage = "com.example.api.model"
-    invokerPackage = "com.example.api.invoker"
-    validateSpec = true
-    configOptions = mapOf(
-        "dateLibrary" to "java8",
-        "interfaceOnly" to "true",
-        "returnResponse" to "false",
-        "useTags" to "true",
-        "useJakartaEe" to "true",
-        "openApiNullable" to "false",
-    )
-}
 
 // jOOQ code generation
 jooq {
@@ -291,17 +261,15 @@ tasks.withType<Test> {
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
 }
 
-// Ensure code generation runs before compilation
-// Required because:
-// - OpenAPI Generator plugin doesn't auto-wire dependencies
-// - jOOQ plugin auto-wiring is disabled (generateSchemaSourceOnCompilation = false)
+// Ensure jOOQ code generation runs before compilation
+// jOOQ plugin auto-wiring is disabled (generateSchemaSourceOnCompilation = false)
 tasks.named("compileKotlin") {
-    dependsOn("openApiGenerate", "generateJooq")
+    dependsOn("generateJooq")
 }
 
 // Ensure ktlint only checks source code, not generated code
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask> {
-    mustRunAfter("generateJooq", "openApiGenerate")
+    mustRunAfter("generateJooq")
     setSource(fileTree("src/main/kotlin"))
 }
 

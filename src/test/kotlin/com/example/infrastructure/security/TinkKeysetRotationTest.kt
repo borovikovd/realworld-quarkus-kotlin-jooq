@@ -1,4 +1,4 @@
-package com.example.infrastructure.security
+package com.example.common.security
 
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeysetManager

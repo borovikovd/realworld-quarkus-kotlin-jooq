@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-    <!-- Exclude OpenAPI generated code -->
-    <Match>
-        <Package name="~com\.example\.api(\..*)?"/>
-    </Match>
-
     <!-- Exclude jOOQ generated code -->
     <Match>
         <Package name="~com\.example\.jooq(\..*)?"/>
@@ -36,7 +31,7 @@
     <!-- Keyset unwrap in init block throws on bad config at startup — intentional fail-fast behaviour.
          No finalizer on this class; the finalizer-attack vector does not apply. -->
     <Match>
-        <Class name="com.example.infrastructure.security.TinkCryptoService"/>
+        <Class name="com.example.common.security.TinkCryptoService"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
 </FindBugsFilter>

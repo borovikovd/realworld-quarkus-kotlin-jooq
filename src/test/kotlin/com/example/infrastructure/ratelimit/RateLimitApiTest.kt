@@ -1,4 +1,4 @@
-package com.example.infrastructure.ratelimit
+package com.example.common.web
 
 import com.example.testsupport.ApiTestFixtures
 import com.example.testsupport.BaseApiTest
