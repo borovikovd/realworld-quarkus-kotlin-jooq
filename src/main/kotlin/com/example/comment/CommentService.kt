@@ -53,14 +53,16 @@ class CommentService(
                 ?: throw NotFoundException("comment", "Comment not found")
 
         if (comment.articleId != articleId) throw NotFoundException("comment", "Comment not found")
-        if (comment.authorId != userId) throw ForbiddenException("You can only delete your own comments")
+        if (comment.authorId != userId) throw ForbiddenException("comment", "You can only delete your own comments")
 
         commentRepository.deleteById(commentId)
         logger.info("Comment deleted: commentId={}", commentId.value)
     }
 
-    fun listByArticle(articleSlug: String): List<CommentDto> =
-        commentRepository.findDtosByArticleSlug(articleSlug, currentUser.id)
+    fun listByArticle(articleSlug: String): List<CommentDto> {
+        if (!articleRepository.existsBySlug(articleSlug)) throw NotFoundException("article", "Article not found")
+        return commentRepository.findDtosByArticleSlug(articleSlug, currentUser.id)
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CommentService::class.java)

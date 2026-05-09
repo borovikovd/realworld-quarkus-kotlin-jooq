@@ -6,6 +6,7 @@ class NotFoundException(
 ) : RuntimeException(message)
 
 class ForbiddenException(
+    val field: String,
     message: String,
 ) : RuntimeException(message)
 

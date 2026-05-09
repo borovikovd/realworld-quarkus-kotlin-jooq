@@ -4,6 +4,7 @@ import com.example.common.security.CurrentUser
 import com.example.common.time.Clock
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
+import com.example.common.web.Patch
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -50,12 +51,12 @@ class ArticleService(
         title: String?,
         description: String?,
         body: String?,
-        tagList: List<String>? = null,
+        tagList: Patch<List<String>>,
     ): ArticleDto {
         val userId = currentUser.require()
         val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
 
-        if (userId != article.authorId) throw ForbiddenException("You can only update your own articles")
+        if (userId != article.authorId) throw ForbiddenException("article", "You can only update your own articles")
 
         val newSlug =
             if (title != null && title != article.title) {
@@ -73,7 +74,11 @@ class ArticleService(
                 title = title ?: article.title,
                 description = description ?: article.description,
                 body = body ?: article.body,
-                tags = tagList?.toSet() ?: article.tags,
+                tags =
+                    when (tagList) {
+                        is Patch.Absent -> article.tags
+                        is Patch.Present -> tagList.value?.toSet() ?: article.tags
+                    },
                 updatedAt = clock.now(),
             )
 
@@ -87,7 +92,7 @@ class ArticleService(
     fun delete(slug: String) {
         val userId = currentUser.require()
         val article = articleRepository.findBySlug(slug) ?: throw NotFoundException("article", "Article not found")
-        if (userId != article.authorId) throw ForbiddenException("You can only delete your own articles")
+        if (userId != article.authorId) throw ForbiddenException("article", "You can only delete your own articles")
         articleRepository.deleteById(article.id)
         logger.info("Article deleted: articleId={}, slug={}", article.id.value, slug)
     }

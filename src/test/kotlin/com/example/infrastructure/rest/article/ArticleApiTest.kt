@@ -120,7 +120,7 @@ class ArticleApiTest : BaseApiTest() {
             .put("/api/articles/${article.slug}")
             .then()
             .statusCode(403)
-            .body("errors.body[0]", equalTo("You can only update your own articles"))
+            .body("errors.article[0]", equalTo("forbidden"))
     }
 
     @Test
@@ -176,7 +176,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article.slug}")
             .then()
             .statusCode(403)
-            .body("errors.body[0]", equalTo("You can only delete your own articles"))
+            .body("errors.article[0]", equalTo("forbidden"))
     }
 
     @Test
@@ -392,7 +392,7 @@ class ArticleApiTest : BaseApiTest() {
             .delete("/api/articles/${article.slug}/comments/${comment.id}")
             .then()
             .statusCode(403)
-            .body("errors.body[0]", equalTo("You can only delete your own comments"))
+            .body("errors.comment[0]", equalTo("forbidden"))
     }
 
     @Test

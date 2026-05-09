@@ -104,8 +104,8 @@ class UserService(
     @Transactional
     fun updateUser(
         userId: UserId,
-        email: String?,
-        username: String?,
+        email: Patch<String>,
+        username: Patch<String>,
         password: String?,
         bio: Patch<String>,
         image: Patch<String>,
@@ -116,19 +116,15 @@ class UserService(
         v.check("password", password == null || password.length >= MIN_PASSWORD_LENGTH) {
             "must be at least $MIN_PASSWORD_LENGTH characters"
         }
-        if (email != null && email != user.email) {
-            v.check("email", !userRepository.existsByEmail(email)) { "has already been taken" }
-        }
-        if (username != null && username != user.username) {
-            v.check("username", !userRepository.existsByUsername(username)) { "has already been taken" }
-        }
+        val resolvedEmail = resolveEmail(email, user.email, v)
+        val resolvedUsername = resolveUsername(username, user.username, v)
         v.throwIfInvalid()
 
         val now = clock.now()
         val updated =
             user.copy(
-                email = email ?: user.email,
-                username = username ?: user.username,
+                email = resolvedEmail,
+                username = resolvedUsername,
                 passwordHash = if (password != null) passwordHashing.hash(password) else user.passwordHash,
                 bio =
                     when (bio) {
@@ -216,6 +212,34 @@ class UserService(
         username: String,
         viewerId: UserId?,
     ): ProfileDto? = userRepository.findProfile(username, viewerId)
+
+    private fun resolveEmail(
+        patch: Patch<String>,
+        current: String,
+        v: Validation,
+    ): String {
+        if (patch is Patch.Absent) return current
+        val value = (patch as Patch.Present).value
+        v.check("email", !value.isNullOrBlank()) { "can't be blank" }
+        if (value != null && value != current) {
+            v.check("email", !userRepository.existsByEmail(value)) { "has already been taken" }
+        }
+        return value ?: current
+    }
+
+    private fun resolveUsername(
+        patch: Patch<String>,
+        current: String,
+        v: Validation,
+    ): String {
+        if (patch is Patch.Absent) return current
+        val value = (patch as Patch.Present).value
+        v.check("username", !value.isNullOrBlank()) { "can't be blank" }
+        if (value != null && value != current) {
+            v.check("username", !userRepository.existsByUsername(value)) { "has already been taken" }
+        }
+        return value ?: current
+    }
 
     private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
 

@@ -41,7 +41,7 @@ class ForbiddenExceptionMapper : ExceptionMapper<ForbiddenException> {
     override fun toResponse(exception: ForbiddenException): Response =
         Response
             .status(Response.Status.FORBIDDEN)
-            .entity(mapOf("errors" to mapOf("body" to listOf(exception.message))))
+            .entity(mapOf("errors" to mapOf(exception.field to listOf("forbidden"))))
             .build()
 }
 

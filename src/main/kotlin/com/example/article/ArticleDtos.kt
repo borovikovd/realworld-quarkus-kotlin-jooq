@@ -1,6 +1,9 @@
 package com.example.article
 
+import com.example.common.web.ListStringPatchDeserializer
+import com.example.common.web.Patch
 import com.example.user.ProfileDto
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -72,5 +75,5 @@ data class ArticlePatch(
     @field:Size(min = 1, max = 256) val title: String?,
     @field:Size(min = 1, max = 1024) val description: String?,
     @field:Size(min = 1) val body: String?,
-    val tagList: List<String>? = null,
+    @field:JsonDeserialize(using = ListStringPatchDeserializer::class) val tagList: Patch<List<String>> = Patch.Absent,
 )
