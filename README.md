@@ -15,7 +15,7 @@ For more information on how this works with other frontends/backends, head over 
 
 # How it works
 
-A production-grade REST API implementing the RealWorld spec. Package-by-feature layout, field-level encryption, envelope encryption with Vault + Tink, Argon2id, single-use refresh tokens.
+A production-grade REST API implementing the RealWorld spec. Package-by-feature layout, Argon2id passwords, single-use refresh tokens.
 
 ## Stack
 
@@ -24,7 +24,6 @@ A production-grade REST API implementing the RealWorld spec. Package-by-feature 
 | Runtime | Quarkus 3.x (JVM), Kotlin |
 | Persistence | PostgreSQL, jOOQ, Atlas (migrations) |
 | Auth | SmallRye JWT (RS256), Argon2id, single-use refresh tokens |
-| Encryption | Google Tink (AES-256-GCM + HMAC-SHA256), HashiCorp Vault Transit |
 | Observability | Micrometer, OpenTelemetry, structured JSON logging |
 | Quality | ktlint, detekt, SpotBugs + FindSecBugs, OWASP dependency-check |
 
@@ -37,19 +36,17 @@ com.example/
 ├── user/           UserResource, ProfileResource, UserService, ProfileService, UserRepository, UserDtos
 ├── tag/            TagResource
 └── common/
-    ├── security/   CurrentUser, PasswordHashing, CryptoService, TokenIssuer,
+    ├── security/   CurrentUser, PasswordHashing, TokenIssuer,
     │               RefreshTokenRepository, RevokedTokenRepository,
     │               RevokedTokenFilter, RefreshTokenCleanupJob
     ├── web/        Exception mappers, Filters (MDC, status code), Validation
-    ├── persistence/ JooqConfiguration, req() extension, decryptAuthorProfile()
+    ├── persistence/ JooqConfiguration, req() extension
     └── time/       Clock
 ```
 
 ## Highlights
 
-**Field-level encryption with zero hot-path Vault calls.** Personal data (`email`, `username`, `bio`, `image`) is encrypted at rest with AES-256-GCM via Google Tink. Two Tink keysets (AEAD + MAC) are wrapped at rest by a Vault Transit KEK and unwrapped exactly once at startup — never on the request path. Lookup hashes use HMAC-SHA256 with a separate keyset from the token MAC keyset so each can rotate independently. Associated data `AD = userId ∥ len(field) ∥ field` prevents cross-column ciphertext swap attacks.
-
-**Single-use refresh tokens with optimistic locking.** Refresh tokens are stored as HMAC tags only (never the raw token). Rotation uses a conditional UPDATE (`WHERE revoked_at IS NULL`) — if two concurrent requests race, only one wins and the other gets 401. Revoke + issue happens in a single `@Transactional` boundary so a mid-flight crash can't lock out the user.
+**Single-use refresh tokens with optimistic locking.** Refresh tokens are stored as SHA-256 hashes only (never the raw token). Rotation uses a conditional UPDATE (`WHERE revoked_at IS NULL`) — if two concurrent requests race, only one wins and the other gets 401. Revoke + issue happens in a single `@Transactional` boundary so a mid-flight crash can't lock out the user.
 
 **jOOQ with multiset.** No ORM, no lazy loading, no N+1. `multiset()` fetches nested collections (tags, favorite counts, author profiles with follow status) in a single SQL query.
 
@@ -63,22 +60,14 @@ com.example/
 **Prerequisites:** Java 21, Docker, [Atlas CLI](https://atlasgo.io/getting-started)
 
 ```bash
-# 1. Start PostgreSQL and Vault
+# 1. Start PostgreSQL
 docker compose up -d postgres
-docker run -d --rm --name vault-dev \
-  -p 8200:8200 \
-  -e VAULT_DEV_ROOT_TOKEN_ID=dev-root-token \
-  hashicorp/vault:1.17
 
 # 2. Apply DB migrations
 atlas migrate apply --env local
 
-# 3. Provision Tink keysets (once per Vault instance)
-VAULT_ADDR=http://localhost:8200 VAULT_TOKEN=dev-root-token \
-  ./gradlew provisionKeysets | grep "^APP_TINK" > .env
-
-# 4. Run (hot reload)
-source .env && QUARKUS_HTTP_CORS_ORIGINS=http://localhost:3000 ./gradlew quarkusDev
+# 3. Run (hot reload)
+QUARKUS_HTTP_CORS_ORIGINS=http://localhost:3000 ./gradlew quarkusDev
 ```
 
 Swagger UI: http://localhost:8080/swagger-ui/
@@ -89,7 +78,7 @@ Swagger UI: http://localhost:8080/swagger-ui/
 ./gradlew build   # compile + tests + lint + spotbugs
 ```
 
-Integration tests use Testcontainers (real PostgreSQL + Vault). No mocked infrastructure.
+Integration tests use Testcontainers (real PostgreSQL). No mocked infrastructure.
 
 ## Docker
 
