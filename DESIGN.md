@@ -127,10 +127,10 @@ Default `limit = 20`, `offset = 0` declared inline at the resource via `@Default
 ## Kept (carried over from original codebase)
 
 - jOOQ + Atlas migration pipeline.
-- Argon2id, HKDF subkey derivation, Tink-based crypto.
-- Refresh-token rotation, idempotency filter, rate limiting.
+- Argon2id for password hashing.
+- Refresh-token rotation.
 - Testcontainers for integration tests (real Postgres).
-- JWT auth, `CurrentUser` request-scoped bean, `Clock` injected for determinism.
+- JWT auth, `CurrentUser` request-scoped bean.
 - Micrometer counters / metrics.
 
 ## Adopted (new direction)
