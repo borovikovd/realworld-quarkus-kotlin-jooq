@@ -151,14 +151,11 @@ class UserService(
     @Transactional
     fun refresh(refreshToken: String): AuthenticatedUser? {
         val stored = tokenIssuer.findRefreshToken(refreshToken)
+
         return when {
             stored == null -> null
-            stored.revokedAt != null || stored.expiresAt.isBefore(OffsetDateTime.now()) -> null
-            // revokeRefreshToken returning false means the row was valid at SELECT but already
-            // revoked at UPDATE — concurrent reuse. Per RFC 9700 §4.14.2, revoke the family so the
-            // thief who won the race loses their freshly issued token within seconds. Returning
-            // null (rather than throwing) keeps the revocation in the same transaction.
-            !tokenIssuer.revokeRefreshToken(refreshToken) -> {
+            stored.expiresAt.isBefore(OffsetDateTime.now()) -> null
+            stored.revokedAt != null || !tokenIssuer.revokeRefreshToken(refreshToken) -> {
                 tokenIssuer.revokeAllRefreshTokens(stored.userId)
                 null
             }
