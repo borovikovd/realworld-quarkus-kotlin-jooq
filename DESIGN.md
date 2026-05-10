@@ -21,29 +21,28 @@ com/example/
 │   ├── ArticleResource.kt
 │   ├── ArticleService.kt
 │   ├── ArticleRepository.kt        // interface + JooqArticleRepository, one file
-│   ├── ArticleDtos.kt              // ArticleId, Article, ArticleDto, NewArticle, ArticlePatch, …
-│   └── SlugGenerator.kt
+│   ├── Article.kt                  // ArticleId, Article, ArticleFilter, Page
+│   ├── ArticleDtos.kt              // ArticleDto, NewArticle, ArticlePatch, …
+│   ├── SlugGenerator.kt
+│   └── TagResource.kt
 ├── comment/
 │   ├── CommentResource.kt
 │   ├── CommentService.kt
 │   ├── CommentRepository.kt
-│   └── CommentDtos.kt
+│   ├── Comment.kt                  // CommentId, Comment
+│   └── CommentDtos.kt              // CommentDto, NewComment
 ├── user/
 │   ├── UserResource.kt              // /users, /user
 │   ├── ProfileResource.kt           // /profiles/:username
-│   ├── UserService.kt               // register, login, getCurrent, update
-│   ├── ProfileService.kt            // getProfile, follow, unfollow
+│   ├── UserService.kt               // register, login, getCurrent, update, getProfile, follow, unfollow
 │   ├── UserRepository.kt            // users + follows tables in one repo
-│   ├── UserDtos.kt                  // UserId, User, UserDto, RegisterUser, LoginUser, UpdateUser
-│   └── ProfileDtos.kt               // ProfileDto
-├── tag/
-│   ├── TagResource.kt
-│   └── TagService.kt
+│   ├── User.kt                      // UserId, User
+│   └── UserDtos.kt                  // UserDto, RegisterUser, LoginUser, UpdateUser, ProfileDto
 └── common/
-    ├── security/    // CurrentUser, JwtIssuer, PasswordHasher, RateLimiter
-    ├── web/         // exception mappers, idempotency filter, status filter
     ├── persistence/ // jOOQ DSLContext config, req() extension
-    └── time/        // Clock
+    ├── ratelimit/   // RateLimiter
+    ├── security/    // CurrentUser, TokenIssuer, PasswordHashing, RefreshToken repos
+    └── web/         // exception mappers, Validation, Patch
 ```
 
 ## Naming
@@ -573,12 +572,10 @@ data class NewComment(@field:NotBlank @field:Size(max = 4096) val body: String)
 
 # User / Profile
 
-The `user/` package contains **two services side by side**:
+The `user/` package contains the services and repositories for user management:
 
-- `UserService` — register, login, get current, update self → mounted at `/api/users` and `/api/user`.
-- `ProfileService` — get profile, follow, unfollow → mounted at `/api/profiles/:username`.
-
-Both share `UserRepository`, which also owns the `follows` table. Following has no aggregate of its own; it's a join table with `follow(followerId, followeeId)` / `unfollow(followerId, followeeId)` / `findProfile(username, viewerId): ProfileDto?` methods on `UserRepository`.
+- `UserService` — handles both user actions (register, login, get current, update self, mounted at `/api/users` and `/api/user`) and profile actions (get profile, follow, unfollow, mounted at `/api/profiles/:username`).
+- Both sets of REST endpoints share `UserRepository`, which also owns the `follows` table. Following has no aggregate of its own; it's a join table with `follow(followerId, followeeId)` / `unfollow(followerId, followeeId)` / `findProfile(username, viewerId): ProfileDto?` methods on `UserRepository`.
 
 `ProfileDto` carries `following: Boolean` computed by a viewer-aware projection in the same SQL that loads the user row. No N+1.
 
