@@ -1,19 +1,18 @@
 package com.example.article
 
 import com.example.common.security.CurrentUser
-import com.example.common.time.Clock
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
 
 @ApplicationScoped
 class ArticleService(
     private val articleRepository: ArticleRepository,
     private val currentUser: CurrentUser,
-    private val clock: Clock,
 ) {
     @Transactional
     fun create(
@@ -25,7 +24,7 @@ class ArticleService(
         val userId = currentUser.require()
         val articleId = articleRepository.nextId()
         val slug = SlugGenerator.generateUniqueSlug(title) { candidate -> articleRepository.existsBySlug(candidate) }
-        val now = clock.now()
+        val now = OffsetDateTime.now()
 
         articleRepository.insert(
             Article(
@@ -79,7 +78,7 @@ class ArticleService(
                         is Patch.Absent -> article.tags
                         is Patch.Present -> tagList.value.orEmpty().toSet()
                     },
-                updatedAt = clock.now(),
+                updatedAt = OffsetDateTime.now(),
             )
 
         articleRepository.update(updated)

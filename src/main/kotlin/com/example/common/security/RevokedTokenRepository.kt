@@ -1,6 +1,5 @@
 package com.example.common.security
 
-import com.example.common.time.Clock
 import com.example.jooq.auth.tables.references.REVOKED_TOKEN
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -10,7 +9,6 @@ import java.util.UUID
 @ApplicationScoped
 class RevokedTokenRepository(
     private val dsl: DSLContext,
-    private val clock: Clock,
 ) {
     fun insert(
         jti: UUID,
@@ -33,7 +31,7 @@ class RevokedTokenRepository(
                 .selectOne()
                 .from(REVOKED_TOKEN)
                 .where(REVOKED_TOKEN.JTI.eq(jti))
-                .and(REVOKED_TOKEN.EXPIRES_AT.gt(clock.now())),
+                .and(REVOKED_TOKEN.EXPIRES_AT.gt(OffsetDateTime.now())),
         )
 
     fun deleteExpiredBefore(before: OffsetDateTime): Int =

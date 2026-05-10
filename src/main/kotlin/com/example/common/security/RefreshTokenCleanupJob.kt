@@ -1,17 +1,16 @@
 package com.example.common.security
 
-import com.example.common.time.Clock
 import io.quarkus.scheduler.Scheduled
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
 class RefreshTokenCleanupJob(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
-    private val clock: Clock,
 ) {
     @Scheduled(every = "24h", delayed = "1h")
     fun deleteExpired() {
@@ -21,10 +20,11 @@ class RefreshTokenCleanupJob(
     }
 
     @Transactional
-    fun purgeRefreshTokens(): Int = refreshTokenRepository.deleteExpiredBefore(clock.now().minus(1, ChronoUnit.DAYS))
+    fun purgeRefreshTokens(): Int =
+        refreshTokenRepository.deleteExpiredBefore(OffsetDateTime.now().minus(1, ChronoUnit.DAYS))
 
     @Transactional
-    fun purgeRevokedTokens(): Int = revokedTokenRepository.deleteExpiredBefore(clock.now())
+    fun purgeRevokedTokens(): Int = revokedTokenRepository.deleteExpiredBefore(OffsetDateTime.now())
 
     private fun runStep(
         name: String,

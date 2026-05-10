@@ -38,24 +38,18 @@ class RefreshTokenRepository(
             }
 
     /** Returns true if the token was revoked, false if it was already revoked or not found. */
-    fun revokeByHash(
-        tokenHash: String,
-        revokedAt: OffsetDateTime,
-    ): Boolean =
+    fun revokeByHash(tokenHash: String): Boolean =
         dsl
             .update(REFRESH_TOKEN)
-            .set(REFRESH_TOKEN.REVOKED_AT, revokedAt)
+            .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
             .where(REFRESH_TOKEN.TOKEN_HASH.eq(tokenHash))
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute() > 0
 
-    fun revokeAllForUser(
-        userId: UserId,
-        revokedAt: OffsetDateTime,
-    ) {
+    fun revokeAllForUser(userId: UserId) {
         dsl
             .update(REFRESH_TOKEN)
-            .set(REFRESH_TOKEN.REVOKED_AT, revokedAt)
+            .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
             .where(REFRESH_TOKEN.USER_ID.eq(userId.value))
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute()

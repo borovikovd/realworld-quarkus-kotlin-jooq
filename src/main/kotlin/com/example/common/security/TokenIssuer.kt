@@ -1,6 +1,5 @@
 package com.example.common.security
 
-import com.example.common.time.Clock
 import com.example.user.UserId
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
@@ -8,6 +7,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Duration
+import java.time.OffsetDateTime
 import java.util.Base64
 import java.util.UUID
 
@@ -18,7 +18,6 @@ class TokenIssuer(
     @param:ConfigProperty(name = "app.token.refresh-expiry-days") private val refreshExpiryDays: Long,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
-    private val clock: Clock,
 ) {
     private val secureRandom = SecureRandom()
     private val base64UrlEncoder = Base64.getUrlEncoder().withoutPadding()
@@ -31,7 +30,7 @@ class TokenIssuer(
         refreshTokenRepository.store(
             userId = userId,
             tokenHash = sha256(refreshToken),
-            expiresAt = clock.now().plus(refreshTokenExpiry),
+            expiresAt = OffsetDateTime.now().plus(refreshTokenExpiry),
         )
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
@@ -39,21 +38,21 @@ class TokenIssuer(
     fun findRefreshToken(token: String): StoredRefreshToken? = refreshTokenRepository.findByHash(sha256(token))
 
     /** Returns false if the token was already revoked or not found. */
-    fun revokeRefreshToken(token: String): Boolean = refreshTokenRepository.revokeByHash(sha256(token), clock.now())
+    fun revokeRefreshToken(token: String): Boolean = refreshTokenRepository.revokeByHash(sha256(token))
 
-    fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
+    fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId)
 
     fun revokeAccessToken(
         jti: UUID,
         userId: UserId,
-    ) = revokedTokenRepository.insert(jti, userId.value, clock.now().plus(accessTokenExpiry))
+    ) = revokedTokenRepository.insert(jti, userId.value, OffsetDateTime.now().plus(accessTokenExpiry))
 
     private fun generateAccessToken(userId: UserId): String =
         Jwt
             .issuer(issuer)
             .subject(userId.value.toString())
             .groups(setOf("user"))
-            .expiresAt(clock.now().toInstant().plus(accessTokenExpiry))
+            .expiresAt(OffsetDateTime.now().toInstant().plus(accessTokenExpiry))
             .sign()
 
     private fun generateRefreshToken(): String {

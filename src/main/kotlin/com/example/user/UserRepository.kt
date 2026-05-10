@@ -2,7 +2,6 @@ package com.example.user
 
 import com.example.common.persistence.req
 import com.example.common.security.PasswordHash
-import com.example.common.time.Clock
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FAVORITES
@@ -13,6 +12,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
+import java.time.OffsetDateTime
 
 interface UserRepository {
     fun nextId(): UserId
@@ -52,7 +52,6 @@ interface UserRepository {
 @ApplicationScoped
 class JooqUserRepository(
     private val dsl: DSLContext,
-    private val clock: Clock,
 ) : UserRepository {
     override fun nextId(): UserId =
         UserId(dsl.select(DSL.field("nextval('user_id_seq')", Long::class.java)).fetchSingle().value1()!!)
@@ -129,7 +128,7 @@ class JooqUserRepository(
         )
 
     override fun erase(id: UserId) {
-        val now = clock.now()
+        val now = OffsetDateTime.now()
         dsl
             .deleteFrom(FOLLOWERS)
             .where(FOLLOWERS.FOLLOWER_ID.eq(id.value).or(FOLLOWERS.FOLLOWEE_ID.eq(id.value)))

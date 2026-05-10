@@ -4,7 +4,6 @@ import com.example.common.security.CurrentUser
 import com.example.common.security.PasswordHash
 import com.example.common.security.PasswordHashing
 import com.example.common.security.TokenIssuer
-import com.example.common.time.Clock
 import com.example.common.web.ConflictException
 import com.example.common.web.InvalidCredentialsException
 import com.example.common.web.NotFoundException
@@ -16,6 +15,7 @@ import com.example.common.web.orElseNullable
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @ApplicationScoped
@@ -23,7 +23,6 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordHashing: PasswordHashing,
     private val tokenIssuer: TokenIssuer,
-    private val clock: Clock,
     private val currentUser: CurrentUser,
 ) {
     @Transactional
@@ -44,7 +43,7 @@ class UserService(
         if (conflicts.isNotEmpty()) throw ConflictException(conflicts)
 
         val userId = userRepository.nextId()
-        val now = clock.now()
+        val now = OffsetDateTime.now()
         val user =
             User(
                 id = userId,
@@ -119,7 +118,7 @@ class UserService(
         val resolvedUsername = resolveUsername(username, user.username, v)
         v.throwIfInvalid()
 
-        val now = clock.now()
+        val now = OffsetDateTime.now()
         val updated =
             user.copy(
                 email = resolvedEmail,
@@ -154,7 +153,7 @@ class UserService(
             tokenIssuer.findRefreshToken(refreshToken)
                 ?: throw UnauthorizedException("Invalid refresh token")
 
-        val now = clock.now()
+        val now = OffsetDateTime.now()
         if (stored.revokedAt != null || stored.expiresAt.isBefore(now)) {
             throw UnauthorizedException("Invalid refresh token")
         }
