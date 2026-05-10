@@ -8,7 +8,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Duration
-import java.time.OffsetDateTime
 import java.util.Base64
 import java.util.UUID
 
@@ -48,11 +47,6 @@ class TokenIssuer(
         jti: UUID,
         userId: UserId,
     ) = revokedTokenRepository.insert(jti, userId.value, clock.now().plus(accessTokenExpiry))
-
-    fun purgeExpiredRefreshTokens(before: OffsetDateTime): Int = refreshTokenRepository.deleteExpiredBefore(before)
-
-    fun purgeExpiredAccessTokenRevocations(before: OffsetDateTime): Int =
-        revokedTokenRepository.deleteExpiredBefore(before)
 
     private fun generateAccessToken(userId: UserId): String =
         Jwt

@@ -6,17 +6,15 @@ import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
-import org.eclipse.microprofile.jwt.JsonWebToken
-import java.util.UUID
 
 @Provider
 @ApplicationScoped
 class RevokedTokenFilter(
-    private val jwt: JsonWebToken,
+    private val currentUser: CurrentUser,
     private val revokedTokenRepository: RevokedTokenRepository,
 ) : ContainerRequestFilter {
     override fun filter(requestContext: ContainerRequestContext) {
-        val jti = resolveJti(requestContext) ?: return
+        val jti = currentUser.jti ?: return
         if (revokedTokenRepository.isRevoked(jti)) {
             requestContext.abortWith(
                 Response
@@ -27,11 +25,4 @@ class RevokedTokenFilter(
             )
         }
     }
-
-    private fun resolveJti(requestContext: ContainerRequestContext): UUID? =
-        if (!requestContext.securityContext.isUserInRole("user")) {
-            null
-        } else {
-            jwt.tokenID?.let { runCatching { UUID.fromString(it) }.getOrNull() }
-        }
 }

@@ -9,7 +9,8 @@ import java.time.temporal.ChronoUnit
 
 @ApplicationScoped
 class RefreshTokenCleanupJob(
-    private val tokenIssuer: TokenIssuer,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val revokedTokenRepository: RevokedTokenRepository,
     private val clock: Clock,
 ) {
     @Scheduled(every = "24h", delayed = "1h")
@@ -20,10 +21,10 @@ class RefreshTokenCleanupJob(
     }
 
     @Transactional
-    fun purgeRefreshTokens(): Int = tokenIssuer.purgeExpiredRefreshTokens(clock.now().minus(1, ChronoUnit.DAYS))
+    fun purgeRefreshTokens(): Int = refreshTokenRepository.deleteExpiredBefore(clock.now().minus(1, ChronoUnit.DAYS))
 
     @Transactional
-    fun purgeRevokedTokens(): Int = tokenIssuer.purgeExpiredAccessTokenRevocations(clock.now())
+    fun purgeRevokedTokens(): Int = revokedTokenRepository.deleteExpiredBefore(clock.now())
 
     private fun runStep(
         name: String,
