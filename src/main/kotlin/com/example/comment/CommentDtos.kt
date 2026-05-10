@@ -3,6 +3,7 @@ package com.example.comment
 import com.example.user.ProfileDto
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.OffsetDateTime
 
 data class CommentDto(
@@ -18,7 +19,7 @@ data class NewCommentRequest(
 )
 
 data class NewComment(
-    @field:NotBlank val body: String,
+    @field:NotBlank @field:Size(max = 65536) val body: String,
 )
 
 data class CommentEnvelope(

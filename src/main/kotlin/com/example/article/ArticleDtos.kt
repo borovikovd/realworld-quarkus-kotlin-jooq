@@ -58,6 +58,9 @@ data class ArticleListEnvelope(
     val articlesCount: Int,
 )
 
+private const val MAX_TAGS = 10
+private const val MAX_TAG_LENGTH = 64
+
 data class NewArticleRequest(
     @field:Valid val article: NewArticle,
 )
@@ -65,9 +68,16 @@ data class NewArticleRequest(
 data class NewArticle(
     @field:NotBlank @field:Size(max = 256) val title: String,
     @field:NotBlank @field:Size(max = 1024) val description: String,
-    @field:NotBlank val body: String,
+    @field:NotBlank @field:Size(max = 65536) val body: String,
     val tagList: List<String>? = null,
-)
+) {
+    init {
+        tagList?.let { tags ->
+            require(tags.size <= MAX_TAGS) { "Too many tags" }
+            require(tags.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
+        }
+    }
+}
 
 data class UpdateArticleRequest(
     @field:Valid val article: ArticlePatch,
@@ -76,10 +86,19 @@ data class UpdateArticleRequest(
 data class ArticlePatch(
     @field:Size(min = 1, max = 256) val title: String? = null,
     @field:Size(min = 1, max = 1024) val description: String? = null,
-    @field:Size(min = 1) val body: String? = null,
+    @field:Size(min = 1, max = 65536) val body: String? = null,
     @field:Schema(type = SchemaType.ARRAY, implementation = String::class)
     @field:JsonDeserialize(using = ListStringPatchDeserializer::class) val tagList: Patch<List<String>> = Patch.Absent,
-)
+) {
+    init {
+        if (tagList is Patch.Present) {
+            tagList.value?.let { tags ->
+                require(tags.size <= MAX_TAGS) { "Too many tags" }
+                require(tags.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
+            }
+        }
+    }
+}
 
 data class TagsResponse(
     val tags: List<String>,

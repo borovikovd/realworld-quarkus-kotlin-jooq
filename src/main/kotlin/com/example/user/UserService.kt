@@ -117,6 +117,12 @@ class UserService(
         val resolvedPassword = resolvePassword(password, v)
         val resolvedEmail = resolveEmail(email, user.email, v)
         val resolvedUsername = resolveUsername(username, user.username, v)
+        if (bio is Patch.Present && bio.value != null) {
+            v.check("bio", bio.value.length <= MAX_BIO_LENGTH) { "must be at most $MAX_BIO_LENGTH characters" }
+        }
+        if (image is Patch.Present && image.value != null) {
+            v.check("image", image.value.length <= MAX_IMAGE_LENGTH) { "must be at most $MAX_IMAGE_LENGTH characters" }
+        }
         v.throwIfInvalid()
 
         val now = OffsetDateTime.now()
@@ -279,6 +285,8 @@ class UserService(
 
     companion object {
         private const val MIN_PASSWORD_LENGTH = 8
+        private const val MAX_BIO_LENGTH = 4096
+        private const val MAX_IMAGE_LENGTH = 1024
         private val logger = LoggerFactory.getLogger(UserService::class.java)
     }
 }
