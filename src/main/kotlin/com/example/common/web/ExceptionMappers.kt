@@ -9,6 +9,22 @@ import org.jooq.exception.DataAccessException
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
+private const val HTTP_422 = 422
+private const val PROBLEM_JSON = "application/problem+json"
+
+private fun internalErrorResponse(): Response =
+    Response
+        .status(Response.Status.INTERNAL_SERVER_ERROR)
+        .type(PROBLEM_JSON)
+        .entity(
+            mapOf(
+                "type" to "about:blank",
+                "title" to "Internal Server Error",
+                "status" to Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                "detail" to "An unexpected error occurred",
+            ),
+        ).build()
+
 @Provider
 class SecurityUnauthorizedExceptionMapper : ExceptionMapper<io.quarkus.security.UnauthorizedException> {
     override fun toResponse(exception: io.quarkus.security.UnauthorizedException): Response =
@@ -76,13 +92,9 @@ class ConflictExceptionMapper : ExceptionMapper<ConflictException> {
 class ValidationExceptionMapper : ExceptionMapper<ValidationException> {
     override fun toResponse(exception: ValidationException): Response =
         Response
-            .status(HTTP_UNPROCESSABLE_ENTITY)
+            .status(HTTP_422)
             .entity(mapOf("errors" to exception.errors))
             .build()
-
-    companion object {
-        private const val HTTP_UNPROCESSABLE_ENTITY = 422
-    }
 }
 
 @Provider
@@ -93,13 +105,9 @@ class ConstraintViolationExceptionMapper : ExceptionMapper<ConstraintViolationEx
                 .groupBy { v -> v.propertyPath.last().name }
                 .mapValues { (_, vs) -> vs.map { it.message } }
         return Response
-            .status(HTTP_UNPROCESSABLE_ENTITY)
+            .status(HTTP_422)
             .entity(mapOf("errors" to errors))
             .build()
-    }
-
-    companion object {
-        private const val HTTP_UNPROCESSABLE_ENTITY = 422
     }
 }
 
@@ -107,13 +115,9 @@ class ConstraintViolationExceptionMapper : ExceptionMapper<ConstraintViolationEx
 class IllegalArgumentExceptionMapper : ExceptionMapper<IllegalArgumentException> {
     override fun toResponse(exception: IllegalArgumentException): Response =
         Response
-            .status(HTTP_UNPROCESSABLE_ENTITY)
+            .status(HTTP_422)
             .entity(mapOf("errors" to mapOf("body" to listOf(exception.message ?: "Invalid input"))))
             .build()
-
-    companion object {
-        private const val HTTP_UNPROCESSABLE_ENTITY = 422
-    }
 }
 
 @Provider
@@ -122,44 +126,28 @@ class DataAccessExceptionMapper : ExceptionMapper<DataAccessException> {
         val field = uniqueViolationField(exception)
         return if (field != null) {
             Response
-                .status(HTTP_UNPROCESSABLE_ENTITY)
+                .status(HTTP_422)
                 .entity(mapOf("errors" to mapOf(field to listOf("has already been taken"))))
                 .build()
         } else {
             logger.error("Unhandled database exception", exception)
-            internalError()
+            internalErrorResponse()
         }
     }
 
     private fun uniqueViolationField(exception: DataAccessException): String? {
         val psql = exception.cause as? PSQLException
         if (psql?.sqlState != UNIQUE_VIOLATION) return null
-        val detail = psql.serverErrorMessage?.detail ?: ""
-        return when {
-            "email_hash" in detail -> "email"
-            "username_hash" in detail -> "username"
-            "articles_slug_key" in detail -> "slug"
+        return when (psql.serverErrorMessage?.constraint) {
+            "user_email_key" -> "email"
+            "user_username_key" -> "username"
+            "articles_slug_key" -> "slug"
             else -> null.also { logger.error("Unhandled unique constraint violation", exception) }
         }
     }
 
-    private fun internalError(): Response =
-        Response
-            .status(Response.Status.INTERNAL_SERVER_ERROR)
-            .type(PROBLEM_JSON)
-            .entity(
-                mapOf(
-                    "type" to "about:blank",
-                    "title" to "Internal Server Error",
-                    "status" to Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    "detail" to "An unexpected error occurred",
-                ),
-            ).build()
-
     companion object {
         private const val UNIQUE_VIOLATION = "23505"
-        private const val HTTP_UNPROCESSABLE_ENTITY = 422
-        private const val PROBLEM_JSON = "application/problem+json"
         private val logger = LoggerFactory.getLogger(DataAccessExceptionMapper::class.java)
     }
 }
@@ -169,22 +157,10 @@ class UnhandledExceptionMapper : ExceptionMapper<Exception> {
     override fun toResponse(exception: Exception): Response {
         if (exception is WebApplicationException) return exception.response
         logger.error("Unhandled exception", exception)
-        return Response
-            .status(Response.Status.INTERNAL_SERVER_ERROR)
-            .type(PROBLEM_JSON)
-            .entity(
-                mapOf(
-                    "type" to "about:blank",
-                    "title" to "Internal Server Error",
-                    "status" to INTERNAL_SERVER_ERROR,
-                    "detail" to "An unexpected error occurred",
-                ),
-            ).build()
+        return internalErrorResponse()
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UnhandledExceptionMapper::class.java)
-        private const val PROBLEM_JSON = "application/problem+json"
-        private const val INTERNAL_SERVER_ERROR = 500
     }
 }

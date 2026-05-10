@@ -3,11 +3,6 @@ package com.example.common.web
 class Validation {
     private val errors = linkedMapOf<String, MutableList<String>>()
 
-    inline fun <T> parse(
-        field: String,
-        block: () -> T,
-    ): Result<T> = runCatching(block).onFailure { add(field, it.message ?: "is invalid") }
-
     fun check(
         field: String,
         condition: Boolean,
