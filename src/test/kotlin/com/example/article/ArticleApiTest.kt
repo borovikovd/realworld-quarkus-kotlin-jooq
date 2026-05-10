@@ -392,6 +392,20 @@ class ArticleApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `should reject null tag list when updating article`() {
+        val user = ApiTestFixtures.registerUser()
+        val article = ApiTestFixtures.createArticle(user.token)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body("""{"article":{"tagList":null}}""")
+            .`when`()
+            .put("/api/articles/${article.slug}")
+            .then()
+            .statusCode(422)
+            .body("errors.tagList[0]", equalTo("must not be null"))
+    }
+
+    @Test
     fun `should limit articles returned`() {
         val user = ApiTestFixtures.registerUser()
         repeat(3) { ApiTestFixtures.createArticle(user.token) }

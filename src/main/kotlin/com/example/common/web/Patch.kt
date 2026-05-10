@@ -35,6 +35,5 @@ class ListStringPatchDeserializer : StdDeserializer<Patch<List<String>>>(Patch::
         ctxt: DeserializationContext,
     ): Patch<List<String>> = Patch.Present(p.readValueAs(object : TypeReference<List<String>>() {}))
 
-    // null in JSON ("tagList": null) treated as absent — keep existing tags
-    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Absent
+    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Present(null)
 }

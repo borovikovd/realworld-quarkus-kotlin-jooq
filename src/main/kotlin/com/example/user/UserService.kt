@@ -135,9 +135,6 @@ class UserService(
             )
 
         userRepository.update(updated)
-        tokenIssuer.revokeAllRefreshTokens(userId)
-        val jti = currentUser.jti
-        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         val tokens = tokenIssuer.issueTokens(userId)
         return toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
     }

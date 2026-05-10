@@ -217,6 +217,25 @@ class UserAuthApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `should keep current access token valid after user update`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(password = "newpassword123", bio = "Updated bio"))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(200)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .get("/api/user")
+            .then()
+            .statusCode(200)
+            .body("user.bio", equalTo("Updated bio"))
+    }
+
+    @Test
     fun `should update user password`() {
         val user = ApiTestFixtures.registerUser()
         val newPassword = "newpassword123"
