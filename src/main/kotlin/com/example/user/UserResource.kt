@@ -45,7 +45,7 @@ class UserResource(
 
     @POST
     @Path("/users/refresh")
-    fun refreshToken(body: RefreshTokenPayload): UserEnvelope =
+    fun refresh(body: RefreshTokenPayload): UserEnvelope =
         UserEnvelope(userService.refresh(body.refreshToken) ?: throw UnauthorizedException("Invalid refresh token"))
 
     @POST
