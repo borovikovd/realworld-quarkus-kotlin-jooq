@@ -45,8 +45,10 @@ class UserResource(
 
     @POST
     @Path("/users/refresh")
-    fun refresh(body: RefreshTokenPayload): UserEnvelope =
-        UserEnvelope(userService.refresh(body.refreshToken) ?: throw UnauthorizedException("Invalid refresh token"))
+    fun refreshToken(body: RefreshTokenPayload): UserEnvelope {
+        val user = userService.refreshToken(body.refreshToken) ?: throw UnauthorizedException("Invalid refresh token")
+        return UserEnvelope(user)
+    }
 
     @POST
     @Path("/users/logout")

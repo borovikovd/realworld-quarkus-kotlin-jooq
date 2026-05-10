@@ -154,7 +154,7 @@ class UserService(
 
     /** Returns null on any invalid-token outcome; the resource layer translates that to 401. */
     @Transactional
-    fun refresh(refreshToken: String): AuthenticatedUser? {
+    fun refreshToken(refreshToken: String): AuthenticatedUser? {
         val stored = tokenIssuer.findRefreshToken(refreshToken)
 
         return when {
