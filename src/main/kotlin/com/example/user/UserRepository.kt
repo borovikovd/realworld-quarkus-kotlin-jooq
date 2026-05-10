@@ -31,7 +31,7 @@ interface UserRepository {
 
     fun existsByUsername(username: String): Boolean
 
-    fun erase(id: UserId)
+    fun delete(id: UserId)
 
     fun findProfile(
         username: String,
@@ -127,7 +127,7 @@ class JooqUserRepository(
                 .and(USER.DELETED_AT.isNull),
         )
 
-    override fun erase(id: UserId) {
+    override fun delete(id: UserId) {
         val now = OffsetDateTime.now()
         dsl
             .deleteFrom(FOLLOWERS)

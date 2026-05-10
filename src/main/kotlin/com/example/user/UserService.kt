@@ -143,13 +143,13 @@ class UserService(
     }
 
     @Transactional
-    fun eraseUser() {
+    fun deleteUser() {
         val userId = currentUser.require()
         val jti = currentUser.jti
         tokenIssuer.revokeAllRefreshTokens(userId)
         if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
-        userRepository.erase(userId)
-        logger.info("User erased: userId={}", userId.value)
+        userRepository.delete(userId)
+        logger.info("User deleted: userId={}", userId.value)
     }
 
     /** Returns null on any invalid-token outcome; the resource layer translates that to 401. */
