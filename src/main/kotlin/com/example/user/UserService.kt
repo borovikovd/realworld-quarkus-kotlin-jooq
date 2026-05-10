@@ -158,8 +158,12 @@ class UserService(
             throw UnauthorizedException("Invalid refresh token")
         }
 
-        // false means a concurrent request already won the UPDATE race — token already used.
+        // false means the row was valid at SELECT but already revoked at UPDATE — i.e. another
+        // party used the same token concurrently. Per RFC 9700 §4.14.2, treat this as token reuse
+        // and invalidate every refresh token for the user so a thief who won the race loses
+        // their freshly issued token within seconds.
         if (!tokenIssuer.revokeRefreshToken(refreshToken)) {
+            tokenIssuer.revokeAllRefreshTokens(stored.userId)
             throw UnauthorizedException("Invalid refresh token")
         }
 
