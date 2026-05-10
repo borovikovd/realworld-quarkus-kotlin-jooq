@@ -109,6 +109,7 @@ class UserService(
         password: Patch<String>,
         bio: Patch<String>,
         image: Patch<String>,
+        jti: UUID? = null,
     ): AuthenticatedUser {
         val user = userRepository.findById(userId) ?: throw UnauthorizedException("User not found")
 
@@ -132,6 +133,7 @@ class UserService(
 
         userRepository.update(updated)
         tokenIssuer.revokeAllRefreshTokens(userId)
+        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         val tokens = tokenIssuer.issueTokens(userId)
         return toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
     }

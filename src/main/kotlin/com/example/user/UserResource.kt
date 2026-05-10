@@ -84,6 +84,7 @@ class UserResource(
                 password = u.password,
                 bio = u.bio,
                 image = u.image,
+                jti = currentUser.jti,
             ),
         )
     }
