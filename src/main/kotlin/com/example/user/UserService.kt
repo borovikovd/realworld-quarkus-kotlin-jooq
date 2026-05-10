@@ -12,6 +12,7 @@ import com.example.common.web.Patch
 import com.example.common.web.UnauthorizedException
 import com.example.common.web.Validation
 import com.example.common.web.ValidationException
+import com.example.common.web.orElseNullable
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -125,16 +126,8 @@ class UserService(
                 username = resolvedUsername,
                 passwordHash =
                     if (resolvedPassword != null) passwordHashing.hash(resolvedPassword) else user.passwordHash,
-                bio =
-                    when (bio) {
-                        is Patch.Absent -> user.bio
-                        is Patch.Present -> bio.value?.ifBlank { null }
-                    },
-                image =
-                    when (image) {
-                        is Patch.Absent -> user.image
-                        is Patch.Present -> image.value?.ifBlank { null }
-                    },
+                bio = bio.orElseNullable(user.bio)?.ifBlank { null },
+                image = image.orElseNullable(user.image)?.ifBlank { null },
                 updatedAt = now,
             )
 
@@ -215,43 +208,52 @@ class UserService(
     private fun resolvePassword(
         patch: Patch<String>,
         v: Validation,
-    ): String? {
-        if (patch is Patch.Absent) return null
-        val value = (patch as Patch.Present).value
-        v.check("password", !value.isNullOrBlank()) { "can't be blank" }
-        v.check("password", value == null || value.length >= MIN_PASSWORD_LENGTH) {
-            "must be at least $MIN_PASSWORD_LENGTH characters"
+    ): String? =
+        when (patch) {
+            is Patch.Absent -> null
+            is Patch.Present -> {
+                val value = patch.value
+                v.check("password", !value.isNullOrBlank()) { "can't be blank" }
+                v.check("password", value == null || value.length >= MIN_PASSWORD_LENGTH) {
+                    "must be at least $MIN_PASSWORD_LENGTH characters"
+                }
+                value
+            }
         }
-        return value
-    }
 
     private fun resolveEmail(
         patch: Patch<String>,
         current: String,
         v: Validation,
-    ): String {
-        if (patch is Patch.Absent) return current
-        val value = (patch as Patch.Present).value
-        v.check("email", !value.isNullOrBlank()) { "can't be blank" }
-        if (value != null && value != current) {
-            v.check("email", !userRepository.existsByEmail(value)) { "has already been taken" }
+    ): String =
+        when (patch) {
+            is Patch.Absent -> current
+            is Patch.Present -> {
+                val value = patch.value
+                v.check("email", !value.isNullOrBlank()) { "can't be blank" }
+                if (value != null && value != current) {
+                    v.check("email", !userRepository.existsByEmail(value)) { "has already been taken" }
+                }
+                value ?: current
+            }
         }
-        return value ?: current
-    }
 
     private fun resolveUsername(
         patch: Patch<String>,
         current: String,
         v: Validation,
-    ): String {
-        if (patch is Patch.Absent) return current
-        val value = (patch as Patch.Present).value
-        v.check("username", !value.isNullOrBlank()) { "can't be blank" }
-        if (value != null && value != current) {
-            v.check("username", !userRepository.existsByUsername(value)) { "has already been taken" }
+    ): String =
+        when (patch) {
+            is Patch.Absent -> current
+            is Patch.Present -> {
+                val value = patch.value
+                v.check("username", !value.isNullOrBlank()) { "can't be blank" }
+                if (value != null && value != current) {
+                    v.check("username", !userRepository.existsByUsername(value)) { "has already been taken" }
+                }
+                value ?: current
+            }
         }
-        return value ?: current
-    }
 
     private val dummyHash: PasswordHash = passwordHashing.hash("timing-equalizer-not-a-real-password")
 

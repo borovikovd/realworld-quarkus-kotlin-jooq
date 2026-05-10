@@ -13,6 +13,13 @@ sealed class Patch<out T> {
     ) : Patch<T>()
 }
 
+/** Absent → [default]; Present → value (including null). For nullable fields where null is meaningful. */
+fun <T> Patch<T>.orElseNullable(default: T?): T? =
+    when (this) {
+        is Patch.Absent -> default
+        is Patch.Present -> value
+    }
+
 class StringPatchDeserializer : StdDeserializer<Patch<String>>(Patch::class.java) {
     override fun deserialize(
         p: JsonParser,
@@ -28,5 +35,6 @@ class ListStringPatchDeserializer : StdDeserializer<Patch<List<String>>>(Patch::
         ctxt: DeserializationContext,
     ): Patch<List<String>> = Patch.Present(p.readValueAs(object : TypeReference<List<String>>() {}))
 
-    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Present(null)
+    // null in JSON ("tagList": null) treated as absent — keep existing tags
+    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Absent
 }
