@@ -67,12 +67,12 @@ class UserResource(
     @PUT
     @Path("/user")
     @RolesAllowed("user")
-    fun updateUser(
+    fun updateCurrentUser(
         @Valid body: UpdateUserRequest,
     ): UserEnvelope {
         val u = body.user
         return UserEnvelope(
-            userService.updateUser(
+            userService.updateCurrentUser(
                 email = u.email,
                 username = u.username,
                 password = u.password,
@@ -86,7 +86,7 @@ class UserResource(
     @Path("/user")
     @RolesAllowed("user")
     @ResponseStatus(204)
-    fun deleteUser() {
-        userService.deleteUser()
+    fun deleteCurrentUser() {
+        userService.deleteCurrentUser()
     }
 }

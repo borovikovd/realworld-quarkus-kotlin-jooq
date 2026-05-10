@@ -100,7 +100,7 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(
+    fun updateCurrentUser(
         email: Patch<String>,
         username: Patch<String>,
         password: Patch<String>,
@@ -143,7 +143,7 @@ class UserService(
     }
 
     @Transactional
-    fun deleteUser() {
+    fun deleteCurrentUser() {
         val userId = currentUser.require()
         val jti = currentUser.jti
         tokenIssuer.revokeAllRefreshTokens(userId)
