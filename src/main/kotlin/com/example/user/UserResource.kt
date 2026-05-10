@@ -2,6 +2,7 @@ package com.example.user
 
 import com.example.common.security.CurrentUser
 import com.example.common.web.NotFoundException
+import com.example.common.web.UnauthorizedException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.validation.Valid
@@ -47,7 +48,8 @@ class UserResource(
 
     @POST
     @Path("/users/refresh")
-    fun refreshToken(body: RefreshTokenPayload): UserEnvelope = UserEnvelope(userService.refresh(body.refreshToken))
+    fun refreshToken(body: RefreshTokenPayload): UserEnvelope =
+        UserEnvelope(userService.refresh(body.refreshToken) ?: throw UnauthorizedException("Invalid refresh token"))
 
     @POST
     @Path("/users/logout")

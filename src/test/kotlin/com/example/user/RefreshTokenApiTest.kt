@@ -146,4 +146,29 @@ class RefreshTokenApiTest : BaseApiTest() {
             .then()
             .statusCode(401)
     }
+
+    @Test
+    fun `logout does not revoke another user's refresh token`() {
+        val alice = ApiTestFixtures.registerUser()
+        val bob = ApiTestFixtures.registerUser()
+
+        // Bob, authenticated, submits Alice's refresh token in the logout body.
+        ApiTestFixtures
+            .authenticatedRequest(bob.token)
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${alice.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/logout")
+            .then()
+            .statusCode(204)
+
+        // Alice's refresh token must still work.
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${alice.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(200)
+    }
 }

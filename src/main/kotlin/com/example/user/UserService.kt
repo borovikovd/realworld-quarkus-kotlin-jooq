@@ -147,28 +147,28 @@ class UserService(
         logger.info("User erased: userId={}", userId.value)
     }
 
+    /** Returns null on any invalid-token outcome; the resource layer translates that to 401. */
     @Transactional
-    fun refresh(refreshToken: String): AuthenticatedUser {
-        val stored =
-            tokenIssuer.findRefreshToken(refreshToken)
-                ?: throw UnauthorizedException("Invalid refresh token")
-
-        val now = OffsetDateTime.now()
-        if (stored.revokedAt != null || stored.expiresAt.isBefore(now)) {
-            throw UnauthorizedException("Invalid refresh token")
+    fun refresh(refreshToken: String): AuthenticatedUser? {
+        val stored = tokenIssuer.findRefreshToken(refreshToken)
+        return when {
+            stored == null -> null
+            stored.revokedAt != null || stored.expiresAt.isBefore(OffsetDateTime.now()) -> null
+            // revokeRefreshToken returning false means the row was valid at SELECT but already
+            // revoked at UPDATE — concurrent reuse. Per RFC 9700 §4.14.2, revoke the family so the
+            // thief who won the race loses their freshly issued token within seconds. Returning
+            // null (rather than throwing) keeps the revocation in the same transaction.
+            !tokenIssuer.revokeRefreshToken(refreshToken) -> {
+                tokenIssuer.revokeAllRefreshTokens(stored.userId)
+                null
+            }
+            else -> issueRotatedTokens(stored.userId)
         }
+    }
 
-        // false means the row was valid at SELECT but already revoked at UPDATE — i.e. another
-        // party used the same token concurrently. Per RFC 9700 §4.14.2, treat this as token reuse
-        // and invalidate every refresh token for the user so a thief who won the race loses
-        // their freshly issued token within seconds.
-        if (!tokenIssuer.revokeRefreshToken(refreshToken)) {
-            tokenIssuer.revokeAllRefreshTokens(stored.userId)
-            throw UnauthorizedException("Invalid refresh token")
-        }
-
-        val tokens = tokenIssuer.issueTokens(stored.userId)
-        val user = userRepository.findById(stored.userId) ?: throw NotFoundException("user", "User not found")
+    private fun issueRotatedTokens(userId: UserId): AuthenticatedUser {
+        val tokens = tokenIssuer.issueTokens(userId)
+        val user = userRepository.findById(userId) ?: throw NotFoundException("user", "User not found")
         return toAuthenticatedUser(user, tokens.accessToken, tokens.refreshToken)
     }
 
@@ -178,7 +178,12 @@ class UserService(
         jti: UUID?,
         userId: UserId?,
     ) {
-        tokenIssuer.revokeRefreshToken(refreshToken)
+        // Only revoke the refresh token if it belongs to the authenticated user, so a holder
+        // of token X can't revoke another user's refresh token by submitting it in the body.
+        val stored = tokenIssuer.findRefreshToken(refreshToken)
+        if (stored != null && stored.userId == userId) {
+            tokenIssuer.revokeRefreshToken(refreshToken)
+        }
         if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
 
