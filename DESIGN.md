@@ -88,29 +88,6 @@ The entity carries `id` and `authorId`; the DTO never does. No `@JsonIgnore` sme
 
 ---
 
-# Article — canonical example
-
-## `ArticleService.kt`
-
-Load entity → `copy()` with patches → save → refetch DTO. Pure Kotlin partial-merge.
-
----
-
-# Comment
-
-Same shape, simpler. **No `Comment` entity** — RealWorld doesn't allow comment updates, so no partial-patch snapshot is needed. Repository returns `CommentDto` for reads, takes `(articleId, authorId, body, now)` for inserts, and a small `(commentId, authorId)` lookup for delete-ownership.
-
-`CommentService` is ~30 lines: `add`, `delete`, `listByArticle`. Cross-feature dependency: `articles.findIdBySlug(slug)` (or similar minimal lookup) lives on `ArticleRepository`.
-
-# User / Profile
-
-The `user/` package contains the services and repositories for user management:
-
-- `UserService` — handles both user actions (register, login, get current, update self, mounted at `/api/users` and `/api/user`) and profile actions (get profile, follow, unfollow, mounted at `/api/profiles/:username`).
-- Both sets of REST endpoints share `UserRepository`, which also owns the `follows` table. Following has no aggregate of its own; it's a join table with `follow(followerId, followeeId)` / `unfollow(followerId, followeeId)` / `findProfile(username, viewerId): ProfileDto?` methods on `UserRepository`.
-
-`ProfileDto` carries `following: Boolean` computed by a viewer-aware projection in the same SQL that loads the user row. No N+1.
-
 # Cross-cutting
 
 ## Auth
