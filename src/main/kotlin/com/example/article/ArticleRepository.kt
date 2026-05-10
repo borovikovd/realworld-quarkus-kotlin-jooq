@@ -23,71 +23,18 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
-interface ArticleRepository {
-    fun nextId(): ArticleId
-
-    fun insert(article: Article)
-
-    fun findBySlug(slug: String): Article?
-
-    fun findIdBySlug(slug: String): ArticleId?
-
-    fun existsBySlug(slug: String): Boolean
-
-    fun update(article: Article)
-
-    fun deleteById(id: ArticleId)
-
-    fun favorite(
-        id: ArticleId,
-        viewerId: UserId,
-    )
-
-    fun unfavorite(
-        id: ArticleId,
-        viewerId: UserId,
-    )
-
-    fun findDtoBySlug(
-        slug: String,
-        viewerId: UserId?,
-    ): ArticleDto?
-
-    fun findDtoById(
-        id: ArticleId,
-        viewerId: UserId?,
-    ): ArticleDto?
-
-    fun list(
-        filter: ArticleFilter,
-        page: Page,
-        viewerId: UserId?,
-    ): List<ArticleListItemDto>
-
-    fun feed(
-        viewerId: UserId,
-        page: Page,
-    ): List<ArticleListItemDto>
-
-    fun count(filter: ArticleFilter): Int
-
-    fun feedCount(viewerId: UserId): Int
-
-    fun allTags(): List<String>
-}
-
 @ApplicationScoped
-class JooqArticleRepository(
+class ArticleRepository(
     private val dsl: DSLContext,
-) : ArticleRepository {
+) {
     private val author: User = USER.`as`("author")
     private val favByViewer: Favorite = FAVORITE.`as`("fav_by_viewer")
     private val folByViewer: Follower = FOLLOWER.`as`("fol_by_viewer")
 
-    override fun nextId(): ArticleId =
+    fun nextId(): ArticleId =
         ArticleId(dsl.select(DSL.field("nextval('article_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
-    override fun insert(article: Article) {
+    fun insert(article: Article) {
         dsl
             .insertInto(ARTICLE)
             .set(ARTICLE.ID, article.id.value)
@@ -103,9 +50,9 @@ class JooqArticleRepository(
         saveTags(article.id, article.tags)
     }
 
-    override fun findBySlug(slug: String): Article? = selectArticleWhere(ARTICLE.SLUG.eq(slug))
+    fun findBySlug(slug: String): Article? = selectArticleWhere(ARTICLE.SLUG.eq(slug))
 
-    override fun findIdBySlug(slug: String): ArticleId? =
+    fun findIdBySlug(slug: String): ArticleId? =
         dsl
             .select(ARTICLE.ID)
             .from(ARTICLE)
@@ -113,10 +60,10 @@ class JooqArticleRepository(
             .fetchOne()
             ?.let { ArticleId(it.req(ARTICLE.ID)) }
 
-    override fun existsBySlug(slug: String): Boolean =
+    fun existsBySlug(slug: String): Boolean =
         dsl.fetchExists(dsl.selectOne().from(ARTICLE).where(ARTICLE.SLUG.eq(slug)))
 
-    override fun update(article: Article) {
+    fun update(article: Article) {
         dsl
             .update(ARTICLE)
             .set(ARTICLE.SLUG, article.slug)
@@ -131,11 +78,11 @@ class JooqArticleRepository(
         saveTags(article.id, article.tags)
     }
 
-    override fun deleteById(id: ArticleId) {
+    fun deleteById(id: ArticleId) {
         dsl.deleteFrom(ARTICLE).where(ARTICLE.ID.eq(id.value)).execute()
     }
 
-    override fun favorite(
+    fun favorite(
         id: ArticleId,
         viewerId: UserId,
     ) {
@@ -147,7 +94,7 @@ class JooqArticleRepository(
             .execute()
     }
 
-    override fun unfavorite(
+    fun unfavorite(
         id: ArticleId,
         viewerId: UserId,
     ) {
@@ -158,7 +105,7 @@ class JooqArticleRepository(
             .execute()
     }
 
-    override fun findDtoBySlug(
+    fun findDtoBySlug(
         slug: String,
         viewerId: UserId?,
     ): ArticleDto? =
@@ -172,7 +119,7 @@ class JooqArticleRepository(
             .fetchOne()
             ?.toDto()
 
-    override fun findDtoById(
+    fun findDtoById(
         id: ArticleId,
         viewerId: UserId?,
     ): ArticleDto? =
@@ -186,7 +133,7 @@ class JooqArticleRepository(
             .fetchOne()
             ?.toDto()
 
-    override fun list(
+    fun list(
         filter: ArticleFilter,
         page: Page,
         viewerId: UserId?,
@@ -204,7 +151,7 @@ class JooqArticleRepository(
             .fetch()
             .map { it.toListItemDto() }
 
-    override fun feed(
+    fun feed(
         viewerId: UserId,
         page: Page,
     ): List<ArticleListItemDto> =
@@ -226,14 +173,14 @@ class JooqArticleRepository(
             .fetch()
             .map { it.toListItemDto() }
 
-    override fun count(filter: ArticleFilter): Int =
+    fun count(filter: ArticleFilter): Int =
         dsl
             .selectCount()
             .from(ARTICLE)
             .where(buildConditions(filter))
             .fetchOne(0, Int::class.java) ?: 0
 
-    override fun feedCount(viewerId: UserId): Int =
+    fun feedCount(viewerId: UserId): Int =
         dsl
             .selectCount()
             .from(ARTICLE)
@@ -245,7 +192,7 @@ class JooqArticleRepository(
                 ),
             ).fetchOne(0, Int::class.java) ?: 0
 
-    override fun allTags(): List<String> =
+    fun allTags(): List<String> =
         dsl
             .select(TAG.NAME)
             .from(TAG)

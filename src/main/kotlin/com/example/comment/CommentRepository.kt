@@ -17,36 +17,16 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 
-interface CommentRepository {
-    fun nextId(): CommentId
-
-    fun insert(comment: Comment)
-
-    fun findById(id: CommentId): Comment?
-
-    fun deleteById(id: CommentId)
-
-    fun findDtoById(
-        id: CommentId,
-        viewerId: UserId?,
-    ): CommentDto?
-
-    fun findDtosByArticleSlug(
-        slug: String,
-        viewerId: UserId?,
-    ): List<CommentDto>
-}
-
 @ApplicationScoped
-class JooqCommentRepository(
+class CommentRepository(
     private val dsl: DSLContext,
-) : CommentRepository {
+) {
     private val author: User = USER.`as`("author")
 
-    override fun nextId(): CommentId =
+    fun nextId(): CommentId =
         CommentId(dsl.select(DSL.field("nextval('comment_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
-    override fun insert(comment: Comment) {
+    fun insert(comment: Comment) {
         dsl
             .insertInto(COMMENT)
             .set(COMMENT.ID, comment.id.value)
@@ -58,7 +38,7 @@ class JooqCommentRepository(
             .execute()
     }
 
-    override fun findById(id: CommentId): Comment? =
+    fun findById(id: CommentId): Comment? =
         dsl
             .selectFrom(COMMENT)
             .where(COMMENT.ID.eq(id.value))
@@ -74,11 +54,11 @@ class JooqCommentRepository(
                 )
             }
 
-    override fun deleteById(id: CommentId) {
+    fun deleteById(id: CommentId) {
         dsl.deleteFrom(COMMENT).where(COMMENT.ID.eq(id.value)).execute()
     }
 
-    override fun findDtoById(
+    fun findDtoById(
         id: CommentId,
         viewerId: UserId?,
     ): CommentDto? =
@@ -91,7 +71,7 @@ class JooqCommentRepository(
             .fetchOne()
             ?.toDto()
 
-    override fun findDtosByArticleSlug(
+    fun findDtosByArticleSlug(
         slug: String,
         viewerId: UserId?,
     ): List<CommentDto> =

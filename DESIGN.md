@@ -20,7 +20,7 @@ com/example/
 ├── article/
 │   ├── ArticleResource.kt
 │   ├── ArticleService.kt
-│   ├── ArticleRepository.kt        // interface + JooqArticleRepository, one file
+│   ├── ArticleRepository.kt        // jOOQ data access
 │   ├── Article.kt                  // ArticleId, Article, ArticleFilter, Page
 │   ├── ArticleDtos.kt              // ArticleDto, NewArticle, ArticlePatch, …
 │   ├── SlugGenerator.kt
@@ -42,7 +42,8 @@ com/example/
     ├── persistence/ // jOOQ DSLContext config, req() extension
     ├── ratelimit/   // RateLimiter
     ├── security/    // CurrentUser, TokenIssuer, PasswordHashing, RefreshToken repos
-    └── web/         // exception mappers, Validation, Patch
+    ├── validation/  // validation accumulator and exception
+    └── web/         // exception mappers, Patch
 ```
 
 ## Naming
@@ -51,7 +52,7 @@ com/example/
 |---|---|
 | HTTP endpoint | `XxxResource` (JAX-RS convention; not `Controller`) |
 | Business orchestration | `XxxService` |
-| Data access | `XxxRepository` (interface) + `JooqXxxRepository` (impl), same file |
+| Data access | `XxxRepository` |
 | Entity (write-side) | bare noun: `Article`, `Comment`, `User` |
 | Response DTO | `XxxDto` |
 | Request DTO | `NewXxx` (create), `XxxPatch` (update) |
@@ -138,8 +139,7 @@ Default `limit = 20`, `offset = 0` declared inline at the resource via `@Default
 - **Package-by-feature** instead of `domain/`/`application/`/`infrastructure/`.
 - **`Article` as thin Kotlin data class** instead of aggregate root with value-object scaffolding.
 - **One `ArticleService`** instead of `ArticleCommands` + `ArticleQueries` interfaces.
-- **One `ArticleRepository`** (writes + read projections) instead of `ArticleRepository` + `ArticleFinder` split.
-- **Repository as concrete class in feature package** — no port/adapter separation. Interface stays for test seam only.
+- **One concrete `ArticleRepository`** (writes + read projections) instead of `ArticleRepository` + `ArticleFinder` or interface + implementation split.
 - **Hand-written DTOs with Bean Validation** instead of OpenAPI-generated POJOs. Smallrye-OpenAPI generates the spec from annotations.
 - **`XxxResource` naming** per Jakarta REST convention.
 - **DTOs with no internal fields** — `ArticleDto` does not carry `authorId`. Separate `Article` entity for write-side state.
@@ -159,7 +159,7 @@ Default `limit = 20`, `offset = 0` declared inline at the resource via `@Default
 Replace this design *only* when one of these triggers fires:
 
 - **Real domain logic appears.** Drafts vs published, scheduled posts, version history. Then `Article` grows methods and a `Status` enum, and the service shrinks toward orchestration.
-- **A second adapter to the same data** beyond REST + maybe GraphQL. Repository abstraction earns its keep when there's a non-HTTP write path with different concurrency or transaction semantics.
+- **A second persistence implementation appears.** Extract a repository interface when there is a concrete alternate adapter, not preemptively.
 - **Multi-tenant or org-scoped operations.** Auth gets richer (ABAC, row-level security) and the service might benefit from a use-case-handler split.
 - **Performance asymmetry between reads and writes.** If reads outscale writes by 100×, a CQRS split with separate read replicas / projections becomes worth its complexity. Until then, one repository, two return shapes.
 - **The team grows past ~10 engineers.** Stricter layering and more enforcement (ArchUnit rules, module boundaries) start paying for themselves.

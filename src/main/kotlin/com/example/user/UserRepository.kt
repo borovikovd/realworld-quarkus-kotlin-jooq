@@ -14,49 +14,14 @@ import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
 import java.time.OffsetDateTime
 
-interface UserRepository {
-    fun nextId(): UserId
-
-    fun insert(user: User)
-
-    fun update(user: User)
-
-    fun findById(id: UserId): User?
-
-    fun findByEmail(email: String): User?
-
-    fun findUserIdByUsername(username: String): UserId?
-
-    fun existsByEmail(email: String): Boolean
-
-    fun existsByUsername(username: String): Boolean
-
-    fun delete(id: UserId)
-
-    fun findProfile(
-        username: String,
-        viewerId: UserId?,
-    ): ProfileDto?
-
-    fun follow(
-        followerId: UserId,
-        followeeId: UserId,
-    )
-
-    fun unfollow(
-        followerId: UserId,
-        followeeId: UserId,
-    )
-}
-
 @ApplicationScoped
-class JooqUserRepository(
+class UserRepository(
     private val dsl: DSLContext,
-) : UserRepository {
-    override fun nextId(): UserId =
+) {
+    fun nextId(): UserId =
         UserId(dsl.select(DSL.field("nextval('user_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
-    override fun insert(user: User) {
+    fun insert(user: User) {
         val now = user.createdAt
         dsl
             .insertInto(USER)
@@ -71,7 +36,7 @@ class JooqUserRepository(
             .execute()
     }
 
-    override fun update(user: User) {
+    fun update(user: User) {
         dsl
             .update(USER)
             .set(USER.EMAIL, user.email)
@@ -84,7 +49,7 @@ class JooqUserRepository(
             .execute()
     }
 
-    override fun findById(id: UserId): User? =
+    fun findById(id: UserId): User? =
         dsl
             .selectFrom(USER)
             .where(USER.ID.eq(id.value))
@@ -92,7 +57,7 @@ class JooqUserRepository(
             .fetchOne()
             ?.let { toUser(it) }
 
-    override fun findByEmail(email: String): User? =
+    fun findByEmail(email: String): User? =
         dsl
             .selectFrom(USER)
             .where(USER.EMAIL.eq(email))
@@ -100,7 +65,7 @@ class JooqUserRepository(
             .fetchOne()
             ?.let { toUser(it) }
 
-    override fun findUserIdByUsername(username: String): UserId? =
+    fun findUserIdByUsername(username: String): UserId? =
         dsl
             .select(USER.ID)
             .from(USER)
@@ -109,7 +74,7 @@ class JooqUserRepository(
             .fetchOne()
             ?.let { UserId(it.req(USER.ID)) }
 
-    override fun existsByEmail(email: String): Boolean =
+    fun existsByEmail(email: String): Boolean =
         dsl.fetchExists(
             dsl
                 .selectOne()
@@ -118,7 +83,7 @@ class JooqUserRepository(
                 .and(USER.DELETED_AT.isNull),
         )
 
-    override fun existsByUsername(username: String): Boolean =
+    fun existsByUsername(username: String): Boolean =
         dsl.fetchExists(
             dsl
                 .selectOne()
@@ -127,7 +92,7 @@ class JooqUserRepository(
                 .and(USER.DELETED_AT.isNull),
         )
 
-    override fun delete(id: UserId) {
+    fun delete(id: UserId) {
         val now = OffsetDateTime.now()
         dsl
             .deleteFrom(FOLLOWER)
@@ -144,7 +109,7 @@ class JooqUserRepository(
             .execute()
     }
 
-    override fun findProfile(
+    fun findProfile(
         username: String,
         viewerId: UserId?,
     ): ProfileDto? =
@@ -173,7 +138,7 @@ class JooqUserRepository(
                 )
             }
 
-    override fun follow(
+    fun follow(
         followerId: UserId,
         followeeId: UserId,
     ) {
@@ -185,7 +150,7 @@ class JooqUserRepository(
             .execute()
     }
 
-    override fun unfollow(
+    fun unfollow(
         followerId: UserId,
         followeeId: UserId,
     ) {

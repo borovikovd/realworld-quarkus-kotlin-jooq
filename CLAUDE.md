@@ -1,6 +1,6 @@
 # Claude Code Assistant Guidelines
 
-Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ on hexagonal architecture: domain → application (ports) → infrastructure (adapters).
+Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ using pragmatic package-by-feature layering: Resource → Service → Repository.
 
 ## Workflow
 
@@ -20,7 +20,7 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ on hexagonal architectu
 
 ## Architecture (enforced by ArchUnit)
 
-- **Outbound port packages contain interfaces only.** DTOs, read models, and value-bag types live in dedicated DTO/readmodel packages, never in port packages.
+- **Avoid speculative interfaces.** Services and repositories stay concrete until a real second implementation or module boundary appears.
 - **Scope correctly.** `@ApplicationScoped` for stateless services, `@RequestScoped` for per-request state. Never store request data in singletons.
 - **Transactions on writes only.** Mark command-side service methods `@Transactional`; reads don't need it.
 - **Aggregates, not rows.** Repositories return whole aggregates. DTO mapping happens at the REST layer.

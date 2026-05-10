@@ -39,7 +39,8 @@ com.example/
     ├── security/   CurrentUser, PasswordHashing, TokenIssuer,
     │               RefreshTokenRepository, RevokedTokenRepository,
     │               RevokedTokenFilter, RefreshTokenCleanupJob
-    ├── web/        Exception mappers, Filters (MDC, status code), Validation
+    ├── validation/ Validation helper and exception
+    ├── web/        Exception mappers, Filters (MDC, status code), Patch
     ├── persistence/ JooqConfiguration, req() extension
     └── time/       Clock
 ```
