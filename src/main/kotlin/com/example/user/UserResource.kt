@@ -1,7 +1,5 @@
 package com.example.user
 
-import com.example.common.security.CurrentUser
-import com.example.common.web.NotFoundException
 import com.example.common.web.UnauthorizedException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
@@ -23,7 +21,6 @@ import org.jboss.resteasy.reactive.ResponseStatus
 @Consumes(MediaType.APPLICATION_JSON)
 class UserResource(
     private val userService: UserService,
-    private val currentUser: CurrentUser,
 ) {
     @POST
     @Path("/users")
@@ -57,17 +54,13 @@ class UserResource(
     @ResponseStatus(204)
     @APIResponse(responseCode = "204", description = "No Content")
     fun logout(body: LogoutPayload) {
-        userService.logout(body.refreshToken, currentUser.jti, currentUser.id)
+        userService.logout(body.refreshToken)
     }
 
     @GET
     @Path("/user")
     @RolesAllowed("user")
-    fun getCurrentUser(): UserEnvelope {
-        val userId = currentUser.require()
-        val rawToken = currentUser.rawToken ?: throw NotFoundException("token", "Token not present")
-        return UserEnvelope(userService.getCurrentUser(userId, rawToken))
-    }
+    fun getCurrentUser(): UserEnvelope = UserEnvelope(userService.getCurrentUser())
 
     @PUT
     @Path("/user")
@@ -78,13 +71,11 @@ class UserResource(
         val u = body.user
         return UserEnvelope(
             userService.updateUser(
-                userId = currentUser.require(),
                 email = u.email,
                 username = u.username,
                 password = u.password,
                 bio = u.bio,
                 image = u.image,
-                jti = currentUser.jti,
             ),
         )
     }
@@ -94,6 +85,6 @@ class UserResource(
     @RolesAllowed("user")
     @ResponseStatus(204)
     fun deleteCurrentUser() {
-        userService.eraseUser(currentUser.require(), currentUser.jti)
+        userService.eraseUser()
     }
 }

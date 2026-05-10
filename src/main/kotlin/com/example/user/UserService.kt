@@ -16,7 +16,6 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
-import java.util.UUID
 
 @ApplicationScoped
 class UserService(
@@ -93,24 +92,22 @@ class UserService(
         return toAuthenticatedUser(found, tokens.accessToken, tokens.refreshToken)
     }
 
-    fun getCurrentUser(
-        userId: UserId,
-        rawToken: String,
-    ): AuthenticatedUser {
+    fun getCurrentUser(): AuthenticatedUser {
+        val userId = currentUser.require()
+        val rawToken = currentUser.rawToken ?: throw UnauthorizedException("Token not present")
         val user = userRepository.findById(userId) ?: throw NotFoundException("user", "User not found")
         return toAuthenticatedUser(user, rawToken, "")
     }
 
     @Transactional
     fun updateUser(
-        userId: UserId,
         email: Patch<String>,
         username: Patch<String>,
         password: Patch<String>,
         bio: Patch<String>,
         image: Patch<String>,
-        jti: UUID? = null,
     ): AuthenticatedUser {
+        val userId = currentUser.require()
         val user = userRepository.findById(userId) ?: throw UnauthorizedException("User not found")
 
         val v = Validation()
@@ -139,16 +136,16 @@ class UserService(
 
         userRepository.update(updated)
         tokenIssuer.revokeAllRefreshTokens(userId)
+        val jti = currentUser.jti
         if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         val tokens = tokenIssuer.issueTokens(userId)
         return toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
     }
 
     @Transactional
-    fun eraseUser(
-        userId: UserId,
-        jti: UUID?,
-    ) {
+    fun eraseUser() {
+        val userId = currentUser.require()
+        val jti = currentUser.jti
         tokenIssuer.revokeAllRefreshTokens(userId)
         if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         userRepository.erase(userId)
@@ -178,11 +175,9 @@ class UserService(
     }
 
     @Transactional
-    fun logout(
-        refreshToken: String,
-        jti: UUID?,
-        userId: UserId?,
-    ) {
+    fun logout(refreshToken: String) {
+        val userId = currentUser.id
+        val jti = currentUser.jti
         // Only revoke the refresh token if it belongs to the authenticated user, so a holder
         // of token X can't revoke another user's refresh token by submitting it in the body.
         val stored = tokenIssuer.findRefreshToken(refreshToken)
