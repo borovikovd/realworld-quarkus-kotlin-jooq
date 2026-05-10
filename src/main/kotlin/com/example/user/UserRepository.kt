@@ -1,21 +1,13 @@
 package com.example.user
 
-import com.example.common.persistence.FIELD_BIO
-import com.example.common.persistence.FIELD_EMAIL
-import com.example.common.persistence.FIELD_IMAGE
-import com.example.common.persistence.FIELD_USERNAME
-import com.example.common.persistence.decryptAuthorProfile
 import com.example.common.persistence.req
-import com.example.common.security.CryptoService
 import com.example.common.security.PasswordHash
 import com.example.common.time.Clock
-import com.example.jooq.auth.tables.references.PASSWORD
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FAVORITES
 import com.example.jooq.public.tables.references.FOLLOWERS
 import com.example.jooq.public.tables.references.USER
-import com.example.jooq.vault.tables.references.PERSON
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -60,141 +52,84 @@ interface UserRepository {
 @ApplicationScoped
 class JooqUserRepository(
     private val dsl: DSLContext,
-    private val crypto: CryptoService,
     private val clock: Clock,
 ) : UserRepository {
     override fun nextId(): UserId =
         UserId(dsl.select(DSL.field("nextval('user_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
     override fun insert(user: User) {
-        val userId = user.id.value
         val now = user.createdAt
-
         dsl
             .insertInto(USER)
-            .set(USER.ID, userId)
+            .set(USER.ID, user.id.value)
+            .set(USER.EMAIL, user.email)
+            .set(USER.USERNAME, user.username)
+            .set(USER.PASSWORD_HASH, user.passwordHash.value)
+            .set(USER.BIO, user.bio)
+            .set(USER.IMAGE, user.image)
             .set(USER.CREATED_AT, now)
             .set(USER.UPDATED_AT, now)
-            .execute()
-
-        dsl
-            .insertInto(PERSON)
-            .set(PERSON.USER_ID, userId)
-            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, FIELD_EMAIL, user.email))
-            .set(PERSON.EMAIL_HASH, crypto.hmacEmail(user.email))
-            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, FIELD_USERNAME, user.username))
-            .set(PERSON.USERNAME_HASH, crypto.hmacUsername(user.username))
-            .set(PERSON.BIO_ENC, user.bio?.let { crypto.encryptField(userId, FIELD_BIO, it) })
-            .set(PERSON.IMAGE_ENC, user.image?.let { crypto.encryptField(userId, FIELD_IMAGE, it) })
-            .set(PERSON.CREATED_AT, now)
-            .set(PERSON.UPDATED_AT, now)
-            .execute()
-
-        dsl
-            .insertInto(PASSWORD)
-            .set(PASSWORD.USER_ID, userId)
-            .set(PASSWORD.HASH, user.passwordHash.value)
-            .set(PASSWORD.CREATED_AT, now)
-            .set(PASSWORD.UPDATED_AT, now)
             .execute()
     }
 
     override fun update(user: User) {
-        val userId = user.id.value
-
         dsl
             .update(USER)
+            .set(USER.EMAIL, user.email)
+            .set(USER.USERNAME, user.username)
+            .set(USER.PASSWORD_HASH, user.passwordHash.value)
+            .set(USER.BIO, user.bio)
+            .set(USER.IMAGE, user.image)
             .set(USER.UPDATED_AT, user.updatedAt)
-            .where(USER.ID.eq(userId))
-            .execute()
-
-        dsl
-            .update(PERSON)
-            .set(PERSON.EMAIL_ENC, crypto.encryptField(userId, FIELD_EMAIL, user.email))
-            .set(PERSON.EMAIL_HASH, crypto.hmacEmail(user.email))
-            .set(PERSON.USERNAME_ENC, crypto.encryptField(userId, FIELD_USERNAME, user.username))
-            .set(PERSON.USERNAME_HASH, crypto.hmacUsername(user.username))
-            .set(PERSON.BIO_ENC, user.bio?.let { crypto.encryptField(userId, FIELD_BIO, it) })
-            .set(PERSON.IMAGE_ENC, user.image?.let { crypto.encryptField(userId, FIELD_IMAGE, it) })
-            .set(PERSON.UPDATED_AT, user.updatedAt)
-            .where(PERSON.USER_ID.eq(userId))
-            .execute()
-
-        dsl
-            .update(PASSWORD)
-            .set(PASSWORD.HASH, user.passwordHash.value)
-            .set(PASSWORD.UPDATED_AT, user.updatedAt)
-            .where(PASSWORD.USER_ID.eq(userId))
+            .where(USER.ID.eq(user.id.value))
             .execute()
     }
 
     override fun findById(id: UserId): User? =
         dsl
-            .select(
-                USER.ID,
-                USER.CREATED_AT,
-                USER.UPDATED_AT,
-                PERSON.EMAIL_ENC,
-                PERSON.USERNAME_ENC,
-                PERSON.BIO_ENC,
-                PERSON.IMAGE_ENC,
-                PASSWORD.HASH,
-            ).from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .join(PASSWORD)
-            .on(PASSWORD.USER_ID.eq(USER.ID))
+            .selectFrom(USER)
             .where(USER.ID.eq(id.value))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { toUser(it) }
 
-    override fun findByEmail(email: String): User? {
-        val emailHash = crypto.hmacEmail(email)
-        return dsl
-            .select(
-                USER.ID,
-                USER.CREATED_AT,
-                USER.UPDATED_AT,
-                PERSON.EMAIL_ENC,
-                PERSON.USERNAME_ENC,
-                PERSON.BIO_ENC,
-                PERSON.IMAGE_ENC,
-                PASSWORD.HASH,
-            ).from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .join(PASSWORD)
-            .on(PASSWORD.USER_ID.eq(USER.ID))
-            .where(PERSON.EMAIL_HASH.eq(emailHash))
+    override fun findByEmail(email: String): User? =
+        dsl
+            .selectFrom(USER)
+            .where(USER.EMAIL.eq(email))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { toUser(it) }
-    }
 
-    override fun findUserIdByUsername(username: String): UserId? {
-        val usernameHash = crypto.hmacUsername(username)
-        return dsl
+    override fun findUserIdByUsername(username: String): UserId? =
+        dsl
             .select(USER.ID)
             .from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .where(PERSON.USERNAME_HASH.eq(usernameHash))
+            .where(USER.USERNAME.eq(username))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { UserId(it.req(USER.ID)) }
-    }
 
     override fun existsByEmail(email: String): Boolean =
-        dsl.fetchExists(dsl.selectOne().from(PERSON).where(PERSON.EMAIL_HASH.eq(crypto.hmacEmail(email))))
+        dsl.fetchExists(
+            dsl
+                .selectOne()
+                .from(USER)
+                .where(USER.EMAIL.eq(email))
+                .and(USER.DELETED_AT.isNull),
+        )
 
     override fun existsByUsername(username: String): Boolean =
-        dsl.fetchExists(dsl.selectOne().from(PERSON).where(PERSON.USERNAME_HASH.eq(crypto.hmacUsername(username))))
+        dsl.fetchExists(
+            dsl
+                .selectOne()
+                .from(USER)
+                .where(USER.USERNAME.eq(username))
+                .and(USER.DELETED_AT.isNull),
+        )
 
     override fun erase(id: UserId) {
         val now = clock.now()
-        dsl.deleteFrom(PERSON).where(PERSON.USER_ID.eq(id.value)).execute()
-        dsl.deleteFrom(PASSWORD).where(PASSWORD.USER_ID.eq(id.value)).execute()
         dsl
             .deleteFrom(FOLLOWERS)
             .where(FOLLOWERS.FOLLOWER_ID.eq(id.value).or(FOLLOWERS.FOLLOWEE_ID.eq(id.value)))
@@ -213,35 +148,31 @@ class JooqUserRepository(
     override fun findProfile(
         username: String,
         viewerId: UserId?,
-    ): ProfileDto? {
-        val usernameHash = crypto.hmacUsername(username)
-        return dsl
+    ): ProfileDto? =
+        dsl
             .select(
-                USER.ID,
-                PERSON.USERNAME_ENC,
-                PERSON.BIO_ENC,
-                PERSON.IMAGE_ENC,
+                USER.USERNAME,
+                USER.BIO,
+                USER.IMAGE,
                 viewerId?.let {
                     select(count())
                         .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWEE_ID.eq(PERSON.USER_ID))
+                        .where(FOLLOWERS.FOLLOWEE_ID.eq(USER.ID))
                         .and(FOLLOWERS.FOLLOWER_ID.eq(it.value))
                         .asField("following")
                 } ?: DSL.`val`(0).`as`("following"),
             ).from(USER)
-            .join(PERSON)
-            .on(PERSON.USER_ID.eq(USER.ID))
-            .where(PERSON.USERNAME_HASH.eq(usernameHash))
+            .where(USER.USERNAME.eq(username))
             .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->
-                record.decryptAuthorProfile(
-                    crypto = crypto,
-                    userId = record.get(USER.ID),
+                ProfileDto(
+                    username = record.req(USER.USERNAME),
+                    bio = record.get(USER.BIO),
+                    image = record.get(USER.IMAGE),
                     following = record.get("following", Int::class.java) > 0,
                 )
             }
-    }
 
     override fun follow(
         followerId: UserId,
@@ -266,17 +197,15 @@ class JooqUserRepository(
             .execute()
     }
 
-    private fun toUser(record: org.jooq.Record): User {
-        val userId = record.req(USER.ID)
-        return User(
-            id = UserId(userId),
-            email = crypto.decryptField(userId, FIELD_EMAIL, record.req(PERSON.EMAIL_ENC)),
-            username = crypto.decryptField(userId, FIELD_USERNAME, record.req(PERSON.USERNAME_ENC)),
-            passwordHash = PasswordHash(record.req(PASSWORD.HASH)),
-            bio = record.get(PERSON.BIO_ENC)?.let { crypto.decryptField(userId, FIELD_BIO, it) },
-            image = record.get(PERSON.IMAGE_ENC)?.let { crypto.decryptField(userId, FIELD_IMAGE, it) },
+    private fun toUser(record: org.jooq.Record): User =
+        User(
+            id = UserId(record.req(USER.ID)),
+            email = record.req(USER.EMAIL),
+            username = record.req(USER.USERNAME),
+            passwordHash = PasswordHash(record.req(USER.PASSWORD_HASH)),
+            bio = record.get(USER.BIO),
+            image = record.get(USER.IMAGE),
             createdAt = record.req(USER.CREATED_AT),
             updatedAt = record.req(USER.UPDATED_AT),
         )
-    }
 }

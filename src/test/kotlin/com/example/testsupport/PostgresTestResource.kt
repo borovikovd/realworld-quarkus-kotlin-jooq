@@ -51,7 +51,6 @@ class PostgresTestResource : QuarkusTestResourceLifecycleManager {
                 stmt.execute(
                     """
                     DROP SCHEMA IF EXISTS auth CASCADE;
-                    DROP SCHEMA IF EXISTS vault CASCADE;
                     DROP SCHEMA public CASCADE;
                     CREATE SCHEMA public;
                     """.trimIndent(),

@@ -5,6 +5,7 @@ import com.example.user.UserId
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -18,7 +19,6 @@ class TokenIssuer(
     @param:ConfigProperty(name = "app.token.refresh-expiry-days") private val refreshExpiryDays: Long,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
-    private val crypto: CryptoService,
     private val clock: Clock,
 ) {
     private val secureRandom = SecureRandom()
@@ -31,18 +31,16 @@ class TokenIssuer(
         val refreshToken = generateRefreshToken()
         refreshTokenRepository.store(
             userId = userId,
-            tokenHash = crypto.hmacRefreshToken(refreshToken),
+            tokenHash = sha256(refreshToken),
             expiresAt = clock.now().plus(refreshTokenExpiry),
         )
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
-    fun findRefreshToken(token: String): StoredRefreshToken? =
-        refreshTokenRepository.findByHash(crypto.hmacRefreshToken(token))
+    fun findRefreshToken(token: String): StoredRefreshToken? = refreshTokenRepository.findByHash(sha256(token))
 
     /** Returns false if the token was already revoked or not found. */
-    fun revokeRefreshToken(token: String): Boolean =
-        refreshTokenRepository.revokeByHash(crypto.hmacRefreshToken(token), clock.now())
+    fun revokeRefreshToken(token: String): Boolean = refreshTokenRepository.revokeByHash(sha256(token), clock.now())
 
     fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId, clock.now())
 
@@ -71,5 +69,10 @@ class TokenIssuer(
 
     companion object {
         private const val REFRESH_TOKEN_BYTES = 32
+
+        fun sha256(value: String): String {
+            val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
+            return Base64.getEncoder().encodeToString(digest)
+        }
     }
 }

@@ -1,13 +1,13 @@
 package com.example.comment
 
 import com.example.article.ArticleId
-import com.example.common.persistence.decryptAuthorProfile
 import com.example.common.persistence.req
-import com.example.common.security.CryptoService
+import com.example.jooq.public.tables.User
 import com.example.jooq.public.tables.references.ARTICLES
 import com.example.jooq.public.tables.references.COMMENTS
 import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.jooq.vault.tables.references.PERSON
+import com.example.jooq.public.tables.references.USER
+import com.example.user.ProfileDto
 import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -40,8 +40,9 @@ interface CommentRepository {
 @ApplicationScoped
 class JooqCommentRepository(
     private val dsl: DSLContext,
-    private val crypto: CryptoService,
 ) : CommentRepository {
+    private val author: User = USER.`as`("author")
+
     override fun nextId(): CommentId =
         CommentId(dsl.select(DSL.field("nextval('comments_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
@@ -84,8 +85,8 @@ class JooqCommentRepository(
         dsl
             .select(commentFields(viewerId))
             .from(COMMENTS)
-            .leftJoin(PERSON)
-            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
+            .join(author)
+            .on(author.ID.eq(COMMENTS.AUTHOR_ID))
             .where(COMMENTS.ID.eq(id.value))
             .fetchOne()
             ?.toDto()
@@ -97,8 +98,8 @@ class JooqCommentRepository(
         dsl
             .select(commentFields(viewerId))
             .from(COMMENTS)
-            .leftJoin(PERSON)
-            .on(PERSON.USER_ID.eq(COMMENTS.AUTHOR_ID))
+            .join(author)
+            .on(author.ID.eq(COMMENTS.AUTHOR_ID))
             .join(ARTICLES)
             .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
             .where(ARTICLES.SLUG.eq(slug))
@@ -112,10 +113,9 @@ class JooqCommentRepository(
             COMMENTS.BODY,
             COMMENTS.CREATED_AT,
             COMMENTS.UPDATED_AT,
-            COMMENTS.AUTHOR_ID,
-            PERSON.USERNAME_ENC,
-            PERSON.BIO_ENC,
-            PERSON.IMAGE_ENC,
+            author.USERNAME,
+            author.BIO,
+            author.IMAGE,
             if (viewerId != null) {
                 select(count())
                     .from(FOLLOWERS)
@@ -133,6 +133,12 @@ class JooqCommentRepository(
             body = req(COMMENTS.BODY),
             createdAt = req(COMMENTS.CREATED_AT),
             updatedAt = req(COMMENTS.UPDATED_AT),
-            author = decryptAuthorProfile(crypto, req(COMMENTS.AUTHOR_ID), req("following", Int::class.java) > 0),
+            author =
+                ProfileDto(
+                    username = req(author.USERNAME),
+                    bio = get(author.BIO),
+                    image = get(author.IMAGE),
+                    following = req("following", Int::class.java) > 0,
+                ),
         )
 }

@@ -1,7 +1,5 @@
 schema "public" {}
 
-schema "vault" {}
-
 schema "auth" {}
 
 table "idempotency_key" {
@@ -49,6 +47,26 @@ table "user" {
     null = false
     type = bigserial
   }
+  column "email" {
+    null = false
+    type = varchar(255)
+  }
+  column "username" {
+    null = false
+    type = varchar(255)
+  }
+  column "password_hash" {
+    null = false
+    type = text
+  }
+  column "bio" {
+    null = true
+    type = text
+  }
+  column "image" {
+    null = true
+    type = varchar(1000)
+  }
   column "deleted_at" {
     null = true
     type = timestamptz
@@ -66,109 +84,17 @@ table "user" {
   primary_key {
     columns = [column.id]
   }
-}
-
-table "person" {
-  schema = schema.vault
-  column "id" {
-    null    = false
-    type    = uuid
-    default = sql("gen_random_uuid()")
+  unique "user_email_key" {
+    columns = [column.email]
   }
-  column "user_id" {
-    null = false
-    type = bigint
+  unique "user_username_key" {
+    columns = [column.username]
   }
-  column "email_enc" {
-    null = false
-    type = bytea
+  index "idx_user_email" {
+    columns = [column.email]
   }
-  column "email_hash" {
-    null = false
-    type = varchar(100)
-  }
-  column "email_verified_at" {
-    null = true
-    type = timestamptz
-  }
-  column "username_enc" {
-    null = false
-    type = bytea
-  }
-  column "username_hash" {
-    null = false
-    type = varchar(100)
-  }
-  column "bio_enc" {
-    null = true
-    type = bytea
-  }
-  column "image_enc" {
-    null = true
-    type = bytea
-  }
-  column "created_at" {
-    null    = false
-    type    = timestamptz
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  column "updated_at" {
-    null    = false
-    type    = timestamptz
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  primary_key {
-    columns = [column.id]
-  }
-  unique "person_user_id_key" {
-    columns = [column.user_id]
-  }
-  unique "person_email_hash_key" {
-    columns = [column.email_hash]
-  }
-  unique "person_username_hash_key" {
-    columns = [column.username_hash]
-  }
-  foreign_key "person_user_id_fkey" {
-    columns     = [column.user_id]
-    ref_columns = [table.user.column.id]
-    on_delete   = CASCADE
-  }
-  index "idx_person_email_hash" {
-    columns = [column.email_hash]
-  }
-  index "idx_person_username_hash" {
-    columns = [column.username_hash]
-  }
-}
-
-table "password" {
-  schema = schema.auth
-  column "user_id" {
-    null = false
-    type = bigint
-  }
-  column "hash" {
-    null = false
-    type = text
-  }
-  column "created_at" {
-    null    = false
-    type    = timestamptz
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  column "updated_at" {
-    null    = false
-    type    = timestamptz
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  primary_key {
-    columns = [column.user_id]
-  }
-  foreign_key "password_user_id_fkey" {
-    columns     = [column.user_id]
-    ref_columns = [table.user.column.id]
-    on_delete   = CASCADE
+  index "idx_user_username" {
+    columns = [column.username]
   }
 }
 

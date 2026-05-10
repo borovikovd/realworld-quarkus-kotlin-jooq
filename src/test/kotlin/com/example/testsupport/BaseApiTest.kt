@@ -6,7 +6,6 @@ import org.jooq.DSLContext
 import org.junit.jupiter.api.BeforeEach
 
 @QuarkusTestResource(PostgresTestResource::class)
-@QuarkusTestResource(VaultTestResource::class)
 abstract class BaseApiTest {
     @Inject
     lateinit var dsl: DSLContext
@@ -20,10 +19,9 @@ abstract class BaseApiTest {
         dsl.execute(
             """
             TRUNCATE TABLE
-                vault.person,
-                auth.password,
                 public.idempotency_key,
                 auth.revoked_token,
+                auth.refresh_token,
                 public.article_tags,
                 public.favorites,
                 public.followers,

@@ -51,9 +51,6 @@ dependencies {
     // jOOQ integration
     implementation("io.quarkiverse.jooq:quarkus-jooq:2.1.0")
 
-    // Vault Transit (HMAC, DEK wrapping)
-    implementation("io.quarkiverse.vault:quarkus-vault:4.7.0")
-
     // Observability
     implementation("io.quarkus:quarkus-logging-json")
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
@@ -65,9 +62,6 @@ dependencies {
 
     // Container image (native build via Quarkus tools)
     implementation("io.quarkus:quarkus-container-image-docker")
-
-    // In-process field encryption + MAC (keysets wrapped at rest by Vault Transit KEK)
-    implementation("com.google.crypto.tink:tink:1.21.0")
 
     // External dependencies
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
@@ -107,17 +101,6 @@ allOpen {
     annotation("jakarta.enterprise.context.ApplicationScoped")
     annotation("jakarta.persistence.Entity")
     annotation("io.quarkus.test.junit.QuarkusTest")
-}
-
-// ============================================
-// Source Sets
-// ============================================
-sourceSets {
-    create("tools") {
-        kotlin.srcDir("src/tools/kotlin")
-        compileClasspath += configurations["runtimeClasspath"]
-        runtimeClasspath += configurations["runtimeClasspath"]
-    }
 }
 
 // ============================================
@@ -260,16 +243,3 @@ tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask> {
     setSource(fileTree("src/main/kotlin"))
 }
 
-// Provision Tink keysets against a running Vault instance.
-// Usage: VAULT_ADDR=http://... VAULT_TOKEN=... ./gradlew provisionKeysets
-tasks.register<JavaExec>("provisionKeysets") {
-    group = "operations"
-    description = "Generate Tink keysets, wrap with Vault Transit, print env vars and cold-backup cleartext."
-    classpath = sourceSets["tools"].runtimeClasspath
-    mainClass = "com.example.tools.ProvisionKeysetsKt"
-    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
-    args = listOf(
-        providers.environmentVariable("VAULT_ADDR").getOrElse("http://localhost:8200"),
-        providers.environmentVariable("VAULT_TOKEN").getOrElse("dev-root-token"),
-    )
-}

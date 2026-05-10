@@ -1,3 +1,5 @@
+-- Add new schema named "auth"
+CREATE SCHEMA "auth";
 -- Create "idempotency_key" table
 CREATE TABLE "public"."idempotency_key" (
   "key" character varying(255) NOT NULL,
@@ -11,18 +13,25 @@ CREATE TABLE "public"."idempotency_key" (
 );
 -- Create index "idx_idempotency_key_expires_at" to table: "idempotency_key"
 CREATE INDEX "idx_idempotency_key_expires_at" ON "public"."idempotency_key" ("expires_at");
--- Add new schema named "vault"
-CREATE SCHEMA "vault";
 -- Create "user" table
 CREATE TABLE "public"."user" (
   "id" bigserial NOT NULL,
+  "email" character varying(255) NOT NULL,
+  "username" character varying(255) NOT NULL,
+  "password_hash" text NOT NULL,
+  "bio" text NULL,
+  "image" character varying(1000) NULL,
   "deleted_at" timestamptz NULL,
   "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id")
+  PRIMARY KEY ("id"),
+  CONSTRAINT "user_email_key" UNIQUE ("email"),
+  CONSTRAINT "user_username_key" UNIQUE ("username")
 );
--- Add new schema named "auth"
-CREATE SCHEMA "auth";
+-- Create index "idx_user_email" to table: "user"
+CREATE INDEX "idx_user_email" ON "public"."user" ("email");
+-- Create index "idx_user_username" to table: "user"
+CREATE INDEX "idx_user_username" ON "public"."user" ("username");
 -- Create "articles" table
 CREATE TABLE "public"."articles" (
   "id" bigserial NOT NULL,
@@ -104,38 +113,6 @@ CREATE TABLE "public"."followers" (
 CREATE INDEX "idx_followers_followee_id" ON "public"."followers" ("followee_id");
 -- Create index "idx_followers_follower_id" to table: "followers"
 CREATE INDEX "idx_followers_follower_id" ON "public"."followers" ("follower_id");
--- Create "password" table
-CREATE TABLE "auth"."password" (
-  "user_id" bigint NOT NULL,
-  "hash" text NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("user_id"),
-  CONSTRAINT "password_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
--- Create "person" table
-CREATE TABLE "vault"."person" (
-  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-  "user_id" bigint NOT NULL,
-  "email_enc" bytea NOT NULL,
-  "email_hash" character varying(100) NOT NULL,
-  "email_verified_at" timestamptz NULL,
-  "username_enc" bytea NOT NULL,
-  "username_hash" character varying(100) NOT NULL,
-  "bio_enc" bytea NULL,
-  "image_enc" bytea NULL,
-  "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  CONSTRAINT "person_email_hash_key" UNIQUE ("email_hash"),
-  CONSTRAINT "person_user_id_key" UNIQUE ("user_id"),
-  CONSTRAINT "person_username_hash_key" UNIQUE ("username_hash"),
-  CONSTRAINT "person_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
-);
--- Create index "idx_person_email_hash" to table: "person"
-CREATE INDEX "idx_person_email_hash" ON "vault"."person" ("email_hash");
--- Create index "idx_person_username_hash" to table: "person"
-CREATE INDEX "idx_person_username_hash" ON "vault"."person" ("username_hash");
 -- Create "refresh_token" table
 CREATE TABLE "auth"."refresh_token" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
