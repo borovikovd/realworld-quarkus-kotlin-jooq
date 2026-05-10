@@ -91,11 +91,9 @@ data class ArticlePatch(
     @field:JsonDeserialize(using = ListStringPatchDeserializer::class) val tagList: Patch<List<String>> = Patch.Absent,
 ) {
     init {
-        if (tagList is Patch.Present) {
-            tagList.value?.let { tags ->
-                require(tags.size <= MAX_TAG) { "Too many tags" }
-                require(tags.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
-            }
+        if (tagList is Patch.Value) {
+            require(tagList.value.size <= MAX_TAG) { "Too many tags" }
+            require(tagList.value.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
         }
     }
 }

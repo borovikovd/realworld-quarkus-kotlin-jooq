@@ -70,10 +70,9 @@ class ArticleService(
 
         val tags =
             when (tagList) {
-                is Patch.Absent -> article.tags
-                is Patch.Present ->
-                    tagList.value?.toSet()
-                        ?: throw ValidationException(mapOf("tagList" to listOf("must not be null")))
+                Patch.Absent -> article.tags
+                Patch.Null -> throw ValidationException(mapOf("tagList" to listOf("must not be null")))
+                is Patch.Value -> tagList.value.toSet()
             }
 
         val updated =

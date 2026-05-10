@@ -8,32 +8,34 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 sealed class Patch<out T> {
     data object Absent : Patch<Nothing>()
 
-    data class Present<out T>(
-        val value: T?,
+    data object Null : Patch<Nothing>()
+
+    data class Value<out T>(
+        val value: T,
     ) : Patch<T>()
 }
 
-/** Absent → [default]; Present → value (including null). For nullable fields where null is meaningful. */
 fun <T> Patch<T>.orElseNullable(default: T?): T? =
     when (this) {
-        is Patch.Absent -> default
-        is Patch.Present -> value
+        Patch.Absent -> default
+        Patch.Null -> null
+        is Patch.Value -> value
     }
 
 class StringPatchDeserializer : StdDeserializer<Patch<String>>(Patch::class.java) {
     override fun deserialize(
         p: JsonParser,
         ctxt: DeserializationContext,
-    ): Patch<String> = Patch.Present(p.text)
+    ): Patch<String> = Patch.Value(p.text)
 
-    override fun getNullValue(ctxt: DeserializationContext?): Patch<String> = Patch.Present(null)
+    override fun getNullValue(ctxt: DeserializationContext?): Patch<String> = Patch.Null
 }
 
 class ListStringPatchDeserializer : StdDeserializer<Patch<List<String>>>(Patch::class.java) {
     override fun deserialize(
         p: JsonParser,
         ctxt: DeserializationContext,
-    ): Patch<List<String>> = Patch.Present(p.readValueAs(object : TypeReference<List<String>>() {}))
+    ): Patch<List<String>> = Patch.Value(p.readValueAs(object : TypeReference<List<String>>() {}))
 
-    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Present(null)
+    override fun getNullValue(ctxt: DeserializationContext?): Patch<List<String>> = Patch.Null
 }

@@ -114,10 +114,10 @@ class UserService(
         val resolvedPassword = resolvePassword(password, v)
         val resolvedEmail = resolveEmail(email, user.email, v)
         val resolvedUsername = resolveUsername(username, user.username, v)
-        if (bio is Patch.Present && bio.value != null) {
+        if (bio is Patch.Value) {
             v.check("bio", bio.value.length <= MAX_BIO_LENGTH) { "must be at most $MAX_BIO_LENGTH characters" }
         }
-        if (image is Patch.Present && image.value != null) {
+        if (image is Patch.Value) {
             v.check("image", image.value.length <= MAX_IMAGE_LENGTH) { "must be at most $MAX_IMAGE_LENGTH characters" }
         }
         v.throwIfInvalid()
@@ -215,11 +215,15 @@ class UserService(
         v: Validation,
     ): String? =
         when (patch) {
-            is Patch.Absent -> null
-            is Patch.Present -> {
+            Patch.Absent -> null
+            Patch.Null -> {
+                v.check("password", false) { "can't be blank" }
+                null
+            }
+            is Patch.Value -> {
                 val value = patch.value
-                v.check("password", !value.isNullOrBlank()) { "can't be blank" }
-                v.check("password", value == null || value.length >= MIN_PASSWORD_LENGTH) {
+                v.check("password", value.isNotBlank()) { "can't be blank" }
+                v.check("password", value.length >= MIN_PASSWORD_LENGTH) {
                     "must be at least $MIN_PASSWORD_LENGTH characters"
                 }
                 value
@@ -232,14 +236,18 @@ class UserService(
         v: Validation,
     ): String =
         when (patch) {
-            is Patch.Absent -> current
-            is Patch.Present -> {
+            Patch.Absent -> current
+            Patch.Null -> {
+                v.check("email", false) { "can't be blank" }
+                current
+            }
+            is Patch.Value -> {
                 val value = patch.value
-                v.check("email", !value.isNullOrBlank()) { "can't be blank" }
-                if (value != null && value != current) {
+                v.check("email", value.isNotBlank()) { "can't be blank" }
+                if (value != current) {
                     v.check("email", !userRepository.existsByEmail(value)) { "has already been taken" }
                 }
-                value ?: current
+                value
             }
         }
 
@@ -249,14 +257,18 @@ class UserService(
         v: Validation,
     ): String =
         when (patch) {
-            is Patch.Absent -> current
-            is Patch.Present -> {
+            Patch.Absent -> current
+            Patch.Null -> {
+                v.check("username", false) { "can't be blank" }
+                current
+            }
+            is Patch.Value -> {
                 val value = patch.value
-                v.check("username", !value.isNullOrBlank()) { "can't be blank" }
-                if (value != null && value != current) {
+                v.check("username", value.isNotBlank()) { "can't be blank" }
+                if (value != current) {
                     v.check("username", !userRepository.existsByUsername(value)) { "has already been taken" }
                 }
-                value ?: current
+                value
             }
         }
 
