@@ -1,5 +1,6 @@
 package com.example.common.web
 
+import com.example.common.validation.ValidationException
 import jakarta.validation.ConstraintViolationException
 import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.Response

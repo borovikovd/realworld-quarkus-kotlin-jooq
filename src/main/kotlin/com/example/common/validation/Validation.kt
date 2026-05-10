@@ -1,4 +1,4 @@
-package com.example.common.web
+package com.example.common.validation
 
 class Validation {
     private val errors = linkedMapOf<String, MutableList<String>>()
@@ -22,3 +22,7 @@ class Validation {
         if (errors.isNotEmpty()) throw ValidationException(errors.mapValues { it.value.toList() })
     }
 }
+
+class ValidationException(
+    val errors: Map<String, List<String>>,
+) : RuntimeException("Validation failed")

@@ -1,10 +1,10 @@
 package com.example.article
 
 import com.example.common.security.CurrentUser
+import com.example.common.validation.ValidationException
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
-import com.example.common.web.ValidationException
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory

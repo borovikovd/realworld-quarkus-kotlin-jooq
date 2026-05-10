@@ -4,13 +4,13 @@ import com.example.common.security.CurrentUser
 import com.example.common.security.PasswordHash
 import com.example.common.security.PasswordHashing
 import com.example.common.security.TokenIssuer
+import com.example.common.validation.Validation
+import com.example.common.validation.ValidationException
 import com.example.common.web.ConflictException
 import com.example.common.web.InvalidCredentialsException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
 import com.example.common.web.UnauthorizedException
-import com.example.common.web.Validation
-import com.example.common.web.ValidationException
 import com.example.common.web.orElseNullable
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
