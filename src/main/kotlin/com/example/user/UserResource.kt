@@ -27,7 +27,7 @@ class UserResource(
     @ResponseStatus(201)
     @APIResponse(responseCode = "201", description = "Created")
     @APIResponse(responseCode = "409", description = "Conflict")
-    fun createUser(
+    fun register(
         @Valid body: NewUserRequest,
     ): UserEnvelope {
         val u = body.user

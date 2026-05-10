@@ -106,7 +106,7 @@ class ArticleResource(
     @Path("/{slug}/favorite")
     @RolesAllowed("user")
     @APIResponse(responseCode = "404", description = "Not Found")
-    fun createArticleFavorite(
+    fun favoriteArticle(
         @PathParam("slug") slug: String,
     ): ArticleEnvelope = ArticleEnvelope(articleService.favorite(slug))
 
@@ -114,7 +114,7 @@ class ArticleResource(
     @Path("/{slug}/favorite")
     @RolesAllowed("user")
     @APIResponse(responseCode = "404", description = "Not Found")
-    fun deleteArticleFavorite(
+    fun unfavoriteArticle(
         @PathParam("slug") slug: String,
     ): ArticleEnvelope = ArticleEnvelope(articleService.unfavorite(slug))
 }

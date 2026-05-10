@@ -22,7 +22,7 @@ class ProfileResource(
 ) {
     @GET
     @APIResponse(responseCode = "404", description = "Not Found")
-    fun getProfileByUsername(
+    fun getProfile(
         @PathParam("username") username: String,
     ): ProfileEnvelope = ProfileEnvelope(requireProfile(username, currentUser.id))
 
@@ -30,7 +30,7 @@ class ProfileResource(
     @Path("/follow")
     @RolesAllowed("user")
     @APIResponse(responseCode = "404", description = "Not Found")
-    fun followUserByUsername(
+    fun followUser(
         @PathParam("username") username: String,
     ): ProfileEnvelope {
         userService.followUser(username)
@@ -41,7 +41,7 @@ class ProfileResource(
     @Path("/follow")
     @RolesAllowed("user")
     @APIResponse(responseCode = "404", description = "Not Found")
-    fun unfollowUserByUsername(
+    fun unfollowUser(
         @PathParam("username") username: String,
     ): ProfileEnvelope {
         userService.unfollowUser(username)
