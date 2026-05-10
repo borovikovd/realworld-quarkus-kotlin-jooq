@@ -1,14 +1,14 @@
 package com.example.article
 
 import com.example.common.persistence.req
-import com.example.jooq.public.tables.Favorites
-import com.example.jooq.public.tables.Followers
+import com.example.jooq.public.tables.Favorite
+import com.example.jooq.public.tables.Follower
 import com.example.jooq.public.tables.User
-import com.example.jooq.public.tables.references.ARTICLES
-import com.example.jooq.public.tables.references.ARTICLE_TAGS
-import com.example.jooq.public.tables.references.FAVORITES
-import com.example.jooq.public.tables.references.FOLLOWERS
-import com.example.jooq.public.tables.references.TAGS
+import com.example.jooq.public.tables.references.ARTICLE
+import com.example.jooq.public.tables.references.ARTICLE_TAG
+import com.example.jooq.public.tables.references.FAVORITE
+import com.example.jooq.public.tables.references.FOLLOWER
+import com.example.jooq.public.tables.references.TAG
 import com.example.jooq.public.tables.references.USER
 import com.example.user.ProfileDto
 import com.example.user.UserId
@@ -81,58 +81,58 @@ class JooqArticleRepository(
     private val dsl: DSLContext,
 ) : ArticleRepository {
     private val author: User = USER.`as`("author")
-    private val favByViewer: Favorites = FAVORITES.`as`("fav_by_viewer")
-    private val folByViewer: Followers = FOLLOWERS.`as`("fol_by_viewer")
+    private val favByViewer: Favorite = FAVORITE.`as`("fav_by_viewer")
+    private val folByViewer: Follower = FOLLOWER.`as`("fol_by_viewer")
 
     override fun nextId(): ArticleId =
-        ArticleId(dsl.select(DSL.field("nextval('articles_id_seq')", Long::class.java)).fetchSingle().value1()!!)
+        ArticleId(dsl.select(DSL.field("nextval('article_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
     override fun insert(article: Article) {
         dsl
-            .insertInto(ARTICLES)
-            .set(ARTICLES.ID, article.id.value)
-            .set(ARTICLES.SLUG, article.slug)
-            .set(ARTICLES.TITLE, article.title)
-            .set(ARTICLES.DESCRIPTION, article.description)
-            .set(ARTICLES.BODY, article.body)
-            .set(ARTICLES.AUTHOR_ID, article.authorId.value)
-            .set(ARTICLES.CREATED_AT, article.createdAt)
-            .set(ARTICLES.UPDATED_AT, article.updatedAt)
+            .insertInto(ARTICLE)
+            .set(ARTICLE.ID, article.id.value)
+            .set(ARTICLE.SLUG, article.slug)
+            .set(ARTICLE.TITLE, article.title)
+            .set(ARTICLE.DESCRIPTION, article.description)
+            .set(ARTICLE.BODY, article.body)
+            .set(ARTICLE.AUTHOR_ID, article.authorId.value)
+            .set(ARTICLE.CREATED_AT, article.createdAt)
+            .set(ARTICLE.UPDATED_AT, article.updatedAt)
             .execute()
 
         saveTags(article.id, article.tags)
     }
 
-    override fun findBySlug(slug: String): Article? = selectArticleWhere(ARTICLES.SLUG.eq(slug))
+    override fun findBySlug(slug: String): Article? = selectArticleWhere(ARTICLE.SLUG.eq(slug))
 
     override fun findIdBySlug(slug: String): ArticleId? =
         dsl
-            .select(ARTICLES.ID)
-            .from(ARTICLES)
-            .where(ARTICLES.SLUG.eq(slug))
+            .select(ARTICLE.ID)
+            .from(ARTICLE)
+            .where(ARTICLE.SLUG.eq(slug))
             .fetchOne()
-            ?.let { ArticleId(it.req(ARTICLES.ID)) }
+            ?.let { ArticleId(it.req(ARTICLE.ID)) }
 
     override fun existsBySlug(slug: String): Boolean =
-        dsl.fetchExists(dsl.selectOne().from(ARTICLES).where(ARTICLES.SLUG.eq(slug)))
+        dsl.fetchExists(dsl.selectOne().from(ARTICLE).where(ARTICLE.SLUG.eq(slug)))
 
     override fun update(article: Article) {
         dsl
-            .update(ARTICLES)
-            .set(ARTICLES.SLUG, article.slug)
-            .set(ARTICLES.TITLE, article.title)
-            .set(ARTICLES.DESCRIPTION, article.description)
-            .set(ARTICLES.BODY, article.body)
-            .set(ARTICLES.UPDATED_AT, article.updatedAt)
-            .where(ARTICLES.ID.eq(article.id.value))
+            .update(ARTICLE)
+            .set(ARTICLE.SLUG, article.slug)
+            .set(ARTICLE.TITLE, article.title)
+            .set(ARTICLE.DESCRIPTION, article.description)
+            .set(ARTICLE.BODY, article.body)
+            .set(ARTICLE.UPDATED_AT, article.updatedAt)
+            .where(ARTICLE.ID.eq(article.id.value))
             .execute()
 
-        dsl.deleteFrom(ARTICLE_TAGS).where(ARTICLE_TAGS.ARTICLE_ID.eq(article.id.value)).execute()
+        dsl.deleteFrom(ARTICLE_TAG).where(ARTICLE_TAG.ARTICLE_ID.eq(article.id.value)).execute()
         saveTags(article.id, article.tags)
     }
 
     override fun deleteById(id: ArticleId) {
-        dsl.deleteFrom(ARTICLES).where(ARTICLES.ID.eq(id.value)).execute()
+        dsl.deleteFrom(ARTICLE).where(ARTICLE.ID.eq(id.value)).execute()
     }
 
     override fun favorite(
@@ -140,9 +140,9 @@ class JooqArticleRepository(
         viewerId: UserId,
     ) {
         dsl
-            .insertInto(FAVORITES)
-            .set(FAVORITES.ARTICLE_ID, id.value)
-            .set(FAVORITES.USER_ID, viewerId.value)
+            .insertInto(FAVORITE)
+            .set(FAVORITE.ARTICLE_ID, id.value)
+            .set(FAVORITE.USER_ID, viewerId.value)
             .onDuplicateKeyIgnore()
             .execute()
     }
@@ -152,9 +152,9 @@ class JooqArticleRepository(
         viewerId: UserId,
     ) {
         dsl
-            .deleteFrom(FAVORITES)
-            .where(FAVORITES.ARTICLE_ID.eq(id.value))
-            .and(FAVORITES.USER_ID.eq(viewerId.value))
+            .deleteFrom(FAVORITE)
+            .where(FAVORITE.ARTICLE_ID.eq(id.value))
+            .and(FAVORITE.USER_ID.eq(viewerId.value))
             .execute()
     }
 
@@ -164,11 +164,11 @@ class JooqArticleRepository(
     ): ArticleDto? =
         dsl
             .select(articleFields(viewerId))
-            .from(ARTICLES)
+            .from(ARTICLE)
             .join(author)
-            .on(author.ID.eq(ARTICLES.AUTHOR_ID))
+            .on(author.ID.eq(ARTICLE.AUTHOR_ID))
             .applyViewerJoins(viewerId)
-            .where(ARTICLES.SLUG.eq(slug))
+            .where(ARTICLE.SLUG.eq(slug))
             .fetchOne()
             ?.toDto()
 
@@ -178,11 +178,11 @@ class JooqArticleRepository(
     ): ArticleDto? =
         dsl
             .select(articleFields(viewerId))
-            .from(ARTICLES)
+            .from(ARTICLE)
             .join(author)
-            .on(author.ID.eq(ARTICLES.AUTHOR_ID))
+            .on(author.ID.eq(ARTICLE.AUTHOR_ID))
             .applyViewerJoins(viewerId)
-            .where(ARTICLES.ID.eq(id.value))
+            .where(ARTICLE.ID.eq(id.value))
             .fetchOne()
             ?.toDto()
 
@@ -193,12 +193,12 @@ class JooqArticleRepository(
     ): List<ArticleListItemDto> =
         dsl
             .select(articleFields(viewerId, includeBody = false))
-            .from(ARTICLES)
+            .from(ARTICLE)
             .join(author)
-            .on(author.ID.eq(ARTICLES.AUTHOR_ID))
+            .on(author.ID.eq(ARTICLE.AUTHOR_ID))
             .applyViewerJoins(viewerId)
             .where(buildConditions(filter))
-            .orderBy(ARTICLES.CREATED_AT.desc())
+            .orderBy(ARTICLE.CREATED_AT.desc())
             .limit(page.limit)
             .offset(page.offset)
             .fetch()
@@ -210,17 +210,17 @@ class JooqArticleRepository(
     ): List<ArticleListItemDto> =
         dsl
             .select(articleFields(viewerId, includeBody = false))
-            .from(ARTICLES)
+            .from(ARTICLE)
             .join(author)
-            .on(author.ID.eq(ARTICLES.AUTHOR_ID))
+            .on(author.ID.eq(ARTICLE.AUTHOR_ID))
             .applyViewerJoins(viewerId)
             .where(
-                ARTICLES.AUTHOR_ID.`in`(
-                    select(FOLLOWERS.FOLLOWEE_ID)
-                        .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
+                ARTICLE.AUTHOR_ID.`in`(
+                    select(FOLLOWER.FOLLOWEE_ID)
+                        .from(FOLLOWER)
+                        .where(FOLLOWER.FOLLOWER_ID.eq(viewerId.value)),
                 ),
-            ).orderBy(ARTICLES.CREATED_AT.desc())
+            ).orderBy(ARTICLE.CREATED_AT.desc())
             .limit(page.limit)
             .offset(page.offset)
             .fetch()
@@ -229,27 +229,27 @@ class JooqArticleRepository(
     override fun count(filter: ArticleFilter): Int =
         dsl
             .selectCount()
-            .from(ARTICLES)
+            .from(ARTICLE)
             .where(buildConditions(filter))
             .fetchOne(0, Int::class.java) ?: 0
 
     override fun feedCount(viewerId: UserId): Int =
         dsl
             .selectCount()
-            .from(ARTICLES)
+            .from(ARTICLE)
             .where(
-                ARTICLES.AUTHOR_ID.`in`(
-                    select(FOLLOWERS.FOLLOWEE_ID)
-                        .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value)),
+                ARTICLE.AUTHOR_ID.`in`(
+                    select(FOLLOWER.FOLLOWEE_ID)
+                        .from(FOLLOWER)
+                        .where(FOLLOWER.FOLLOWER_ID.eq(viewerId.value)),
                 ),
             ).fetchOne(0, Int::class.java) ?: 0
 
     override fun allTags(): List<String> =
         dsl
-            .select(TAGS.NAME)
-            .from(TAGS)
-            .orderBy(TAGS.NAME)
+            .select(TAG.NAME)
+            .from(TAG)
+            .orderBy(TAG.NAME)
             .fetch()
             .mapNotNull { it.value1() }
 
@@ -257,25 +257,25 @@ class JooqArticleRepository(
         val conditions = mutableListOf<Condition>()
         filter.tag?.let {
             conditions.add(
-                ARTICLES.ID.`in`(
-                    select(ARTICLE_TAGS.ARTICLE_ID)
-                        .from(ARTICLE_TAGS)
-                        .join(TAGS)
-                        .on(TAGS.ID.eq(ARTICLE_TAGS.TAG_ID))
-                        .where(TAGS.NAME.eq(it)),
+                ARTICLE.ID.`in`(
+                    select(ARTICLE_TAG.ARTICLE_ID)
+                        .from(ARTICLE_TAG)
+                        .join(TAG)
+                        .on(TAG.ID.eq(ARTICLE_TAG.TAG_ID))
+                        .where(TAG.NAME.eq(it)),
                 ),
             )
         }
         filter.author?.let {
-            conditions.add(ARTICLES.AUTHOR_ID.`in`(select(USER.ID).from(USER).where(USER.USERNAME.eq(it))))
+            conditions.add(ARTICLE.AUTHOR_ID.`in`(select(USER.ID).from(USER).where(USER.USERNAME.eq(it))))
         }
         filter.favorited?.let {
             conditions.add(
-                ARTICLES.ID.`in`(
-                    select(FAVORITES.ARTICLE_ID)
-                        .from(FAVORITES)
+                ARTICLE.ID.`in`(
+                    select(FAVORITE.ARTICLE_ID)
+                        .from(FAVORITE)
                         .join(USER)
-                        .on(USER.ID.eq(FAVORITES.USER_ID))
+                        .on(USER.ID.eq(FAVORITE.USER_ID))
                         .where(USER.USERNAME.eq(it)),
                 ),
             )
@@ -286,9 +286,9 @@ class JooqArticleRepository(
     private fun <R : Record> SelectJoinStep<R>.applyViewerJoins(viewerId: UserId?): SelectJoinStep<R> {
         viewerId ?: return this
         return leftJoin(favByViewer)
-            .on(favByViewer.ARTICLE_ID.eq(ARTICLES.ID).and(favByViewer.USER_ID.eq(viewerId.value)))
+            .on(favByViewer.ARTICLE_ID.eq(ARTICLE.ID).and(favByViewer.USER_ID.eq(viewerId.value)))
             .leftJoin(folByViewer)
-            .on(folByViewer.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId.value)))
+            .on(folByViewer.FOLLOWEE_ID.eq(ARTICLE.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId.value)))
     }
 
     private fun articleFields(
@@ -310,32 +310,32 @@ class JooqArticleRepository(
 
         val fields =
             mutableListOf<Field<*>>(
-                ARTICLES.ID,
-                ARTICLES.SLUG,
-                ARTICLES.TITLE,
-                ARTICLES.DESCRIPTION,
+                ARTICLE.ID,
+                ARTICLE.SLUG,
+                ARTICLE.TITLE,
+                ARTICLE.DESCRIPTION,
             )
         if (includeBody) {
-            fields.add(ARTICLES.BODY)
+            fields.add(ARTICLE.BODY)
         }
         fields.addAll(
             listOf(
-                ARTICLES.AUTHOR_ID,
-                ARTICLES.CREATED_AT,
-                ARTICLES.UPDATED_AT,
+                ARTICLE.AUTHOR_ID,
+                ARTICLE.CREATED_AT,
+                ARTICLE.UPDATED_AT,
                 author.USERNAME,
                 author.BIO,
                 author.IMAGE,
                 multiset(
-                    select(TAGS.NAME)
-                        .from(TAGS)
-                        .join(ARTICLE_TAGS)
-                        .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                        .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                    select(TAG.NAME)
+                        .from(TAG)
+                        .join(ARTICLE_TAG)
+                        .on(ARTICLE_TAG.TAG_ID.eq(TAG.ID))
+                        .where(ARTICLE_TAG.ARTICLE_ID.eq(ARTICLE.ID)),
                 ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
                 select(count())
-                    .from(FAVORITES)
-                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                    .from(FAVORITE)
+                    .where(FAVORITE.ARTICLE_ID.eq(ARTICLE.ID))
                     .asField<Int>("favoritesCount"),
                 favoritedField,
                 followingField,
@@ -346,13 +346,13 @@ class JooqArticleRepository(
 
     private fun Record.toDto(): ArticleDto =
         ArticleDto(
-            slug = req(ARTICLES.SLUG),
-            title = req(ARTICLES.TITLE),
-            description = req(ARTICLES.DESCRIPTION),
-            body = req(ARTICLES.BODY),
+            slug = req(ARTICLE.SLUG),
+            title = req(ARTICLE.TITLE),
+            description = req(ARTICLE.DESCRIPTION),
+            body = req(ARTICLE.BODY),
             tagList = @Suppress("UNCHECKED_CAST") (get("tags") as? List<String> ?: emptyList()),
-            createdAt = req(ARTICLES.CREATED_AT),
-            updatedAt = req(ARTICLES.UPDATED_AT),
+            createdAt = req(ARTICLE.CREATED_AT),
+            updatedAt = req(ARTICLE.UPDATED_AT),
             favorited = req("favorited", Int::class.java) > 0,
             favoritesCount = req("favoritesCount", Int::class.java),
             author =
@@ -366,12 +366,12 @@ class JooqArticleRepository(
 
     private fun Record.toListItemDto(): ArticleListItemDto =
         ArticleListItemDto(
-            slug = req(ARTICLES.SLUG),
-            title = req(ARTICLES.TITLE),
-            description = req(ARTICLES.DESCRIPTION),
+            slug = req(ARTICLE.SLUG),
+            title = req(ARTICLE.TITLE),
+            description = req(ARTICLE.DESCRIPTION),
             tagList = @Suppress("UNCHECKED_CAST") (get("tags") as? List<String> ?: emptyList()),
-            createdAt = req(ARTICLES.CREATED_AT),
-            updatedAt = req(ARTICLES.UPDATED_AT),
+            createdAt = req(ARTICLE.CREATED_AT),
+            updatedAt = req(ARTICLE.UPDATED_AT),
             favorited = req("favorited", Int::class.java) > 0,
             favoritesCount = req("favoritesCount", Int::class.java),
             author =
@@ -386,31 +386,31 @@ class JooqArticleRepository(
     private fun selectArticleWhere(condition: Condition): Article? =
         dsl
             .select(
-                ARTICLES.asterisk(),
+                ARTICLE.asterisk(),
                 multiset(
                     dsl
-                        .select(TAGS.NAME)
-                        .from(TAGS)
-                        .join(ARTICLE_TAGS)
-                        .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                        .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                        .select(TAG.NAME)
+                        .from(TAG)
+                        .join(ARTICLE_TAG)
+                        .on(ARTICLE_TAG.TAG_ID.eq(TAG.ID))
+                        .where(ARTICLE_TAG.ARTICLE_ID.eq(ARTICLE.ID)),
                 ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-            ).from(ARTICLES)
+            ).from(ARTICLE)
             .where(condition)
             .fetchOne()
             ?.let { record ->
                 @Suppress("UNCHECKED_CAST")
                 val tags = record.get("tags") as? List<String> ?: emptyList()
                 Article(
-                    id = ArticleId(record.req(ARTICLES.ID)),
-                    slug = record.req(ARTICLES.SLUG),
-                    title = record.req(ARTICLES.TITLE),
-                    description = record.req(ARTICLES.DESCRIPTION),
-                    body = record.req(ARTICLES.BODY),
-                    authorId = UserId(record.req(ARTICLES.AUTHOR_ID)),
+                    id = ArticleId(record.req(ARTICLE.ID)),
+                    slug = record.req(ARTICLE.SLUG),
+                    title = record.req(ARTICLE.TITLE),
+                    description = record.req(ARTICLE.DESCRIPTION),
+                    body = record.req(ARTICLE.BODY),
+                    authorId = UserId(record.req(ARTICLE.AUTHOR_ID)),
                     tags = tags.toSet(),
-                    createdAt = record.req(ARTICLES.CREATED_AT),
-                    updatedAt = record.req(ARTICLES.UPDATED_AT),
+                    createdAt = record.req(ARTICLE.CREATED_AT),
+                    updatedAt = record.req(ARTICLE.UPDATED_AT),
                 )
             }
 
@@ -423,30 +423,30 @@ class JooqArticleRepository(
         val tagInserts =
             tags.map { tag ->
                 dsl
-                    .insertInto(TAGS)
-                    .set(TAGS.NAME, tag)
-                    .onConflict(TAGS.NAME)
+                    .insertInto(TAG)
+                    .set(TAG.NAME, tag)
+                    .onConflict(TAG.NAME)
                     .doUpdate()
-                    .set(TAGS.NAME, tag)
+                    .set(TAG.NAME, tag)
             }
         dsl.batch(tagInserts).execute()
 
         val tagIds =
             dsl
-                .select(TAGS.ID, TAGS.NAME)
-                .from(TAGS)
-                .where(TAGS.NAME.`in`(tags))
+                .select(TAG.ID, TAG.NAME)
+                .from(TAG)
+                .where(TAG.NAME.`in`(tags))
                 .fetch()
-                .associate { it.req(TAGS.NAME) to it.req(TAGS.ID) }
+                .associate { it.req(TAG.NAME) to it.req(TAG.ID) }
 
         val articleTagInserts =
             tags.mapNotNull { tag ->
                 tagIds[tag]?.let { tagId ->
                     dsl
-                        .insertInto(ARTICLE_TAGS)
-                        .set(ARTICLE_TAGS.ARTICLE_ID, articleId.value)
-                        .set(ARTICLE_TAGS.TAG_ID, tagId)
-                        .onConflict(ARTICLE_TAGS.ARTICLE_ID, ARTICLE_TAGS.TAG_ID)
+                        .insertInto(ARTICLE_TAG)
+                        .set(ARTICLE_TAG.ARTICLE_ID, articleId.value)
+                        .set(ARTICLE_TAG.TAG_ID, tagId)
+                        .onConflict(ARTICLE_TAG.ARTICLE_ID, ARTICLE_TAG.TAG_ID)
                         .doNothing()
                 }
             }

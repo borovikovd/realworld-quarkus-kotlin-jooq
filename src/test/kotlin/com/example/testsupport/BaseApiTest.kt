@@ -19,15 +19,14 @@ abstract class BaseApiTest {
         dsl.execute(
             """
             TRUNCATE TABLE
-                public.idempotency_key,
                 auth.revoked_token,
                 auth.refresh_token,
-                public.article_tags,
-                public.favorites,
-                public.followers,
-                public.comments,
-                public.articles,
-                public.tags,
+                public.article_tag,
+                public.favorite,
+                public.follower,
+                public.comment,
+                public.article,
+                public.tag,
                 public."user"
             RESTART IDENTITY CASCADE
             """.trimIndent(),

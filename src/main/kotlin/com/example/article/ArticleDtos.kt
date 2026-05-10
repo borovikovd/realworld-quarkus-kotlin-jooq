@@ -58,7 +58,7 @@ data class ArticleListEnvelope(
     val articlesCount: Int,
 )
 
-private const val MAX_TAGS = 10
+private const val MAX_TAG = 10
 private const val MAX_TAG_LENGTH = 64
 
 data class NewArticleRequest(
@@ -73,7 +73,7 @@ data class NewArticle(
 ) {
     init {
         tagList?.let { tags ->
-            require(tags.size <= MAX_TAGS) { "Too many tags" }
+            require(tags.size <= MAX_TAG) { "Too many tags" }
             require(tags.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
         }
     }
@@ -93,7 +93,7 @@ data class ArticlePatch(
     init {
         if (tagList is Patch.Present) {
             tagList.value?.let { tags ->
-                require(tags.size <= MAX_TAGS) { "Too many tags" }
+                require(tags.size <= MAX_TAG) { "Too many tags" }
                 require(tags.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
             }
         }

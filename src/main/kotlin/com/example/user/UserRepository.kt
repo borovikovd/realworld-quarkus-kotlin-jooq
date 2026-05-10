@@ -2,10 +2,10 @@ package com.example.user
 
 import com.example.common.persistence.req
 import com.example.common.security.PasswordHash
-import com.example.jooq.public.tables.references.ARTICLES
-import com.example.jooq.public.tables.references.COMMENTS
-import com.example.jooq.public.tables.references.FAVORITES
-import com.example.jooq.public.tables.references.FOLLOWERS
+import com.example.jooq.public.tables.references.ARTICLE
+import com.example.jooq.public.tables.references.COMMENT
+import com.example.jooq.public.tables.references.FAVORITE
+import com.example.jooq.public.tables.references.FOLLOWER
 import com.example.jooq.public.tables.references.USER
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
@@ -130,12 +130,12 @@ class JooqUserRepository(
     override fun delete(id: UserId) {
         val now = OffsetDateTime.now()
         dsl
-            .deleteFrom(FOLLOWERS)
-            .where(FOLLOWERS.FOLLOWER_ID.eq(id.value).or(FOLLOWERS.FOLLOWEE_ID.eq(id.value)))
+            .deleteFrom(FOLLOWER)
+            .where(FOLLOWER.FOLLOWER_ID.eq(id.value).or(FOLLOWER.FOLLOWEE_ID.eq(id.value)))
             .execute()
-        dsl.deleteFrom(FAVORITES).where(FAVORITES.USER_ID.eq(id.value)).execute()
-        dsl.deleteFrom(COMMENTS).where(COMMENTS.AUTHOR_ID.eq(id.value)).execute()
-        dsl.deleteFrom(ARTICLES).where(ARTICLES.AUTHOR_ID.eq(id.value)).execute()
+        dsl.deleteFrom(FAVORITE).where(FAVORITE.USER_ID.eq(id.value)).execute()
+        dsl.deleteFrom(COMMENT).where(COMMENT.AUTHOR_ID.eq(id.value)).execute()
+        dsl.deleteFrom(ARTICLE).where(ARTICLE.AUTHOR_ID.eq(id.value)).execute()
         dsl
             .update(USER)
             .set(USER.DELETED_AT, now)
@@ -155,9 +155,9 @@ class JooqUserRepository(
                 USER.IMAGE,
                 viewerId?.let {
                     select(count())
-                        .from(FOLLOWERS)
-                        .where(FOLLOWERS.FOLLOWEE_ID.eq(USER.ID))
-                        .and(FOLLOWERS.FOLLOWER_ID.eq(it.value))
+                        .from(FOLLOWER)
+                        .where(FOLLOWER.FOLLOWEE_ID.eq(USER.ID))
+                        .and(FOLLOWER.FOLLOWER_ID.eq(it.value))
                         .asField("following")
                 } ?: DSL.`val`(0).`as`("following"),
             ).from(USER)
@@ -178,9 +178,9 @@ class JooqUserRepository(
         followeeId: UserId,
     ) {
         dsl
-            .insertInto(FOLLOWERS)
-            .set(FOLLOWERS.FOLLOWER_ID, followerId.value)
-            .set(FOLLOWERS.FOLLOWEE_ID, followeeId.value)
+            .insertInto(FOLLOWER)
+            .set(FOLLOWER.FOLLOWER_ID, followerId.value)
+            .set(FOLLOWER.FOLLOWEE_ID, followeeId.value)
             .onDuplicateKeyIgnore()
             .execute()
     }
@@ -190,9 +190,9 @@ class JooqUserRepository(
         followeeId: UserId,
     ) {
         dsl
-            .deleteFrom(FOLLOWERS)
-            .where(FOLLOWERS.FOLLOWER_ID.eq(followerId.value))
-            .and(FOLLOWERS.FOLLOWEE_ID.eq(followeeId.value))
+            .deleteFrom(FOLLOWER)
+            .where(FOLLOWER.FOLLOWER_ID.eq(followerId.value))
+            .and(FOLLOWER.FOLLOWEE_ID.eq(followeeId.value))
             .execute()
     }
 

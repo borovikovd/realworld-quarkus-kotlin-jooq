@@ -3,9 +3,9 @@ package com.example.comment
 import com.example.article.ArticleId
 import com.example.common.persistence.req
 import com.example.jooq.public.tables.User
-import com.example.jooq.public.tables.references.ARTICLES
-import com.example.jooq.public.tables.references.COMMENTS
-import com.example.jooq.public.tables.references.FOLLOWERS
+import com.example.jooq.public.tables.references.ARTICLE
+import com.example.jooq.public.tables.references.COMMENT
+import com.example.jooq.public.tables.references.FOLLOWER
 import com.example.jooq.public.tables.references.USER
 import com.example.user.ProfileDto
 import com.example.user.UserId
@@ -44,38 +44,38 @@ class JooqCommentRepository(
     private val author: User = USER.`as`("author")
 
     override fun nextId(): CommentId =
-        CommentId(dsl.select(DSL.field("nextval('comments_id_seq')", Long::class.java)).fetchSingle().value1()!!)
+        CommentId(dsl.select(DSL.field("nextval('comment_id_seq')", Long::class.java)).fetchSingle().value1()!!)
 
     override fun insert(comment: Comment) {
         dsl
-            .insertInto(COMMENTS)
-            .set(COMMENTS.ID, comment.id.value)
-            .set(COMMENTS.ARTICLE_ID, comment.articleId.value)
-            .set(COMMENTS.AUTHOR_ID, comment.authorId.value)
-            .set(COMMENTS.BODY, comment.body)
-            .set(COMMENTS.CREATED_AT, comment.createdAt)
-            .set(COMMENTS.UPDATED_AT, comment.updatedAt)
+            .insertInto(COMMENT)
+            .set(COMMENT.ID, comment.id.value)
+            .set(COMMENT.ARTICLE_ID, comment.articleId.value)
+            .set(COMMENT.AUTHOR_ID, comment.authorId.value)
+            .set(COMMENT.BODY, comment.body)
+            .set(COMMENT.CREATED_AT, comment.createdAt)
+            .set(COMMENT.UPDATED_AT, comment.updatedAt)
             .execute()
     }
 
     override fun findById(id: CommentId): Comment? =
         dsl
-            .selectFrom(COMMENTS)
-            .where(COMMENTS.ID.eq(id.value))
+            .selectFrom(COMMENT)
+            .where(COMMENT.ID.eq(id.value))
             .fetchOne()
             ?.let { record ->
                 Comment(
-                    id = CommentId(record.req(COMMENTS.ID)),
-                    articleId = ArticleId(record.req(COMMENTS.ARTICLE_ID)),
-                    authorId = UserId(record.req(COMMENTS.AUTHOR_ID)),
-                    body = record.req(COMMENTS.BODY),
-                    createdAt = record.req(COMMENTS.CREATED_AT),
-                    updatedAt = record.req(COMMENTS.UPDATED_AT),
+                    id = CommentId(record.req(COMMENT.ID)),
+                    articleId = ArticleId(record.req(COMMENT.ARTICLE_ID)),
+                    authorId = UserId(record.req(COMMENT.AUTHOR_ID)),
+                    body = record.req(COMMENT.BODY),
+                    createdAt = record.req(COMMENT.CREATED_AT),
+                    updatedAt = record.req(COMMENT.UPDATED_AT),
                 )
             }
 
     override fun deleteById(id: CommentId) {
-        dsl.deleteFrom(COMMENTS).where(COMMENTS.ID.eq(id.value)).execute()
+        dsl.deleteFrom(COMMENT).where(COMMENT.ID.eq(id.value)).execute()
     }
 
     override fun findDtoById(
@@ -84,10 +84,10 @@ class JooqCommentRepository(
     ): CommentDto? =
         dsl
             .select(commentFields(viewerId))
-            .from(COMMENTS)
+            .from(COMMENT)
             .join(author)
-            .on(author.ID.eq(COMMENTS.AUTHOR_ID))
-            .where(COMMENTS.ID.eq(id.value))
+            .on(author.ID.eq(COMMENT.AUTHOR_ID))
+            .where(COMMENT.ID.eq(id.value))
             .fetchOne()
             ?.toDto()
 
@@ -97,30 +97,30 @@ class JooqCommentRepository(
     ): List<CommentDto> =
         dsl
             .select(commentFields(viewerId))
-            .from(COMMENTS)
+            .from(COMMENT)
             .join(author)
-            .on(author.ID.eq(COMMENTS.AUTHOR_ID))
-            .join(ARTICLES)
-            .on(ARTICLES.ID.eq(COMMENTS.ARTICLE_ID))
-            .where(ARTICLES.SLUG.eq(slug))
-            .orderBy(COMMENTS.CREATED_AT.desc())
+            .on(author.ID.eq(COMMENT.AUTHOR_ID))
+            .join(ARTICLE)
+            .on(ARTICLE.ID.eq(COMMENT.ARTICLE_ID))
+            .where(ARTICLE.SLUG.eq(slug))
+            .orderBy(COMMENT.CREATED_AT.desc())
             .fetch()
             .map { it.toDto() }
 
     private fun commentFields(viewerId: UserId?): List<Field<*>> =
         listOf(
-            COMMENTS.ID,
-            COMMENTS.BODY,
-            COMMENTS.CREATED_AT,
-            COMMENTS.UPDATED_AT,
+            COMMENT.ID,
+            COMMENT.BODY,
+            COMMENT.CREATED_AT,
+            COMMENT.UPDATED_AT,
             author.USERNAME,
             author.BIO,
             author.IMAGE,
             if (viewerId != null) {
                 select(count())
-                    .from(FOLLOWERS)
-                    .where(FOLLOWERS.FOLLOWEE_ID.eq(COMMENTS.AUTHOR_ID))
-                    .and(FOLLOWERS.FOLLOWER_ID.eq(viewerId.value))
+                    .from(FOLLOWER)
+                    .where(FOLLOWER.FOLLOWEE_ID.eq(COMMENT.AUTHOR_ID))
+                    .and(FOLLOWER.FOLLOWER_ID.eq(viewerId.value))
                     .asField<Int>("following")
             } else {
                 DSL.`val`(0).`as`("following")
@@ -129,10 +129,10 @@ class JooqCommentRepository(
 
     private fun Record.toDto(): CommentDto =
         CommentDto(
-            id = req(COMMENTS.ID),
-            body = req(COMMENTS.BODY),
-            createdAt = req(COMMENTS.CREATED_AT),
-            updatedAt = req(COMMENTS.UPDATED_AT),
+            id = req(COMMENT.ID),
+            body = req(COMMENT.BODY),
+            createdAt = req(COMMENT.CREATED_AT),
+            updatedAt = req(COMMENT.UPDATED_AT),
             author =
                 ProfileDto(
                     username = req(author.USERNAME),
