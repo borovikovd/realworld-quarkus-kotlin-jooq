@@ -62,12 +62,12 @@ interface ArticleRepository {
         filter: ArticleFilter,
         page: Page,
         viewerId: UserId?,
-    ): List<ArticleDto>
+    ): List<ArticleListItemDto>
 
     fun feed(
         viewerId: UserId,
         page: Page,
-    ): List<ArticleDto>
+    ): List<ArticleListItemDto>
 
     fun count(filter: ArticleFilter): Int
 
@@ -190,9 +190,9 @@ class JooqArticleRepository(
         filter: ArticleFilter,
         page: Page,
         viewerId: UserId?,
-    ): List<ArticleDto> =
+    ): List<ArticleListItemDto> =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(viewerId, includeBody = false))
             .from(ARTICLES)
             .join(author)
             .on(author.ID.eq(ARTICLES.AUTHOR_ID))
@@ -202,14 +202,14 @@ class JooqArticleRepository(
             .limit(page.limit)
             .offset(page.offset)
             .fetch()
-            .map { it.toDto() }
+            .map { it.toListItemDto() }
 
     override fun feed(
         viewerId: UserId,
         page: Page,
-    ): List<ArticleDto> =
+    ): List<ArticleListItemDto> =
         dsl
-            .select(articleFields(viewerId))
+            .select(articleFields(viewerId, includeBody = false))
             .from(ARTICLES)
             .join(author)
             .on(author.ID.eq(ARTICLES.AUTHOR_ID))
@@ -224,7 +224,7 @@ class JooqArticleRepository(
             .limit(page.limit)
             .offset(page.offset)
             .fetch()
-            .map { it.toDto() }
+            .map { it.toListItemDto() }
 
     override fun count(filter: ArticleFilter): Int =
         dsl
@@ -291,7 +291,10 @@ class JooqArticleRepository(
             .on(folByViewer.FOLLOWEE_ID.eq(ARTICLES.AUTHOR_ID).and(folByViewer.FOLLOWER_ID.eq(viewerId.value)))
     }
 
-    private fun articleFields(viewerId: UserId?): List<Field<*>> {
+    private fun articleFields(
+        viewerId: UserId?,
+        includeBody: Boolean = true,
+    ): List<Field<*>> {
         val favoritedField =
             if (viewerId != null) {
                 DSL.`when`(favByViewer.USER_ID.isNotNull, 1).otherwise(0).`as`("favorited")
@@ -304,32 +307,41 @@ class JooqArticleRepository(
             } else {
                 DSL.`val`(0).`as`("following")
             }
-        return listOf(
-            ARTICLES.ID,
-            ARTICLES.SLUG,
-            ARTICLES.TITLE,
-            ARTICLES.DESCRIPTION,
-            ARTICLES.BODY,
-            ARTICLES.AUTHOR_ID,
-            ARTICLES.CREATED_AT,
-            ARTICLES.UPDATED_AT,
-            author.USERNAME,
-            author.BIO,
-            author.IMAGE,
-            multiset(
-                select(TAGS.NAME)
-                    .from(TAGS)
-                    .join(ARTICLE_TAGS)
-                    .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
-                    .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
-            ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-            select(count())
-                .from(FAVORITES)
-                .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
-                .asField<Int>("favoritesCount"),
-            favoritedField,
-            followingField,
+
+        val fields =
+            mutableListOf<Field<*>>(
+                ARTICLES.ID,
+                ARTICLES.SLUG,
+                ARTICLES.TITLE,
+                ARTICLES.DESCRIPTION,
+            )
+        if (includeBody) {
+            fields.add(ARTICLES.BODY)
+        }
+        fields.addAll(
+            listOf(
+                ARTICLES.AUTHOR_ID,
+                ARTICLES.CREATED_AT,
+                ARTICLES.UPDATED_AT,
+                author.USERNAME,
+                author.BIO,
+                author.IMAGE,
+                multiset(
+                    select(TAGS.NAME)
+                        .from(TAGS)
+                        .join(ARTICLE_TAGS)
+                        .on(ARTICLE_TAGS.TAG_ID.eq(TAGS.ID))
+                        .where(ARTICLE_TAGS.ARTICLE_ID.eq(ARTICLES.ID)),
+                ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
+                select(count())
+                    .from(FAVORITES)
+                    .where(FAVORITES.ARTICLE_ID.eq(ARTICLES.ID))
+                    .asField<Int>("favoritesCount"),
+                favoritedField,
+                followingField,
+            ),
         )
+        return fields
     }
 
     private fun Record.toDto(): ArticleDto =
@@ -338,6 +350,25 @@ class JooqArticleRepository(
             title = req(ARTICLES.TITLE),
             description = req(ARTICLES.DESCRIPTION),
             body = req(ARTICLES.BODY),
+            tagList = @Suppress("UNCHECKED_CAST") (get("tags") as? List<String> ?: emptyList()),
+            createdAt = req(ARTICLES.CREATED_AT),
+            updatedAt = req(ARTICLES.UPDATED_AT),
+            favorited = req("favorited", Int::class.java) > 0,
+            favoritesCount = req("favoritesCount", Int::class.java),
+            author =
+                ProfileDto(
+                    username = req(author.USERNAME),
+                    bio = get(author.BIO),
+                    image = get(author.IMAGE),
+                    following = req("following", Int::class.java) > 0,
+                ),
+        )
+
+    private fun Record.toListItemDto(): ArticleListItemDto =
+        ArticleListItemDto(
+            slug = req(ARTICLES.SLUG),
+            title = req(ARTICLES.TITLE),
+            description = req(ARTICLES.DESCRIPTION),
             tagList = @Suppress("UNCHECKED_CAST") (get("tags") as? List<String> ?: emptyList()),
             createdAt = req(ARTICLES.CREATED_AT),
             updatedAt = req(ARTICLES.UPDATED_AT),

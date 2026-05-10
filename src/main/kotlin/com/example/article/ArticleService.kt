@@ -119,11 +119,11 @@ class ArticleService(
     fun list(
         filter: ArticleFilter,
         page: Page,
-    ): List<ArticleDto> = articleRepository.list(filter, page, currentUser.id)
+    ): List<ArticleListItemDto> = articleRepository.list(filter, page, currentUser.id)
 
     fun count(filter: ArticleFilter): Int = articleRepository.count(filter)
 
-    fun feed(page: Page): List<ArticleDto> = articleRepository.feed(currentUser.require(), page)
+    fun feed(page: Page): List<ArticleListItemDto> = articleRepository.feed(currentUser.require(), page)
 
     fun feedCount(): Int = articleRepository.feedCount(currentUser.require())
 

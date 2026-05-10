@@ -4,6 +4,8 @@ import com.example.common.web.NotFoundException
 import jakarta.annotation.security.RolesAllowed
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -42,13 +44,13 @@ class ArticleResource(
         @Parameter(required = false) @QueryParam("tag") tag: String?,
         @Parameter(required = false) @QueryParam("author") author: String?,
         @Parameter(required = false) @QueryParam("favorited") favorited: String?,
-        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") limit: Int,
-        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") offset: Int,
+        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") @Min(1) @Max(100) limit: Int,
+        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") @Min(0) offset: Int,
     ): ArticleListEnvelope {
         val filter = ArticleFilter(tag, author, favorited)
         val page = Page(limit, offset)
         return ArticleListEnvelope(
-            articles = articleService.list(filter, page).map { it.toListItem() },
+            articles = articleService.list(filter, page),
             articlesCount = articleService.count(filter),
         )
     }
@@ -57,12 +59,12 @@ class ArticleResource(
     @Path("/feed")
     @RolesAllowed("user")
     fun getArticlesFeed(
-        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") limit: Int,
-        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") offset: Int,
+        @Parameter(required = false) @QueryParam("limit") @DefaultValue("20") @Min(1) @Max(100) limit: Int,
+        @Parameter(required = false) @QueryParam("offset") @DefaultValue("0") @Min(0) offset: Int,
     ): ArticleListEnvelope {
         val page = Page(limit, offset)
         return ArticleListEnvelope(
-            articles = articleService.feed(page).map { it.toListItem() },
+            articles = articleService.feed(page),
             articlesCount = articleService.feedCount(),
         )
     }
