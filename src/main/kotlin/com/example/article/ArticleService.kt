@@ -127,8 +127,6 @@ class ArticleService(
 
     fun feedCount(): Int = articleRepository.feedCount(currentUser.require())
 
-    fun allTags(): List<String> = articleRepository.allTags()
-
     companion object {
         private val logger = LoggerFactory.getLogger(ArticleService::class.java)
     }
