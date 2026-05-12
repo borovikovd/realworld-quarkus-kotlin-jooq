@@ -162,6 +162,6 @@ Replace this design *only* when one of these triggers fires:
 - **A second persistence implementation appears.** Extract a repository interface when there is a concrete alternate adapter, not preemptively.
 - **Multi-tenant or org-scoped operations.** Auth gets richer (ABAC, row-level security) and the service might benefit from a use-case-handler split.
 - **Performance asymmetry between reads and writes.** If reads outscale writes by 100×, a CQRS split with separate read replicas / projections becomes worth its complexity. Until then, one repository, two return shapes.
-- **The team grows past ~10 engineers.** Stricter layering and more enforcement (ArchUnit rules, module boundaries) start paying for themselves.
+- **The team grows past ~10 engineers.** Stricter layering and more enforcement (module boundaries) start paying for themselves.
 
 For a Conduit-scale CRUD blog with one team and one transport, this design is the right ceiling. Going lighter (transaction script) is defensible. Going heavier (hexagonal aggregates) is not.

@@ -6,7 +6,7 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ using pragmatic package
 
 1. **Read before you write.** Understand what depends on the symbol you are changing. A "dead code" bug may have callers that rely on the bug; check the full call graph, not just the obvious site.
 2. **Write code and tests together.** Don't push code without the test that proves it.
-3. **Run the full gate before claiming done.** `./gradlew build` runs codegen → compile → tests (ArchUnit included) → ktlint → detekt → SpotBugs/FindSecBugs. Pushed ≠ green; if you didn't run it, you didn't verify it.
+3. **Run the full gate before claiming done.** `./gradlew build` runs codegen → compile → tests → ktlint → detekt → SpotBugs/FindSecBugs. Pushed ≠ green; if you didn't run it, you didn't verify it.
 4. **Regenerate after schema/spec changes.** OpenAPI and jOOQ consume input files (`src/main/resources/openapi.yaml`, `db/migrations/*.sql`); stale generated symbols are a common trap. Discover task names with `./gradlew tasks` — don't memorize them.
 5. **Conventional commits.** `feat/fix/refactor/test/chore/docs(scope): subject`. Keep commits focused; split independent concerns rather than bundling.
 
@@ -18,7 +18,7 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ using pragmatic package
 - **No breadcrumbs for removed code.** Delete it; don't leave shims, re-exports, or `// removed` markers.
 - Validate input only at system boundaries. Trust internal code.
 
-## Architecture (enforced by ArchUnit)
+## Architecture
 
 - **Avoid speculative interfaces.** Services and repositories stay concrete until a real second implementation or module boundary appears.
 - **Scope correctly.** `@ApplicationScoped` for stateless services, `@RequestScoped` for per-request state. Never store request data in singletons.
@@ -57,3 +57,4 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ using pragmatic package
 - **Generated code is gitignored.** Regenerate after schema/spec edits and review the diff for accidental drift.
 - **Don't trust documented task or symbol names blindly** — including names in this file. The codebase is the source of truth; verify with `./gradlew tasks`, `grep`, or a quick read.
 - When unsure whether to do extra work, ask. Silently "improving" a user's recommendation is worse than asking.
+g.
