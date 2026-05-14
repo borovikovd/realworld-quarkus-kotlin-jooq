@@ -10,8 +10,8 @@ import jakarta.ws.rs.core.MediaType
 @Path("/tags")
 @Produces(MediaType.APPLICATION_JSON)
 class TagResource(
-    private val articleRepository: ArticleRepository,
+    private val articleService: ArticleService,
 ) {
     @GET
-    fun getTags(): TagsResponse = TagsResponse(articleRepository.allTags())
+    fun getTags(): TagsResponse = TagsResponse(articleService.allTags())
 }
