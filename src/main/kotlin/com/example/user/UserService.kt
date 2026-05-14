@@ -129,8 +129,15 @@ class UserService(
             )
 
         userRepository.update(updated)
-        val tokens = tokenIssuer.issueTokens(userId)
-        return toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
+
+        val credentialsChanged = resolvedPassword != null || resolvedEmail != user.email
+        return if (credentialsChanged) {
+            val tokens = tokenIssuer.issueTokens(userId)
+            toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
+        } else {
+            val rawToken = currentUser.rawToken ?: throw UnauthorizedException("Token not present")
+            toAuthenticatedUser(updated, rawToken, "")
+        }
     }
 
     @Transactional
