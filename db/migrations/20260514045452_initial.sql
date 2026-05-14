@@ -1,3 +1,12 @@
+-- Create "revoked_token" table
+CREATE TABLE "public"."revoked_token" (
+  "jti" uuid NOT NULL,
+  "user_id" bigint NOT NULL,
+  "expires_at" timestamptz NOT NULL,
+  PRIMARY KEY ("jti")
+);
+-- Create index "idx_revoked_token_expires_at" to table: "revoked_token"
+CREATE INDEX "idx_revoked_token_expires_at" ON "public"."revoked_token" ("expires_at");
 -- Create "user" table
 CREATE TABLE "public"."user" (
   "id" bigserial NOT NULL,
@@ -113,12 +122,3 @@ CREATE TABLE "public"."refresh_token" (
 CREATE INDEX "idx_refresh_token_expires_at" ON "public"."refresh_token" ("expires_at");
 -- Create index "idx_refresh_token_user_id" to table: "refresh_token"
 CREATE INDEX "idx_refresh_token_user_id" ON "public"."refresh_token" ("user_id");
--- Create "revoked_token" table
-CREATE TABLE "public"."revoked_token" (
-  "jti" uuid NOT NULL,
-  "user_id" bigint NOT NULL,
-  "expires_at" timestamptz NOT NULL,
-  PRIMARY KEY ("jti")
-);
--- Create index "idx_revoked_token_expires_at" to table: "revoked_token"
-CREATE INDEX "idx_revoked_token_expires_at" ON "public"."revoked_token" ("expires_at");
