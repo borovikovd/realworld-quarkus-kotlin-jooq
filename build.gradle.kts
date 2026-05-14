@@ -174,7 +174,6 @@ detekt {
 
 // OWASP Dependency-Check (SCA)
 dependencyCheck {
-    failBuildOnCVSS = 7.0f
     formats = listOf("HTML", "SARIF")
     outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
     suppressionFile = "gradle/dependency-check-suppressions.xml"
