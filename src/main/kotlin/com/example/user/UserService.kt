@@ -11,7 +11,6 @@ import com.example.common.web.InvalidCredentialsException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
 import com.example.common.web.UnauthorizedException
-import com.example.common.web.orElseNullable
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -114,12 +113,8 @@ class UserService(
         val resolvedPassword = resolvePassword(password, v)
         val resolvedEmail = resolveEmail(email, user.email, v)
         val resolvedUsername = resolveUsername(username, user.username, v)
-        if (bio is Patch.Value) {
-            v.check("bio", bio.value.length <= MAX_BIO_LENGTH) { "must be at most $MAX_BIO_LENGTH characters" }
-        }
-        if (image is Patch.Value) {
-            v.check("image", image.value.length <= MAX_IMAGE_LENGTH) { "must be at most $MAX_IMAGE_LENGTH characters" }
-        }
+        val resolvedBio = resolveOptionalText("bio", bio, user.bio, MAX_BIO_LENGTH, v)
+        val resolvedImage = resolveOptionalText("image", image, user.image, MAX_IMAGE_LENGTH, v)
         v.throwIfInvalid()
 
         val now = OffsetDateTime.now()
@@ -129,8 +124,8 @@ class UserService(
                 username = resolvedUsername,
                 passwordHash =
                     if (resolvedPassword != null) passwordHashing.hash(resolvedPassword) else user.passwordHash,
-                bio = bio.orElseNullable(user.bio)?.ifBlank { null },
-                image = image.orElseNullable(user.image)?.ifBlank { null },
+                bio = resolvedBio,
+                image = resolvedImage,
                 updatedAt = now,
             )
 
@@ -275,6 +270,22 @@ class UserService(
                     v.check("username", !userRepository.existsByUsername(value)) { "has already been taken" }
                 }
                 value
+            }
+        }
+
+    private fun resolveOptionalText(
+        field: String,
+        patch: Patch<String>,
+        current: String?,
+        maxLength: Int,
+        v: Validation,
+    ): String? =
+        when (patch) {
+            Patch.Absent -> current
+            Patch.Null -> null
+            is Patch.Value -> {
+                v.check(field, patch.value.length <= maxLength) { "must be at most $maxLength characters" }
+                patch.value.ifBlank { null }
             }
         }
 

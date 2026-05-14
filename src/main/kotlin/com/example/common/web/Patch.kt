@@ -15,13 +15,6 @@ sealed class Patch<out T> {
     ) : Patch<T>()
 }
 
-fun <T> Patch<T>.orElseNullable(default: T?): T? =
-    when (this) {
-        Patch.Absent -> default
-        Patch.Null -> null
-        is Patch.Value -> value
-    }
-
 class StringPatchDeserializer : StdDeserializer<Patch<String>>(Patch::class.java) {
     override fun deserialize(
         p: JsonParser,
