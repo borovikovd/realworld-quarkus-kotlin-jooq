@@ -1,7 +1,7 @@
 package com.example.article
 
 import com.example.common.security.CurrentUser
-import com.example.common.validation.ValidationException
+import com.example.common.validation.Validation
 import com.example.common.web.ForbiddenException
 import com.example.common.web.NotFoundException
 import com.example.common.web.Patch
@@ -68,12 +68,21 @@ class ArticleService(
                 article.slug
             }
 
+        val v = Validation()
         val tags =
             when (tagList) {
                 Patch.Absent -> article.tags
-                Patch.Null -> throw ValidationException(mapOf("tagList" to listOf("must not be null")))
-                is Patch.Value -> tagList.value.toSet()
+                Patch.Null -> {
+                    v.add("tagList", "must not be null")
+                    emptySet()
+                }
+                is Patch.Value -> {
+                    v.check("tagList", tagList.value.size <= MAX_TAG) { "Too many tags" }
+                    v.check("tagList", tagList.value.all { it.length <= MAX_TAG_LENGTH }) { "Tag too long" }
+                    tagList.value.toSet()
+                }
             }
+        v.throwIfInvalid()
 
         val updated =
             article.copy(

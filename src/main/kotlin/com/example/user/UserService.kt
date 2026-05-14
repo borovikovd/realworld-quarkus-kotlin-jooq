@@ -30,12 +30,6 @@ class UserService(
         username: String,
         password: String,
     ): AuthenticatedUser {
-        val v = Validation()
-        v.check("password", password.length >= MIN_PASSWORD_LENGTH) {
-            "must be at least $MIN_PASSWORD_LENGTH characters"
-        }
-        v.throwIfInvalid()
-
         val conflicts = mutableMapOf<String, List<String>>()
         if (userRepository.existsByEmail(email)) conflicts["email"] = listOf("has already been taken")
         if (userRepository.existsByUsername(username)) conflicts["username"] = listOf("has already been taken")

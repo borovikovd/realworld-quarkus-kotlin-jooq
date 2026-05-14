@@ -32,7 +32,7 @@ data class NewUserRequest(
 data class NewUser(
     @field:NotBlank @field:Email @field:Size(max = 200) val email: String,
     @field:NotBlank @field:Size(max = 100) val username: String,
-    @field:NotBlank val password: String,
+    @field:NotBlank @field:Size(min = 8, message = "must be at least 8 characters") val password: String,
 )
 
 data class LoginUserRequest(
