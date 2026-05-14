@@ -1,6 +1,6 @@
 package com.example.common.security
 
-import com.example.jooq.auth.tables.references.REFRESH_TOKEN
+import com.example.jooq.public.tables.references.REFRESH_TOKEN
 import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext

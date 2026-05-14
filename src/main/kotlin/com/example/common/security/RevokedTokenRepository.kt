@@ -1,6 +1,6 @@
 package com.example.common.security
 
-import com.example.jooq.auth.tables.references.REVOKED_TOKEN
+import com.example.jooq.public.tables.references.REVOKED_TOKEN
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import java.time.OffsetDateTime

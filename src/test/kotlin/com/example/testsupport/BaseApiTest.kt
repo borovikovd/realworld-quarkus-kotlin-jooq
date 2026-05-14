@@ -19,8 +19,8 @@ abstract class BaseApiTest {
         dsl.execute(
             """
             TRUNCATE TABLE
-                auth.revoked_token,
-                auth.refresh_token,
+                public.revoked_token,
+                public.refresh_token,
                 public.article_tag,
                 public.favorite,
                 public.follower,

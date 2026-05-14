@@ -1,5 +1,3 @@
--- Add new schema named "auth"
-CREATE SCHEMA "auth";
 -- Create "user" table
 CREATE TABLE "public"."user" (
   "id" bigserial NOT NULL,
@@ -101,7 +99,7 @@ CREATE INDEX "idx_follower_followee_id" ON "public"."follower" ("followee_id");
 -- Create index "idx_follower_follower_id" to table: "follower"
 CREATE INDEX "idx_follower_follower_id" ON "public"."follower" ("follower_id");
 -- Create "refresh_token" table
-CREATE TABLE "auth"."refresh_token" (
+CREATE TABLE "public"."refresh_token" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "user_id" bigint NOT NULL,
   "token_hash" character varying(100) NOT NULL,
@@ -113,11 +111,11 @@ CREATE TABLE "auth"."refresh_token" (
   CONSTRAINT "refresh_token_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
 );
 -- Create index "idx_refresh_token_expires_at" to table: "refresh_token"
-CREATE INDEX "idx_refresh_token_expires_at" ON "auth"."refresh_token" ("expires_at");
+CREATE INDEX "idx_refresh_token_expires_at" ON "public"."refresh_token" ("expires_at");
 -- Create index "idx_refresh_token_user_id" to table: "refresh_token"
-CREATE INDEX "idx_refresh_token_user_id" ON "auth"."refresh_token" ("user_id");
+CREATE INDEX "idx_refresh_token_user_id" ON "public"."refresh_token" ("user_id");
 -- Create "revoked_token" table
-CREATE TABLE "auth"."revoked_token" (
+CREATE TABLE "public"."revoked_token" (
   "jti" uuid NOT NULL,
   "user_id" bigint NOT NULL,
   "expires_at" timestamptz NOT NULL,
@@ -125,4 +123,4 @@ CREATE TABLE "auth"."revoked_token" (
   CONSTRAINT "revoked_token_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
 );
 -- Create index "idx_revoked_token_expires_at" to table: "revoked_token"
-CREATE INDEX "idx_revoked_token_expires_at" ON "auth"."revoked_token" ("expires_at");
+CREATE INDEX "idx_revoked_token_expires_at" ON "public"."revoked_token" ("expires_at");

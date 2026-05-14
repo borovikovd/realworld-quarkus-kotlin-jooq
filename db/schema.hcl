@@ -1,7 +1,5 @@
 schema "public" {}
 
-schema "auth" {}
-
 table "user" {
   schema = schema.public
   column "id" {
@@ -60,7 +58,7 @@ table "user" {
 }
 
 table "refresh_token" {
-  schema = schema.auth
+  schema = schema.public
   column "id" {
     null    = false
     type    = uuid
@@ -107,7 +105,7 @@ table "refresh_token" {
 }
 
 table "revoked_token" {
-  schema = schema.auth
+  schema = schema.public
   column "jti" {
     null = false
     type = uuid
