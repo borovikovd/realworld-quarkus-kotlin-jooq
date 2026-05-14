@@ -2,9 +2,6 @@ package com.example.user
 
 import com.example.common.persistence.req
 import com.example.common.security.PasswordHash
-import com.example.jooq.public.tables.references.ARTICLE
-import com.example.jooq.public.tables.references.COMMENT
-import com.example.jooq.public.tables.references.FAVORITE
 import com.example.jooq.public.tables.references.FOLLOWER
 import com.example.jooq.public.tables.references.USER
 import jakarta.enterprise.context.ApplicationScoped
@@ -12,7 +9,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.select
-import java.time.OffsetDateTime
 
 @ApplicationScoped
 class UserRepository(
@@ -53,7 +49,6 @@ class UserRepository(
         dsl
             .selectFrom(USER)
             .where(USER.ID.eq(id.value))
-            .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { toUser(it) }
 
@@ -61,7 +56,6 @@ class UserRepository(
         dsl
             .selectFrom(USER)
             .where(USER.EMAIL.eq(email))
-            .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { toUser(it) }
 
@@ -70,7 +64,6 @@ class UserRepository(
             .select(USER.ID)
             .from(USER)
             .where(USER.USERNAME.eq(username))
-            .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { UserId(it.req(USER.ID)) }
 
@@ -79,8 +72,7 @@ class UserRepository(
             dsl
                 .selectOne()
                 .from(USER)
-                .where(USER.EMAIL.eq(email))
-                .and(USER.DELETED_AT.isNull),
+                .where(USER.EMAIL.eq(email)),
         )
 
     fun existsByUsername(username: String): Boolean =
@@ -88,25 +80,11 @@ class UserRepository(
             dsl
                 .selectOne()
                 .from(USER)
-                .where(USER.USERNAME.eq(username))
-                .and(USER.DELETED_AT.isNull),
+                .where(USER.USERNAME.eq(username)),
         )
 
     fun delete(id: UserId) {
-        val now = OffsetDateTime.now()
-        dsl
-            .deleteFrom(FOLLOWER)
-            .where(FOLLOWER.FOLLOWER_ID.eq(id.value).or(FOLLOWER.FOLLOWEE_ID.eq(id.value)))
-            .execute()
-        dsl.deleteFrom(FAVORITE).where(FAVORITE.USER_ID.eq(id.value)).execute()
-        dsl.deleteFrom(COMMENT).where(COMMENT.AUTHOR_ID.eq(id.value)).execute()
-        dsl.deleteFrom(ARTICLE).where(ARTICLE.AUTHOR_ID.eq(id.value)).execute()
-        dsl
-            .update(USER)
-            .set(USER.DELETED_AT, now)
-            .set(USER.UPDATED_AT, now)
-            .where(USER.ID.eq(id.value))
-            .execute()
+        dsl.deleteFrom(USER).where(USER.ID.eq(id.value)).execute()
     }
 
     fun findProfile(
@@ -127,7 +105,6 @@ class UserRepository(
                 } ?: DSL.`val`(0).`as`("following"),
             ).from(USER)
             .where(USER.USERNAME.eq(username))
-            .and(USER.DELETED_AT.isNull)
             .fetchOne()
             ?.let { record ->
                 ProfileDto(

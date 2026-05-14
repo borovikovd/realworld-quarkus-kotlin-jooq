@@ -6,7 +6,6 @@ CREATE TABLE "public"."user" (
   "password_hash" text NOT NULL,
   "bio" text NULL,
   "image" character varying(1000) NULL,
-  "deleted_at" timestamptz NULL,
   "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id"),
@@ -119,8 +118,7 @@ CREATE TABLE "public"."revoked_token" (
   "jti" uuid NOT NULL,
   "user_id" bigint NOT NULL,
   "expires_at" timestamptz NOT NULL,
-  PRIMARY KEY ("jti"),
-  CONSTRAINT "revoked_token_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
+  PRIMARY KEY ("jti")
 );
 -- Create index "idx_revoked_token_expires_at" to table: "revoked_token"
 CREATE INDEX "idx_revoked_token_expires_at" ON "public"."revoked_token" ("expires_at");

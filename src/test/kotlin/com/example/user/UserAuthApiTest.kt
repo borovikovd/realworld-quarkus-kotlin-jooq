@@ -286,4 +286,27 @@ class UserAuthApiTest : BaseApiTest() {
             .body("user.email", equalTo(user.email))
             .body("user.username", equalTo(user.username))
     }
+
+    @Test
+    fun `should allow re-registering with the same email and username after delete`() {
+        val email = TestDataBuilder.uniqueEmail()
+        val username = TestDataBuilder.uniqueUsername()
+        val user = ApiTestFixtures.registerUser(email = email, username = username)
+
+        ApiTestFixtures.authenticatedRequest(user.token)
+            .`when`()
+            .delete("/api/user")
+            .then()
+            .statusCode(204)
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(TestDataBuilder.userRegistration(email = email, username = username))
+            .`when`()
+            .post("/api/users")
+            .then()
+            .statusCode(201)
+            .body("user.email", equalTo(email))
+            .body("user.username", equalTo(username))
+    }
 }

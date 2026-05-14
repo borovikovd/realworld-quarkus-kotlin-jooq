@@ -137,7 +137,6 @@ class UserService(
     fun deleteCurrentUser() {
         val userId = currentUser.require()
         val jti = currentUser.jti
-        tokenIssuer.revokeAllRefreshTokens(userId)
         if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
         userRepository.delete(userId)
         logger.info("User deleted: userId={}", userId.value)

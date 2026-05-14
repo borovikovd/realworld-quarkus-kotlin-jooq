@@ -26,10 +26,6 @@ table "user" {
     null = true
     type = varchar(1000)
   }
-  column "deleted_at" {
-    null = true
-    type = timestamptz
-  }
   column "created_at" {
     null    = false
     type    = timestamptz
@@ -120,11 +116,6 @@ table "revoked_token" {
   }
   primary_key {
     columns = [column.jti]
-  }
-  foreign_key "revoked_token_user_id_fkey" {
-    columns     = [column.user_id]
-    ref_columns = [table.user.column.id]
-    on_delete   = CASCADE
   }
   index "idx_revoked_token_expires_at" {
     columns = [column.expires_at]
