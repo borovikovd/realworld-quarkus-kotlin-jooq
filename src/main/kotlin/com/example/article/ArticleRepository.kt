@@ -19,7 +19,6 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.multiset
 import org.jooq.impl.DSL.select
 
@@ -255,24 +254,19 @@ class ArticleRepository(
                 DSL.`val`(0).`as`("following")
             }
 
-        val fields =
-            mutableListOf<Field<*>>(
-                ARTICLE.ID,
-                ARTICLE.SLUG,
-                ARTICLE.TITLE,
-                ARTICLE.DESCRIPTION,
-            )
-        if (includeBody) {
-            fields.add(ARTICLE.BODY)
-        }
-        fields.addAll(
-            listOf(
-                ARTICLE.AUTHOR_ID,
-                ARTICLE.CREATED_AT,
-                ARTICLE.UPDATED_AT,
-                author.USERNAME,
-                author.BIO,
-                author.IMAGE,
+        return buildList<Field<*>> {
+            add(ARTICLE.ID)
+            add(ARTICLE.SLUG)
+            add(ARTICLE.TITLE)
+            add(ARTICLE.DESCRIPTION)
+            if (includeBody) add(ARTICLE.BODY)
+            add(ARTICLE.AUTHOR_ID)
+            add(ARTICLE.CREATED_AT)
+            add(ARTICLE.UPDATED_AT)
+            add(author.USERNAME)
+            add(author.BIO)
+            add(author.IMAGE)
+            add(
                 multiset(
                     select(TAG.NAME)
                         .from(TAG)
@@ -280,15 +274,16 @@ class ArticleRepository(
                         .on(ARTICLE_TAG.TAG_ID.eq(TAG.ID))
                         .where(ARTICLE_TAG.ARTICLE_ID.eq(ARTICLE.ID)),
                 ).`as`("tags").convertFrom { it.map { r -> r.value1() } },
-                select(count())
+            )
+            add(
+                select(DSL.count())
                     .from(FAVORITE)
                     .where(FAVORITE.ARTICLE_ID.eq(ARTICLE.ID))
                     .asField<Int>("favoritesCount"),
-                favoritedField,
-                followingField,
-            ),
-        )
-        return fields
+            )
+            add(favoritedField)
+            add(followingField)
+        }
     }
 
     private fun Record.toDto(): ArticleDto =
