@@ -14,9 +14,8 @@ class RefreshTokenCleanupJob(
 ) {
     @Scheduled(every = "24h", delayed = "1h")
     fun deleteExpired() {
-        val deletedTokens = runStep("refresh tokens") { purgeRefreshTokens() }
-        val deletedRevoked = runStep("revoked tokens") { purgeRevokedTokens() }
-        log.info("Maintenance: deleted {} refresh tokens, {} revoked tokens", deletedTokens, deletedRevoked)
+        runStep("refresh tokens") { purgeRefreshTokens() }
+        runStep("revoked tokens") { purgeRevokedTokens() }
     }
 
     @Transactional
@@ -29,11 +28,11 @@ class RefreshTokenCleanupJob(
     private fun runStep(
         name: String,
         block: () -> Int,
-    ): Int =
-        runCatching(block).getOrElse {
-            log.error("Maintenance step failed ({}): {}", name, it.message, it)
-            -1
-        }
+    ) {
+        runCatching(block)
+            .onSuccess { log.info("Maintenance: deleted {} {}", it, name) }
+            .onFailure { log.error("Maintenance step failed ({}): {}", name, it.message, it) }
+    }
 
     companion object {
         private val log = LoggerFactory.getLogger(RefreshTokenCleanupJob::class.java)
