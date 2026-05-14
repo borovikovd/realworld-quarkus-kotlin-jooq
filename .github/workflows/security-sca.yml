@@ -33,9 +33,12 @@ jobs:
           key: nvd-${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}
           restore-keys: nvd-${{ runner.os }}-
 
+      # Advisory only: findings are reported via SARIF (see step below) and
+      # visible in the Security tab, but don't block CI. SCA hits add noise
+      # without enough signal to gate merges on automatically.
       - name: Run OWASP Dependency-Check
         run: chmod +x gradlew && ./gradlew dependencyCheckAnalyze --no-daemon
-        continue-on-error: false
+        continue-on-error: true
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
