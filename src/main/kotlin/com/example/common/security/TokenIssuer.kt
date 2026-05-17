@@ -5,6 +5,7 @@ import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import org.eclipse.microprofile.jwt.Claims
 import org.slf4j.LoggerFactory
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -112,6 +113,7 @@ class TokenIssuer(
             .issuer(issuer)
             .subject(userId.value.toString())
             .groups(setOf("user"))
+            .claim(Claims.jti, UUID.randomUUID().toString())
             .expiresAt(OffsetDateTime.now().toInstant().plus(accessTokenExpiry))
             .sign()
 
