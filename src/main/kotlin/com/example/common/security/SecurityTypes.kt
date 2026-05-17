@@ -19,7 +19,12 @@ data class IssuedTokens(
     val refreshToken: String,
 )
 
-data class StoredRefreshToken(
+data class RefreshResult(
+    val userId: UserId,
+    val tokens: IssuedTokens,
+)
+
+internal data class StoredRefreshToken(
     val userId: UserId,
     val expiresAt: OffsetDateTime,
     val revokedAt: OffsetDateTime?,

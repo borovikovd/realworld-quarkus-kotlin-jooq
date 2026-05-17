@@ -3,7 +3,9 @@ package com.example.common.security
 import com.example.user.UserId
 import io.smallrye.jwt.build.Jwt
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.transaction.Transactional
 import org.eclipse.microprofile.config.inject.ConfigProperty
+import org.slf4j.LoggerFactory
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Duration
@@ -24,7 +26,7 @@ class TokenIssuer(
     private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
-    fun issueTokens(userId: UserId): IssuedTokens {
+    fun issue(userId: UserId): IssuedTokens {
         val accessToken = generateAccessToken(userId)
         val refreshToken = generateRefreshToken()
         refreshTokenRepository.store(
@@ -35,10 +37,47 @@ class TokenIssuer(
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
-    fun findRefreshToken(token: String): StoredRefreshToken? = refreshTokenRepository.findByHash(sha256(token))
+    /**
+     * Exchanges a refresh token for a fresh access+refresh pair, rotating the refresh token.
+     * Returns null for any invalid outcome (not found, expired, already revoked).
+     * On reuse (presenting a previously-revoked token), all the user's refresh tokens are
+     * revoked as a breach response — this is RFC 6749 §10.4 / OAuth 2.1 reuse detection.
+     */
+    @Transactional
+    fun refresh(rawRefreshToken: String): RefreshResult? {
+        val hash = sha256(rawRefreshToken)
+        val stored = refreshTokenRepository.findByHash(hash)
 
-    /** Returns false if the token was already revoked or not found. */
-    fun revokeRefreshToken(token: String): Boolean = refreshTokenRepository.revokeByHash(sha256(token))
+        return when {
+            stored == null -> {
+                logger.info("Refresh failed: token not found")
+                null
+            }
+            stored.expiresAt.isBefore(OffsetDateTime.now()) -> {
+                logger.info("Refresh failed: token expired for userId={}", stored.userId.value)
+                null
+            }
+            stored.revokedAt != null || !refreshTokenRepository.revokeByHash(hash) -> {
+                logger.warn(
+                    "Refresh token reuse detected, revoking all tokens for userId={}",
+                    stored.userId.value,
+                )
+                refreshTokenRepository.revokeAllForUser(stored.userId)
+                null
+            }
+            else -> RefreshResult(userId = stored.userId, tokens = issue(stored.userId))
+        }
+    }
+
+    /**
+     * Revokes the refresh token only if it belongs to [userId]. Returns true if a row was
+     * updated. The ownership predicate prevents a holder of access token A from revoking
+     * another user's refresh token by submitting it.
+     */
+    fun revokeRefreshToken(
+        rawRefreshToken: String,
+        userId: UserId,
+    ): Boolean = refreshTokenRepository.revokeByHashAndUser(sha256(rawRefreshToken), userId)
 
     fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId)
 
@@ -62,6 +101,7 @@ class TokenIssuer(
 
     companion object {
         private const val REFRESH_TOKEN_BYTES = 32
+        private val logger = LoggerFactory.getLogger(TokenIssuer::class.java)
 
         fun sha256(value: String): String {
             val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))

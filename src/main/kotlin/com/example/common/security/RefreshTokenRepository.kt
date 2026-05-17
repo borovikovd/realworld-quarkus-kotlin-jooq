@@ -23,7 +23,7 @@ class RefreshTokenRepository(
             .execute()
     }
 
-    fun findByHash(tokenHash: String): StoredRefreshToken? =
+    internal fun findByHash(tokenHash: String): StoredRefreshToken? =
         dsl
             .select(REFRESH_TOKEN.USER_ID, REFRESH_TOKEN.EXPIRES_AT, REFRESH_TOKEN.REVOKED_AT)
             .from(REFRESH_TOKEN)
@@ -43,6 +43,19 @@ class RefreshTokenRepository(
             .update(REFRESH_TOKEN)
             .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
             .where(REFRESH_TOKEN.TOKEN_HASH.eq(tokenHash))
+            .and(REFRESH_TOKEN.REVOKED_AT.isNull)
+            .execute() > 0
+
+    /** Revokes only when the token's hash and owner both match. Returns true if a row was updated. */
+    fun revokeByHashAndUser(
+        tokenHash: String,
+        userId: UserId,
+    ): Boolean =
+        dsl
+            .update(REFRESH_TOKEN)
+            .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
+            .where(REFRESH_TOKEN.TOKEN_HASH.eq(tokenHash))
+            .and(REFRESH_TOKEN.USER_ID.eq(userId.value))
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute() > 0
 

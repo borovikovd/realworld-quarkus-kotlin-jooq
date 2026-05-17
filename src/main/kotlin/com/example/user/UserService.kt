@@ -54,7 +54,7 @@ class UserService(
         userRepository.insert(user)
         logger.info("User registered: userId={}, username={}", userId.value, username)
 
-        val tokens = tokenIssuer.issueTokens(userId)
+        val tokens = tokenIssuer.issue(userId)
         return AuthenticatedUser(
             email = user.email,
             username = user.username,
@@ -87,7 +87,7 @@ class UserService(
             throw InvalidCredentialsException()
         }
 
-        val tokens = tokenIssuer.issueTokens(found.id)
+        val tokens = tokenIssuer.issue(found.id)
         return toAuthenticatedUser(found, tokens.accessToken, tokens.refreshToken)
     }
 
@@ -133,7 +133,7 @@ class UserService(
 
         val credentialsChanged = resolvedPassword != null || resolvedEmail != user.email
         return if (credentialsChanged) {
-            val tokens = tokenIssuer.issueTokens(userId)
+            val tokens = tokenIssuer.issue(userId)
             toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
         } else {
             val rawToken = currentUser.rawToken ?: throw UnauthorizedException("Token not present")
@@ -153,35 +153,16 @@ class UserService(
     /** Returns null on any invalid-token outcome; the resource layer translates that to 401. */
     @Transactional
     fun refreshToken(refreshToken: String): AuthenticatedUser? {
-        val stored = tokenIssuer.findRefreshToken(refreshToken)
-
-        return when {
-            stored == null -> null
-            stored.expiresAt.isBefore(OffsetDateTime.now()) -> null
-            stored.revokedAt != null || !tokenIssuer.revokeRefreshToken(refreshToken) -> {
-                tokenIssuer.revokeAllRefreshTokens(stored.userId)
-                null
-            }
-            else -> issueRotatedTokens(stored.userId)
-        }
-    }
-
-    private fun issueRotatedTokens(userId: UserId): AuthenticatedUser {
-        val tokens = tokenIssuer.issueTokens(userId)
-        val user = userRepository.findById(userId) ?: throw NotFoundException("user", "User not found")
-        return toAuthenticatedUser(user, tokens.accessToken, tokens.refreshToken)
+        val result = tokenIssuer.refresh(refreshToken) ?: return null
+        val user = userRepository.findById(result.userId) ?: throw NotFoundException("user", "User not found")
+        return toAuthenticatedUser(user, result.tokens.accessToken, result.tokens.refreshToken)
     }
 
     @Transactional
     fun logout(refreshToken: String) {
         val userId = currentUser.id
         val jti = currentUser.jti
-        // Only revoke the refresh token if it belongs to the authenticated user, so a holder
-        // of token X can't revoke another user's refresh token by submitting it in the body.
-        val stored = tokenIssuer.findRefreshToken(refreshToken)
-        if (stored != null && stored.userId == userId) {
-            tokenIssuer.revokeRefreshToken(refreshToken)
-        }
+        if (userId != null) tokenIssuer.revokeRefreshToken(refreshToken, userId)
         if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
     }
 
