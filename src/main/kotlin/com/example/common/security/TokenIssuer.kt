@@ -62,7 +62,7 @@ class TokenIssuer(
                     "Refresh token reuse detected, revoking all tokens for userId={}",
                     stored.userId.value,
                 )
-                refreshTokenRepository.revokeAllForUser(stored.userId)
+                revokeAllSessions(stored.userId, currentJti = null)
                 null
             }
             else -> RefreshResult(userId = stored.userId, tokens = issue(stored.userId))
@@ -70,18 +70,39 @@ class TokenIssuer(
     }
 
     /**
-     * Revokes the refresh token only if it belongs to [userId]. Returns true if a row was
-     * updated. The ownership predicate prevents a holder of access token A from revoking
-     * another user's refresh token by submitting it.
+     * Terminates a single session: revokes the presented refresh token (only if it belongs
+     * to [userId]) and blocklists the access token's [jti] if present. The ownership
+     * predicate prevents a holder of access token A from revoking another user's refresh
+     * token by submitting it.
      */
-    fun revokeRefreshToken(
+    @Transactional
+    fun revokeSession(
         rawRefreshToken: String,
         userId: UserId,
-    ): Boolean = refreshTokenRepository.revokeByHashAndUser(sha256(rawRefreshToken), userId)
+        jti: UUID?,
+    ) {
+        refreshTokenRepository.revokeByHashAndUser(sha256(rawRefreshToken), userId)
+        if (jti != null) blocklistAccessToken(jti, userId)
+    }
 
-    fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId)
+    /**
+     * Terminates every session for [userId]: revokes all refresh tokens and, if the caller
+     * is signed in, blocklists their access token's [currentJti]. Used on password/email
+     * change, account erase, and refresh-token reuse detection.
+     *
+     * Note: access tokens for other devices remain valid until their natural expiry
+     * (short-lived by design). The refresh-token sweep prevents them from being renewed.
+     */
+    @Transactional
+    fun revokeAllSessions(
+        userId: UserId,
+        currentJti: UUID?,
+    ) {
+        refreshTokenRepository.revokeAllForUser(userId)
+        if (currentJti != null) blocklistAccessToken(currentJti, userId)
+    }
 
-    fun revokeAccessToken(
+    private fun blocklistAccessToken(
         jti: UUID,
         userId: UserId,
     ) = revokedTokenRepository.insert(jti, userId.value, OffsetDateTime.now().plus(accessTokenExpiry))

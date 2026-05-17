@@ -133,6 +133,7 @@ class UserService(
 
         val credentialsChanged = resolvedPassword != null || resolvedEmail != user.email
         return if (credentialsChanged) {
+            tokenIssuer.revokeAllSessions(userId, currentUser.jti)
             val tokens = tokenIssuer.issue(userId)
             toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
         } else {
@@ -144,8 +145,7 @@ class UserService(
     @Transactional
     fun deleteCurrentUser() {
         val userId = currentUser.require()
-        val jti = currentUser.jti
-        if (jti != null) tokenIssuer.revokeAccessToken(jti, userId)
+        tokenIssuer.revokeAllSessions(userId, currentUser.jti)
         userRepository.delete(userId)
         logger.info("User deleted: userId={}", userId.value)
     }
@@ -160,10 +160,8 @@ class UserService(
 
     @Transactional
     fun logout(refreshToken: String) {
-        val userId = currentUser.id
-        val jti = currentUser.jti
-        if (userId != null) tokenIssuer.revokeRefreshToken(refreshToken, userId)
-        if (jti != null && userId != null) tokenIssuer.revokeAccessToken(jti, userId)
+        val userId = currentUser.id ?: return
+        tokenIssuer.revokeSession(refreshToken, userId, currentUser.jti)
     }
 
     @Transactional

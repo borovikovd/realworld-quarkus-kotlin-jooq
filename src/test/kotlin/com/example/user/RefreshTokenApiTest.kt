@@ -2,6 +2,7 @@ package com.example.user
 
 import com.example.testsupport.ApiTestFixtures
 import com.example.testsupport.BaseApiTest
+import com.example.testsupport.TestDataBuilder
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
@@ -138,6 +139,64 @@ class RefreshTokenApiTest : BaseApiTest() {
             .delete("/api/user")
             .then()
             .statusCode(204)
+
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .`when`()
+            .get("/api/user")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
+    fun `password change revokes all prior sessions`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(password = "new-password-456"))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(200)
+
+        // The old refresh token chain is dead.
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(401)
+
+        // The old access token's jti is blocklisted.
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .`when`()
+            .get("/api/user")
+            .then()
+            .statusCode(401)
+    }
+
+    @Test
+    fun `email change revokes all prior sessions`() {
+        val user = ApiTestFixtures.registerUser()
+
+        ApiTestFixtures
+            .authenticatedRequest(user.token)
+            .body(TestDataBuilder.userUpdate(email = TestDataBuilder.uniqueEmail()))
+            .`when`()
+            .put("/api/user")
+            .then()
+            .statusCode(200)
+
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(401)
 
         ApiTestFixtures
             .authenticatedRequest(user.token)
