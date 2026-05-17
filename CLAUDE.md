@@ -39,7 +39,8 @@ Production-grade code. Idiomatic Kotlin + Quarkus + jOOQ using pragmatic package
 
 - Argon2id for passwords. Constant-time comparison for any secret check.
 - Derive subkeys from a master key via HKDF; never log secrets.
-- Auth tokens: short-lived access (~15 min) plus long-lived refresh tokens that are single-use, rotated, stored only as HMACs, and revoked on logout / rotation / user erase.
+- Auth tokens: short-lived access (~15 min) plus long-lived refresh tokens that are single-use, rotated, and revoked on logout / rotation / user erase. Store at-rest as SHA-256 of the raw token — sufficient when the raw token is ≥256 bits of cryptographic randomness (e.g. `SecureRandom.nextBytes(32)`). For any at-rest secret that isn't itself high-entropy random, use HMAC with a dedicated app secret instead.
+- Access tokens carry an explicit `jti` claim (set at sign time, not relying on JWT library defaults); revocation works by blocklisting that `jti` until the token's natural expiry.
 - **Equalize timing on lookup-then-verify flows** (login, password reset, token redemption). Run the verify step on both the found and not-found branches so latency does not leak existence.
 - Security-critical config (CORS origins, master keys, signing keys) must fail closed: required env vars, no permissive defaults like `*`.
 
