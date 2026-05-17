@@ -64,6 +64,11 @@ table "refresh_token" {
     null = false
     type = bigint
   }
+  column "family_id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
   column "token_hash" {
     null = false
     type = varchar(100)
@@ -94,6 +99,9 @@ table "refresh_token" {
   }
   index "idx_refresh_token_user_id" {
     columns = [column.user_id]
+  }
+  index "idx_refresh_token_family_id" {
+    columns = [column.family_id]
   }
   index "idx_refresh_token_expires_at" {
     columns = [column.expires_at]

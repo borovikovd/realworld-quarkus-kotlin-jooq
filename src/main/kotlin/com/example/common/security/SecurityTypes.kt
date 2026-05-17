@@ -2,6 +2,7 @@ package com.example.common.security
 
 import com.example.user.UserId
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @JvmInline
 value class PasswordHash(
@@ -26,6 +27,7 @@ data class RefreshResult(
 
 internal data class StoredRefreshToken(
     val userId: UserId,
+    val familyId: UUID,
     val expiresAt: OffsetDateTime,
     val revokedAt: OffsetDateTime?,
 )

@@ -207,6 +207,50 @@ class RefreshTokenApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `reuse on one device does not revoke other devices`() {
+        val user = ApiTestFixtures.registerUser()
+
+        // Second login on the same account simulates a second device — a separate family.
+        val secondDeviceRefresh =
+            given()
+                .contentType(ContentType.JSON)
+                .body(TestDataBuilder.userLogin(user.email, user.password))
+                .`when`()
+                .post("/api/users/login")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath()
+                .getString("user.refreshToken")
+
+        // Rotate device-1 once, then reuse the original token to trip reuse detection.
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(200)
+
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"${user.refreshToken}"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(401)
+
+        // Device-2's family is untouched.
+        given()
+            .contentType(ContentType.JSON)
+            .body("""{"refreshToken":"$secondDeviceRefresh"}""")
+            .`when`()
+            .post("/api/users/refresh")
+            .then()
+            .statusCode(200)
+    }
+
+    @Test
     fun `logout does not revoke another user's refresh token`() {
         val alice = ApiTestFixtures.registerUser()
         val bob = ApiTestFixtures.registerUser()

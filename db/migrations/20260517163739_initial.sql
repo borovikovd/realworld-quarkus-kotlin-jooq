@@ -110,6 +110,7 @@ CREATE INDEX "idx_follower_follower_id" ON "public"."follower" ("follower_id");
 CREATE TABLE "public"."refresh_token" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "user_id" bigint NOT NULL,
+  "family_id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "token_hash" character varying(100) NOT NULL,
   "expires_at" timestamptz NOT NULL,
   "revoked_at" timestamptz NULL,
@@ -120,5 +121,7 @@ CREATE TABLE "public"."refresh_token" (
 );
 -- Create index "idx_refresh_token_expires_at" to table: "refresh_token"
 CREATE INDEX "idx_refresh_token_expires_at" ON "public"."refresh_token" ("expires_at");
+-- Create index "idx_refresh_token_family_id" to table: "refresh_token"
+CREATE INDEX "idx_refresh_token_family_id" ON "public"."refresh_token" ("family_id");
 -- Create index "idx_refresh_token_user_id" to table: "refresh_token"
 CREATE INDEX "idx_refresh_token_user_id" ON "public"."refresh_token" ("user_id");

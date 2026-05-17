@@ -5,6 +5,7 @@ import com.example.user.UserId
 import jakarta.enterprise.context.ApplicationScoped
 import org.jooq.DSLContext
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @ApplicationScoped
 class RefreshTokenRepository(
@@ -12,12 +13,14 @@ class RefreshTokenRepository(
 ) {
     fun store(
         userId: UserId,
+        familyId: UUID,
         tokenHash: String,
         expiresAt: OffsetDateTime,
     ) {
         dsl
             .insertInto(REFRESH_TOKEN)
             .set(REFRESH_TOKEN.USER_ID, userId.value)
+            .set(REFRESH_TOKEN.FAMILY_ID, familyId)
             .set(REFRESH_TOKEN.TOKEN_HASH, tokenHash)
             .set(REFRESH_TOKEN.EXPIRES_AT, expiresAt)
             .execute()
@@ -25,13 +28,18 @@ class RefreshTokenRepository(
 
     internal fun findByHash(tokenHash: String): StoredRefreshToken? =
         dsl
-            .select(REFRESH_TOKEN.USER_ID, REFRESH_TOKEN.EXPIRES_AT, REFRESH_TOKEN.REVOKED_AT)
-            .from(REFRESH_TOKEN)
+            .select(
+                REFRESH_TOKEN.USER_ID,
+                REFRESH_TOKEN.FAMILY_ID,
+                REFRESH_TOKEN.EXPIRES_AT,
+                REFRESH_TOKEN.REVOKED_AT,
+            ).from(REFRESH_TOKEN)
             .where(REFRESH_TOKEN.TOKEN_HASH.eq(tokenHash))
             .fetchOne()
             ?.let {
                 StoredRefreshToken(
                     userId = UserId(it.get(REFRESH_TOKEN.USER_ID)!!),
+                    familyId = it.get(REFRESH_TOKEN.FAMILY_ID)!!,
                     expiresAt = it.get(REFRESH_TOKEN.EXPIRES_AT)!!,
                     revokedAt = it.get(REFRESH_TOKEN.REVOKED_AT),
                 )
@@ -67,6 +75,15 @@ class RefreshTokenRepository(
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute()
     }
+
+    /** Revokes every live refresh token sharing [familyId]. Used by reuse detection. */
+    fun revokeFamily(familyId: UUID): Int =
+        dsl
+            .update(REFRESH_TOKEN)
+            .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
+            .where(REFRESH_TOKEN.FAMILY_ID.eq(familyId))
+            .and(REFRESH_TOKEN.REVOKED_AT.isNull)
+            .execute()
 
     /** Deletes tokens whose expiry is before [before]. Returns the number of rows deleted. */
     fun deleteExpiredBefore(before: OffsetDateTime): Int =

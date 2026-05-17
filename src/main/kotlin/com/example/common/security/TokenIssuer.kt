@@ -27,22 +27,19 @@ class TokenIssuer(
     private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
-    fun issue(userId: UserId): IssuedTokens {
-        val accessToken = generateAccessToken(userId)
-        val refreshToken = generateRefreshToken()
-        refreshTokenRepository.store(
-            userId = userId,
-            tokenHash = sha256(refreshToken),
-            expiresAt = OffsetDateTime.now().plus(refreshTokenExpiry),
-        )
-        return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
-    }
+    /** Mints a fresh access+refresh pair under a brand-new family (login, register, post-credential-change). */
+    fun issue(userId: UserId): IssuedTokens = mintPair(userId, UUID.randomUUID())
 
     /**
-     * Exchanges a refresh token for a fresh access+refresh pair, rotating the refresh token.
-     * Returns null for any invalid outcome (not found, expired, already revoked).
-     * On reuse (presenting a previously-revoked token), all the user's refresh tokens are
-     * revoked as a breach response — this is RFC 6749 §10.4 / OAuth 2.1 reuse detection.
+     * Exchanges a refresh token for a fresh access+refresh pair, rotating the refresh token
+     * while preserving its family. Returns null for any invalid outcome (not found, expired,
+     * already revoked).
+     *
+     * On reuse (presenting a previously-revoked token from this chain), only the affected
+     * family is revoked — sibling sessions on other devices keep working. This is the
+     * RFC 9700 §4.14.2 implementation note: "the grant to which a refresh token belongs
+     * may be encoded into the refresh token itself ... by extension, all refresh tokens
+     * that need to be revoked."
      */
     @Transactional
     fun refresh(rawRefreshToken: String): RefreshResult? {
@@ -60,13 +57,14 @@ class TokenIssuer(
             }
             stored.revokedAt != null || !refreshTokenRepository.revokeByHash(hash) -> {
                 logger.warn(
-                    "Refresh token reuse detected, revoking all tokens for userId={}",
+                    "Refresh token reuse detected, revoking family={} for userId={}",
+                    stored.familyId,
                     stored.userId.value,
                 )
-                revokeAllSessions(stored.userId, currentJti = null)
+                refreshTokenRepository.revokeFamily(stored.familyId)
                 null
             }
-            else -> RefreshResult(userId = stored.userId, tokens = issue(stored.userId))
+            else -> RefreshResult(userId = stored.userId, tokens = mintPair(stored.userId, stored.familyId))
         }
     }
 
@@ -101,6 +99,21 @@ class TokenIssuer(
     ) {
         refreshTokenRepository.revokeAllForUser(userId)
         if (currentJti != null) blocklistAccessToken(currentJti, userId)
+    }
+
+    private fun mintPair(
+        userId: UserId,
+        familyId: UUID,
+    ): IssuedTokens {
+        val accessToken = generateAccessToken(userId)
+        val refreshToken = generateRefreshToken()
+        refreshTokenRepository.store(
+            userId = userId,
+            familyId = familyId,
+            tokenHash = sha256(refreshToken),
+            expiresAt = OffsetDateTime.now().plus(refreshTokenExpiry),
+        )
+        return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
     private fun blocklistAccessToken(
