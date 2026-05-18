@@ -28,6 +28,7 @@ class TokenIssuer(
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
     /** Mints a fresh access+refresh pair under a brand-new family (login, register, post-credential-change). */
+    @Transactional
     fun issue(userId: UserId): IssuedTokens = mintPair(userId, UUID.randomUUID())
 
     /**
