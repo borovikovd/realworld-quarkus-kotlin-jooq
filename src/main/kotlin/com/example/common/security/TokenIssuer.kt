@@ -124,6 +124,15 @@ class TokenIssuer(
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
+    /**
+     * Blocklists a single access token's [jti] until its natural expiry. Used when the
+     * caller's session must die immediately but no refresh-token state needs revoking —
+     * notably account erase, where the user row's `ON DELETE CASCADE` already wipes the
+     * refresh-token chain.
+     */
+    @Transactional
+    fun revokeAccessToken(jti: UUID) = blocklistAccessToken(jti)
+
     private fun blocklistAccessToken(jti: UUID) =
         revokedTokenRepository.insert(jti, OffsetDateTime.now().plus(accessTokenExpiry))
 

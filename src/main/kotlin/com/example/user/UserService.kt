@@ -145,7 +145,10 @@ class UserService(
     @Transactional
     fun deleteCurrentUser() {
         val userId = currentUser.require()
-        tokenIssuer.revokeAllSessions(userId, currentUser.jti)
+        // Refresh tokens cascade-delete with the user row; only the caller's access
+        // JWT needs an explicit blocklist entry since it stays cryptographically valid
+        // until natural expiry.
+        currentUser.jti?.let { tokenIssuer.revokeAccessToken(it) }
         userRepository.delete(userId)
         logger.info("User deleted: userId={}", userId.value)
     }
