@@ -154,7 +154,7 @@ class TokenIssuer(
         private const val REFRESH_TOKEN_BYTES = 32
         private val logger = LoggerFactory.getLogger(TokenIssuer::class.java)
 
-        fun sha256(value: String): String {
+        private fun sha256(value: String): String {
             val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
             return Base64.getEncoder().encodeToString(digest)
         }
