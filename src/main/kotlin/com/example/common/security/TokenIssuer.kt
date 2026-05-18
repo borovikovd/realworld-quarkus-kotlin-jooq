@@ -56,17 +56,24 @@ class TokenIssuer(
                 logger.info("Refresh failed: token expired for userId={}", stored.userId.value)
                 null
             }
-            stored.revokedAt != null || !refreshTokenRepository.revokeByHash(hash) -> {
-                logger.warn(
-                    "Refresh token reuse detected, revoking family={} for userId={}",
-                    stored.familyId,
-                    stored.userId.value,
-                )
-                refreshTokenRepository.revokeFamily(stored.familyId)
-                null
-            }
+            stored.revokedAt != null -> reuseDetected(stored, "replayed after revocation")
+            !refreshTokenRepository.revokeByHash(hash) -> reuseDetected(stored, "lost concurrent rotation race")
             else -> RefreshResult(userId = stored.userId, tokens = mintPair(stored.userId, stored.familyId))
         }
+    }
+
+    private fun reuseDetected(
+        stored: StoredRefreshToken,
+        reason: String,
+    ): RefreshResult? {
+        logger.warn(
+            "Refresh token reuse ({}), revoking family={} for userId={}",
+            reason,
+            stored.familyId,
+            stored.userId.value,
+        )
+        refreshTokenRepository.revokeFamily(stored.familyId)
+        return null
     }
 
     /**
