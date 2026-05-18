@@ -140,7 +140,8 @@ class UserService(
             resolvedUsername != user.username,
         )
         return if (credentialsChanged) {
-            tokenIssuer.revokeAllSessions(userId, currentUser.jti)
+            tokenIssuer.revokeAllRefreshTokens(userId)
+            currentUser.jti?.let { tokenIssuer.revokeAccessToken(it) }
             val tokens = tokenIssuer.issue(userId)
             toAuthenticatedUser(updated, tokens.accessToken, tokens.refreshToken)
         } else {
@@ -168,7 +169,8 @@ class UserService(
     @Transactional
     fun logout(refreshToken: String) {
         val userId = currentUser.id ?: return
-        tokenIssuer.revokeSession(refreshToken, userId, currentUser.jti)
+        tokenIssuer.revokeRefreshToken(refreshToken, userId)
+        currentUser.jti?.let { tokenIssuer.revokeAccessToken(it) }
     }
 
     @Transactional

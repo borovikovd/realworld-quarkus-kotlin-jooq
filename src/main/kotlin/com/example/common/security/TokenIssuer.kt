@@ -70,27 +70,18 @@ class TokenIssuer(
 
     /** The [userId] predicate prevents A from revoking B's refresh token by submitting it. */
     @Transactional
-    fun revokeSession(
+    fun revokeRefreshToken(
         rawRefreshToken: String,
         userId: UserId,
-        jti: UUID?,
     ) {
         refreshTokenRepository.revokeByHashAndUser(sha256(rawRefreshToken), userId)
-        if (jti != null) blocklistAccessToken(jti)
     }
 
-    /**
-     * Access tokens on other devices stay valid until natural expiry — short TTL is the
-     * bound. The refresh-token sweep prevents them from being renewed.
-     */
     @Transactional
-    fun revokeAllSessions(
-        userId: UserId,
-        currentJti: UUID?,
-    ) {
-        refreshTokenRepository.revokeAllForUser(userId)
-        if (currentJti != null) blocklistAccessToken(currentJti)
-    }
+    fun revokeAllRefreshTokens(userId: UserId) = refreshTokenRepository.revokeAllForUser(userId)
+
+    @Transactional
+    fun revokeAccessToken(jti: UUID) = revokedTokenRepository.insert(jti, OffsetDateTime.now().plus(accessTokenExpiry))
 
     private fun mintPair(
         userId: UserId,
@@ -106,13 +97,6 @@ class TokenIssuer(
         )
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
-
-    /** For when refresh-token revocation is handled elsewhere (e.g. cascade on user delete). */
-    @Transactional
-    fun revokeAccessToken(jti: UUID) = blocklistAccessToken(jti)
-
-    private fun blocklistAccessToken(jti: UUID) =
-        revokedTokenRepository.insert(jti, OffsetDateTime.now().plus(accessTokenExpiry))
 
     private fun generateAccessToken(userId: UserId): String =
         Jwt
