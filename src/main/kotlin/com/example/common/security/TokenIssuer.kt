@@ -27,20 +27,12 @@ class TokenIssuer(
     private val accessTokenExpiry: Duration = Duration.ofSeconds(accessExpirySeconds)
     private val refreshTokenExpiry: Duration = Duration.ofDays(refreshExpiryDays)
 
-    /** Mints a fresh access+refresh pair under a brand-new family (login, register, post-credential-change). */
     @Transactional
     fun issue(userId: UserId): IssuedTokens = mintPair(userId, UUID.randomUUID())
 
     /**
-     * Exchanges a refresh token for a fresh access+refresh pair, rotating the refresh token
-     * while preserving its family. Returns null for any invalid outcome (not found, expired,
-     * already revoked).
-     *
-     * On reuse (presenting a previously-revoked token from this chain), only the affected
-     * family is revoked — sibling sessions on other devices keep working. This is the
-     * RFC 9700 §4.14.2 implementation note: "the grant to which a refresh token belongs
-     * may be encoded into the refresh token itself ... by extension, all refresh tokens
-     * that need to be revoked."
+     * On reuse, revokes only the affected family (RFC 9700 §4.14.2) so sibling sessions
+     * on other devices keep working.
      */
     @Transactional
     fun refresh(rawRefreshToken: String): RefreshResult? {
@@ -76,12 +68,7 @@ class TokenIssuer(
         return null
     }
 
-    /**
-     * Terminates a single session: revokes the presented refresh token (only if it belongs
-     * to [userId]) and blocklists the access token's [jti] if present. The ownership
-     * predicate prevents a holder of access token A from revoking another user's refresh
-     * token by submitting it.
-     */
+    /** The [userId] predicate prevents A from revoking B's refresh token by submitting it. */
     @Transactional
     fun revokeSession(
         rawRefreshToken: String,
@@ -93,12 +80,8 @@ class TokenIssuer(
     }
 
     /**
-     * Terminates every session for [userId]: revokes all refresh tokens and, if the caller
-     * is signed in, blocklists their access token's [currentJti]. Used on password/email
-     * change, account erase, and refresh-token reuse detection.
-     *
-     * Note: access tokens for other devices remain valid until their natural expiry
-     * (short-lived by design). The refresh-token sweep prevents them from being renewed.
+     * Access tokens on other devices stay valid until natural expiry — short TTL is the
+     * bound. The refresh-token sweep prevents them from being renewed.
      */
     @Transactional
     fun revokeAllSessions(
@@ -124,12 +107,7 @@ class TokenIssuer(
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
-    /**
-     * Blocklists a single access token's [jti] until its natural expiry. Used when the
-     * caller's session must die immediately but no refresh-token state needs revoking —
-     * notably account erase, where the user row's `ON DELETE CASCADE` already wipes the
-     * refresh-token chain.
-     */
+    /** For when refresh-token revocation is handled elsewhere (e.g. cascade on user delete). */
     @Transactional
     fun revokeAccessToken(jti: UUID) = blocklistAccessToken(jti)
 

@@ -152,15 +152,12 @@ class UserService(
     @Transactional
     fun deleteCurrentUser() {
         val userId = currentUser.require()
-        // Refresh tokens cascade-delete with the user row; only the caller's access
-        // JWT needs an explicit blocklist entry since it stays cryptographically valid
-        // until natural expiry.
+        // Refresh tokens cascade with the user row; only the access JWT needs explicit blocklisting.
         currentUser.jti?.let { tokenIssuer.revokeAccessToken(it) }
         userRepository.delete(userId)
         logger.info("User deleted: userId={}", userId.value)
     }
 
-    /** Returns null on any invalid-token outcome; the resource layer translates that to 401. */
     @Transactional
     fun refreshToken(refreshToken: String): AuthenticatedUser? {
         val result = tokenIssuer.refresh(refreshToken) ?: return null
