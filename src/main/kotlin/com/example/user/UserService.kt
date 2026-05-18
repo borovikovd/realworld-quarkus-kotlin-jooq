@@ -132,6 +132,13 @@ class UserService(
         userRepository.update(updated)
 
         val credentialsChanged = resolvedPassword != null || resolvedEmail != user.email
+        logger.info(
+            "User updated: userId={}, passwordChanged={}, emailChanged={}, usernameChanged={}",
+            userId.value,
+            resolvedPassword != null,
+            resolvedEmail != user.email,
+            resolvedUsername != user.username,
+        )
         return if (credentialsChanged) {
             tokenIssuer.revokeAllSessions(userId, currentUser.jti)
             val tokens = tokenIssuer.issue(userId)
