@@ -114,10 +114,6 @@ table "revoked_token" {
     null = false
     type = uuid
   }
-  column "user_id" {
-    null = false
-    type = bigint
-  }
   column "expires_at" {
     null = false
     type = timestamptz

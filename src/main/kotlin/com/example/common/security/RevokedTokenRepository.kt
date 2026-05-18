@@ -12,13 +12,11 @@ class RevokedTokenRepository(
 ) {
     fun insert(
         jti: UUID,
-        userId: Long,
         expiresAt: OffsetDateTime,
     ) {
         dsl
             .insertInto(REVOKED_TOKEN)
             .set(REVOKED_TOKEN.JTI, jti)
-            .set(REVOKED_TOKEN.USER_ID, userId)
             .set(REVOKED_TOKEN.EXPIRES_AT, expiresAt)
             .onConflict(REVOKED_TOKEN.JTI)
             .doNothing()

@@ -82,7 +82,7 @@ class TokenIssuer(
         jti: UUID?,
     ) {
         refreshTokenRepository.revokeByHashAndUser(sha256(rawRefreshToken), userId)
-        if (jti != null) blocklistAccessToken(jti, userId)
+        if (jti != null) blocklistAccessToken(jti)
     }
 
     /**
@@ -99,7 +99,7 @@ class TokenIssuer(
         currentJti: UUID?,
     ) {
         refreshTokenRepository.revokeAllForUser(userId)
-        if (currentJti != null) blocklistAccessToken(currentJti, userId)
+        if (currentJti != null) blocklistAccessToken(currentJti)
     }
 
     private fun mintPair(
@@ -117,10 +117,8 @@ class TokenIssuer(
         return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
     }
 
-    private fun blocklistAccessToken(
-        jti: UUID,
-        userId: UserId,
-    ) = revokedTokenRepository.insert(jti, userId.value, OffsetDateTime.now().plus(accessTokenExpiry))
+    private fun blocklistAccessToken(jti: UUID) =
+        revokedTokenRepository.insert(jti, OffsetDateTime.now().plus(accessTokenExpiry))
 
     private fun generateAccessToken(userId: UserId): String =
         Jwt

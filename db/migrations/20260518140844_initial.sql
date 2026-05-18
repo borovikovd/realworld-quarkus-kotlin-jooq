@@ -1,7 +1,6 @@
 -- Create "revoked_token" table
 CREATE TABLE "public"."revoked_token" (
   "jti" uuid NOT NULL,
-  "user_id" bigint NOT NULL,
   "expires_at" timestamptz NOT NULL,
   PRIMARY KEY ("jti")
 );
