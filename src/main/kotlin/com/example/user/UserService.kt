@@ -161,9 +161,9 @@ class UserService(
 
     @Transactional
     fun refreshToken(refreshToken: String): AuthenticatedUser? {
-        val result = tokenIssuer.refresh(refreshToken) ?: return null
-        val user = userRepository.findById(result.userId) ?: throw NotFoundException("user", "User not found")
-        return toAuthenticatedUser(user, result.tokens.accessToken, result.tokens.refreshToken)
+        val tokens = tokenIssuer.refresh(refreshToken) ?: return null
+        val user = userRepository.findById(tokens.userId) ?: throw NotFoundException("user", "User not found")
+        return toAuthenticatedUser(user, tokens.accessToken, tokens.refreshToken)
     }
 
     @Transactional

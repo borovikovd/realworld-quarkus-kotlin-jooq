@@ -16,13 +16,9 @@ value class PasswordHash(
 }
 
 data class IssuedTokens(
+    val userId: UserId,
     val accessToken: String,
     val refreshToken: String,
-)
-
-data class RefreshResult(
-    val userId: UserId,
-    val tokens: IssuedTokens,
 )
 
 internal data class StoredRefreshToken(

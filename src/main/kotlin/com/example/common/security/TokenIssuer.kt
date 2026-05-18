@@ -35,7 +35,7 @@ class TokenIssuer(
      * on other devices keep working.
      */
     @Transactional
-    fun refresh(rawRefreshToken: String): RefreshResult? {
+    fun refresh(rawRefreshToken: String): IssuedTokens? {
         val hash = sha256(rawRefreshToken)
         val stored = refreshTokenRepository.findByHash(hash)
 
@@ -50,14 +50,14 @@ class TokenIssuer(
             }
             stored.revokedAt != null -> reuseDetected(stored, "replayed after revocation")
             !refreshTokenRepository.revokeByHash(hash) -> reuseDetected(stored, "lost concurrent rotation race")
-            else -> RefreshResult(userId = stored.userId, tokens = mintPair(stored.userId, stored.familyId))
+            else -> mintPair(stored.userId, stored.familyId)
         }
     }
 
     private fun reuseDetected(
         stored: StoredRefreshToken,
         reason: String,
-    ): RefreshResult? {
+    ): IssuedTokens? {
         logger.warn(
             "Refresh token reuse ({}), revoking family={} for userId={}",
             reason,
@@ -95,7 +95,7 @@ class TokenIssuer(
             tokenHash = sha256(refreshToken),
             expiresAt = OffsetDateTime.now().plus(refreshTokenExpiry),
         )
-        return IssuedTokens(accessToken = accessToken, refreshToken = refreshToken)
+        return IssuedTokens(userId = userId, accessToken = accessToken, refreshToken = refreshToken)
     }
 
     private fun generateAccessToken(userId: UserId): String =
