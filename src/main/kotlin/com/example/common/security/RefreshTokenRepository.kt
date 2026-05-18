@@ -77,13 +77,14 @@ class RefreshTokenRepository(
     }
 
     /** Revokes every live refresh token sharing [familyId]. Used by reuse detection. */
-    fun revokeFamily(familyId: UUID): Int =
+    fun revokeFamily(familyId: UUID) {
         dsl
             .update(REFRESH_TOKEN)
             .set(REFRESH_TOKEN.REVOKED_AT, OffsetDateTime.now())
             .where(REFRESH_TOKEN.FAMILY_ID.eq(familyId))
             .and(REFRESH_TOKEN.REVOKED_AT.isNull)
             .execute()
+    }
 
     /** Deletes tokens whose expiry is before [before]. Returns the number of rows deleted. */
     fun deleteExpiredBefore(before: OffsetDateTime): Int =
