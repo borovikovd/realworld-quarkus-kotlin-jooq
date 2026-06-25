@@ -34,7 +34,7 @@ repositories {
 // ============================================
 dependencies {
     // Quarkus BOM
-    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.36.3"))
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.37.0"))
 
     // Quarkus extensions (versions managed by BOM)
     implementation("io.quarkus:quarkus-rest")
