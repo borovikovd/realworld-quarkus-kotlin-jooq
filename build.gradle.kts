@@ -64,7 +64,7 @@ dependencies {
     implementation("io.quarkus:quarkus-container-image-docker")
 
     // External dependencies
-    implementation("org.bouncycastle:bcprov-jdk18on:1.84")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85")
     // jOOQ code generation
     jooqGenerator("org.jooq:jooq-meta-extensions:3.21.6")
 
