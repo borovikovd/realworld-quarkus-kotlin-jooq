@@ -13,7 +13,7 @@ plugins {
     // when iterating configurations that interacts badly with Quarkus's dynamic config
     // registration. Track fix at https://github.com/dependency-check/dependency-check-gradle/issues/500
     id("org.owasp.dependencycheck") version "12.2.2"
-    id("org.cyclonedx.bom") version "3.2.4"
+    id("org.cyclonedx.bom") version "3.3.0"
 }
 
 // ============================================
