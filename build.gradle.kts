@@ -49,7 +49,7 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-validator")
 
     // jOOQ integration
-    implementation("io.quarkiverse.jooq:quarkus-jooq:2.1.0")
+    implementation("io.quarkiverse.jooq:quarkus-jooq:2.2.0")
 
     // Observability
     implementation("io.quarkus:quarkus-logging-json")
