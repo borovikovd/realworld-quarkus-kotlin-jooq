@@ -66,7 +66,7 @@ dependencies {
     // External dependencies
     implementation("org.bouncycastle:bcprov-jdk18on:1.87")
     // jOOQ code generation
-    jooqGenerator("org.jooq:jooq-meta-extensions:3.21.9")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.21.10")
 
     // SpotBugs + FindSecBugs (bytecode security analysis)
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
